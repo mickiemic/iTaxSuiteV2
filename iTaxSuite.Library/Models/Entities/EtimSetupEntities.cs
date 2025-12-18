@@ -39,6 +39,19 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public override string CacheKey => BranchCode;
+        public string BaseETRAddress
+        {
+            get
+            {
+                if (TaxClient is null)
+                    return null;
+
+                if (TaxClient.IsProduction)
+                    return $"https://etims.kra.go.ke/common/link/etims/receipt/indexEtimsReceiptData?Data=";
+                else
+                    return $"https://etims-sbx.kra.go.ke/common/link/etims/receipt/indexEtimsReceiptData?Data=";
+            }
+        }
         public virtual TaxClient TaxClient { get; set; }
     }
 

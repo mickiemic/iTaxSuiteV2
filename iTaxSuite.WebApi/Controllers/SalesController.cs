@@ -36,6 +36,31 @@ namespace iTaxSuite.WebApi.Controllers
                 return StatusCode(500, ex.GetBaseException().Message);
             }
         }
+        [HttpPost]
+        [Route("getsaleqr")]
+        public async Task<IActionResult> GetQRImage(int salesTrxId, bool updateMeta = false)
+        {
+            string _method_ = "GetQRImage";
+            try
+            {
+                var result = await _saleService.GetQRImage(salesTrxId, updateMeta);
+                if (result.IsSuccess)
+                {
+                    var salesTransact = result.GetValue();
+                    var file = File(salesTransact.QRImage, "image/png");
+
+                    return Ok(new SaleQRView(salesTransact, 
+                        file.FileContents, file.ContentType));
+                }
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
 
         [HttpPost]
         [Route("refetchoesale")]

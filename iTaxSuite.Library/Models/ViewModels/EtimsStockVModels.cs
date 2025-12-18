@@ -304,6 +304,25 @@ namespace iTaxSuite.Library.Models.ViewModels
             TotalItemCount = ItemList.Count;
         }
 
+        public StockIOSaveReq(ClientBranch clientBranch, StockIORequest stockIORequest, StockItem stockItem)
+        {
+            PIN = clientBranch.TaxClient.TaxNumber;
+            RegistrationTypeCode = ETimsUtils.GetRegistrationType();
+            Remark = stockIORequest.Description;
+            RegistrantID = ModifierID = "S300ETRBridge";
+            RegistrantName = ModifierName = "S300ETRBridge";
+
+            StockTrxDate = stockIORequest.DocDate.ToString(ETIMSConst.FMT_DATEONLY);
+            StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
+
+            var ioItem = new StockIOItem(stockIORequest, stockItem);
+            TotalTaxableAmount = ioItem.TaxableAmount;
+            TotalTaxAmount = ioItem.TaxAmount;
+            TotalAmount = ioItem.TotalAmount;
+            ItemList.Add(ioItem);
+
+            TotalItemCount = 1;
+        }
     }
     public class StockIOSaveResp : ETIMSBaseResp
     {
@@ -350,6 +369,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         }*/
 
         public StockIOItem(EtimsSaleItem sItem)
+            : this()
         {
             ItemSeqNumber = sItem.ItemSeqNumber;
             ItemCode = sItem.ItemCode;
@@ -371,6 +391,51 @@ namespace iTaxSuite.Library.Models.ViewModels
             TaxAmount = sItem.TaxAmount;
             TotalAmount = sItem.TotalAmount;
         }
+
+        public StockIOItem(StockIORequest stockIORequest, StockItem stockItem)
+            : this()
+        {
+            ItemSeqNumber = stockItem.EtrSeqNumber;
+            ItemCode = stockItem.ProductCode;
+            ItemClassCode = stockItem.Product.ItemClassCode;
+            ItemTypeCode = "2";
+            ItemName = stockItem.Product.Description;
+            //ItemExpiredDate = sItem.ItemExpiredDate;
+            //Barcode = stockItem.Product.Barcode;
+            PkgUnitCode = stockItem.Product.PackageUnit;
+            Package = stockIORequest.MoveQuantity;
+            QtyUnitCode = stockItem.Product.QuantityUnit;
+            Quantity = stockIORequest.MoveQuantity;
+            UnitPrice = stockIORequest.UnitPrice;
+            SupplyPrice = stockIORequest.SupplyPrice;
+            DiscountAmount = stockIORequest.DiscountAmount;
+
+            TaxableAmount = stockIORequest.TaxableAmount;
+            TaxTypeCode = "B";
+            TaxAmount = stockIORequest.TaxAmount;
+            TotalAmount = stockIORequest.TotalAmount;
+        }
+    }
+    public class StockIORequest
+    {
+        [StringLength(64)]
+        public string DocNumber { get; set; }
+        public DateTime DocDate { get; set; } = DateTime.Now;
+        [Required]
+        public StockMovementType MovementType { get; set; }
+        public SourceType SourceType { get; set; } = SourceType.MANUALENTRY;
+        [StringLength(128)]
+        public string Description { get; set; }
+        [Required]
+        [StringLength(64)]
+        public string ProductCode { get; set; }
+        public int MoveQuantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal SupplyPrice { get; set; }
+        public decimal TaxableAmount { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal TaxAmount { get; set; }
+        public decimal TotalAmount { get; set; }
     }
 
     public class TrnsPurchaseSaveReq : ETIMSBaseReq

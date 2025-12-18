@@ -14,6 +14,9 @@ namespace iTaxSuite.Library.Models.ViewModels
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public DocumentType DocumentType { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public RecordStatus RecordStatus { get; set; }      = RecordStatus.NONE;
         [Newtonsoft.Json.JsonProperty("invcNo")]
         public int EtimsInvoiceNum { get; set; }            // Internal
         [Newtonsoft.Json.JsonProperty("orgInvcNo")]
@@ -375,38 +378,31 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class TrnsSalesSaveResp : ETIMSBaseResp
     {
         [Newtonsoft.Json.JsonProperty("data")]
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
         public SaleCUData Data { get; set; }
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string CUNumber
+
+        public string GetCUNumber(ClientBranch clientBranch)
         {
-            get
-            {
-                if (!IsSuccess || Data == null)
-                    return null;
-                else
-                {
-                    return Data.sdcId;
-                }
-            }
+            if (!IsSuccess || Data == null || clientBranch?.TaxClient == null)
+                return null;
+
+            return $"{clientBranch.TaxClient.TaxNumber}{clientBranch.BranchCode}{Data.ReceiptSignature}";
         }
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string QRText
+
+        public string GetQRText(ClientBranch clientBranch)
         {
-            get
-            {
-                if (!IsSuccess || Data == null)
-                    return null;
-                else
-                {
-                    //TODO : Switch between LIVE and SandBox
-                    //TODO : Genereate QRText and QRCode
-                    // return $"https://itax.kra.go.ke/KRA-Portal/invoiceChk.htm?actionCode=loadPage&invoiceNo={data.sdcId}";
-                    return $"https://tims-test.kra.go.ke/KRA-Portal/invoiceChk.htm?actionCode=loadPage&invoiceNo={Data.sdcId}";
-                }
-            }
+            if (!IsSuccess || Data == null || clientBranch?.TaxClient == null)
+                return null;
+
+            // return $"https://itax.kra.go.ke/KRA-Portal/invoiceChk.htm?actionCode=loadPage&invoiceNo={data.sdcId}";
+            //return $"https://tims-test.kra.go.ke/KRA-Portal/invoiceChk.htm?actionCode=loadPage&invoiceNo={Data.sdcId}";
+            var baseETRAddress = clientBranch.BaseETRAddress;
+            if (string.IsNullOrWhiteSpace(baseETRAddress))
+                return null;
+
+            return $"{baseETRAddress}{GetCUNumber(clientBranch)}";
         }
+
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string RawResponse { get; set; }
@@ -415,13 +411,27 @@ namespace iTaxSuite.Library.Models.ViewModels
     }
     public class SaleCUData
     {
-        public int rcptNo { get; set; }
-        public string intrlData { get; set; }
-        public string rcptSign { get; set; }
-        public int totRcptNo { get; set; }
-        public string vsdcRcptPbctDate { get; set; }
-        public string sdcId { get; set; }
-        public string mrcNo { get; set; }
+        [Newtonsoft.Json.JsonProperty("rcptNo")]
+        [System.Text.Json.Serialization.JsonPropertyName("rcptNo")]
+        public int ReceiptNumber { get; set; }     // Receipt Number
+        [Newtonsoft.Json.JsonProperty("intrlData")]
+        [System.Text.Json.Serialization.JsonPropertyName("intrlData")]
+        public string InternalData { get; set; }   // Internal Data
+        [Newtonsoft.Json.JsonProperty("rcptSign")]
+        [System.Text.Json.Serialization.JsonPropertyName("rcptSign")]
+        public string ReceiptSignature { get; set; }        // Receipt Signature
+        [Newtonsoft.Json.JsonProperty("totRcptNo")]
+        [System.Text.Json.Serialization.JsonPropertyName("totRcptNo")]
+        public int totRcptNo { get; set; }  // Total Receipt Number
+        [Newtonsoft.Json.JsonProperty("vsdcRcptPbctDate")]
+        [System.Text.Json.Serialization.JsonPropertyName("vsdcRcptPbctDate")]
+        public string vsdcRcptPbctDate { get; set; }    // VSDC Receipt Timestamp
+        [Newtonsoft.Json.JsonProperty("sdcId")]
+        [System.Text.Json.Serialization.JsonPropertyName("sdcId")]
+        public string sdcId { get; set; }   // SDC (Signed Data Controller) Identifier
+        [Newtonsoft.Json.JsonProperty("mrcNo")]
+        [System.Text.Json.Serialization.JsonPropertyName("mrcNo")]
+        public string MRCNumber { get; set; }   // Machine Register Code Number
     }
 
     public class EtimsReceipt
@@ -678,12 +688,45 @@ namespace iTaxSuite.Library.Models.ViewModels
         }
 
     }
-    public class SalesFilter : APagedFilter
+    public class SalesFilter : APDatedFilter
     {
         public bool IsValid => true;
         public RecordStatusGroup RecordGroup { get; set; } = RecordStatusGroup.ALL;
         [StringLength(32)]
         public string DocNumber { get; set; }
+        [StringLength(64)]
+        public string CustNumber { get; set; }
+    }
+    public class SaleQRView
+    {
+        public string CUNumber { get; set; }
+        public string QRText { get; set; }
+        public DateTime? QRTime { get; set; }
+        public byte[] FileContents { get; set; }
+        public string ContentType { get; set; }
+        public string SDCID { get; set; }
+        public string InternalData { get; set; }
+        public int ReceiptNumber { get; set; }
+        public string ReceiptSignature { get; set; }
+        public string EtrTaxClass { get; set; } = "B";
+        public SaleQRView()
+        {
+        }
+
+        public SaleQRView(SalesTransact salesTransact, byte[] fileContents, string contentType)
+            : this()
+        {
+            CUNumber = $"{salesTransact.SDCID}/{salesTransact.ReceiptNumber}";
+            QRText = salesTransact.QRText;
+            QRTime = salesTransact.QRTime;
+            SDCID = salesTransact.SDCID;
+            ReceiptNumber = salesTransact.ReceiptNumber;
+            InternalData = salesTransact.InternalData.InsertXterByPos(4, "-");
+            ReceiptSignature = salesTransact.ReceiptSignature.InsertXterByPos(4, "-");
+            //EtrTaxClass = salesTransact.EtrTaxClass;
+            FileContents = fileContents;
+            ContentType = contentType;
+        }
     }
     public class QueueSaveSale
     {
@@ -878,5 +921,6 @@ namespace iTaxSuite.Library.Models.ViewModels
         [System.Text.Json.Serialization.JsonPropertyName("totAmt")]
         public decimal TotalAmount { get; set; }
     }
+
 
 }

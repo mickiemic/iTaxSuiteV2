@@ -60,7 +60,7 @@ namespace iTaxSuite.Library.Models.Entities
                 BranchCode = BranchCode,
                 ReqType = ETIMSReqType.CREATE_ITEMS,
                 DocNumber = CacheKey,
-                DocStamp = Product?.ProductData?.SourceStamp?.ToString("s"),
+                DocStamp = Product?.ProductData?.SourceStamp ?? DateTime.Now,
                 SourceApp = "IC",
                 ReqAddress = $"{clientBranch.EtrAddress}/items/saveItems",
                 ReqKey = CacheKey,
@@ -115,7 +115,8 @@ namespace iTaxSuite.Library.Models.Entities
             CreatedBy = "Sys-Admin";
         }
 
-        public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.Invoice pInvoice, StockIOSaveReq stockIOSaveReq)
+        public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.Invoice pInvoice, 
+            StockIOSaveReq stockIOSaveReq)
             : this()
         {
             MovementType = StockMovementType.Purchase;
@@ -125,8 +126,19 @@ namespace iTaxSuite.Library.Models.Entities
             DocDate = pInvoice.InvoiceDate.Value;
             CreatedBy = "Sys-Admin";
         }
+
+        public StockMovement(ClientBranch clientBranch, StockIORequest stockIORequest)
+        {
+            MovementType = stockIORequest.MovementType;
+            SourceType = SourceType.MANUALENTRY;
+            BranchCode = clientBranch.BranchCode;
+            DocNumber = $"{BranchCode}:{stockIORequest.DocNumber}";
+            DocDate = stockIORequest.DocDate;
+            Description = stockIORequest.Description;
+            CreatedBy = "Sys-Admin";
+        }
     }
-    public class MovementFilter : APagedFilter
+    public class MovementFilter : APDatedFilter
     {
         public bool IsValid => true;
         public RecordStatusGroup RecordGroup { get; set; } = RecordStatusGroup.ALL;
@@ -156,8 +168,17 @@ namespace iTaxSuite.Library.Models.Entities
             SourceStamp = oeInvoice.InvoiceDate.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(oeInvoice);
             StockIOSaveReq = stockIOSaveReq;
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
         }
+
+        public StockMovData(StockMovement stockMovement, StockIORequest stockIORequest, StockIOSaveReq stockIOSaveReq)
+        {
+            SourceStamp = stockIORequest.DocDate;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIORequest);
+            StockIOSaveReq = stockIOSaveReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
+        }
+
         public StockIOSaveReq GetEtimsRequest()
         {
             if (string.IsNullOrWhiteSpace(RequestPayload))
@@ -266,7 +287,7 @@ namespace iTaxSuite.Library.Models.Entities
             SourceStamp = item.DateLastMaintained.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
             SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
         }
         public SaveItemReq GetEtimsRequest()
         {

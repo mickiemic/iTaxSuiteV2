@@ -123,6 +123,15 @@ namespace iTaxSuite.Library.Extensions
         {
             return Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
         }
+        public static string InsertXterByPos(this string input, int position, string separator)
+        {
+            if (string.IsNullOrWhiteSpace(input) || position <= 0 || string.IsNullOrWhiteSpace(separator))
+                return input;
+            var output = Regex.Replace(input, $".{{{position}}}", $"$0{separator}");
+            if (output.EndsWith(separator))
+                output = output.Substring(0, (output.Length - separator.Length));
+            return output;
+        }
     }
 
     public static class LinqExtensions

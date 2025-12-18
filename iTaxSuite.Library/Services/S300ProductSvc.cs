@@ -11,11 +11,13 @@ namespace iTaxSuite.Library.Services
 {
     public interface IS300ProductSvc
     {
+        Task<Result<StockMovement, string>> CreateStockMovement(StockIORequest stockIORequest);
         Task<ICItems> FetchProducts();
         Task<Result<PagedResult<Product>, string>> GetProducts(ProductFilter filter);
         Task<Result<PagedResult<StockItem>, string>> GetStockItems(StockFilter filter);
         Task<Result<PagedResult<StockMovement>, string>> GetStockMovements(MovementFilter filter);
         Task<Result<EtimsTransact, string>> ProcessSaveProduct(EtimsTransact transact);
+        Task<Result<EtimsTransact, string>> ProcessSaveStockIO(EtimsTransact transact);
         Task<Result<EtimsTransact, string>> QueueSaveProduct(BranchStockKey filter);
         Task<Result<Product, string>> ReFetchProduct(ProductKey productKey);
         Task<Result<BranchStockLevel, string>> SaveStockLevel(SaveStockLevel saveStockLevel);
@@ -200,6 +202,17 @@ namespace iTaxSuite.Library.Services
                 if (!string.IsNullOrWhiteSpace(filter.DocNumber))
                     query = query.Where(x => x.DocNumber.Equals(filter.DocNumber));
 
+                if (filter.HasAnyDate())
+                {
+                    string _dtFilterError = filter.GetDatesError();
+                    if (!string.IsNullOrWhiteSpace(_dtFilterError))
+                    {
+                        return _dtFilterError;
+                    }
+                    query = query.Where(x => x.DocDate >= filter.StartTime.Value
+                        && x.DocDate <= filter.EndTime.Value);
+                }
+
                 result.Count = await query.CountAsync();
                 if (filter.Sort != null)
                     query = filter.PageAndOrder(query);
@@ -215,7 +228,38 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
         }
+        public async Task<Result<StockMovement, string>> CreateStockMovement(StockIORequest stockIORequest)
+        {
+            string _method_ = "CreateStockMovement";
+            StockMovement stockMovement = null;
+            string _strError = string.Empty;
+            try
+            {
+                var stockItem = await _dbContext.StockItems.Include(e => e.Product)
+                    .FirstOrDefaultAsync(x => x.BranchCode == _clientBranch.BranchCode 
+                    && x.ProductCode == stockIORequest.ProductCode);
+                if (stockItem is null)
+                {
+                    _strError = $"StockItem with ProductCode:{stockIORequest.ProductCode} not found";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
 
+                stockMovement = new StockMovement(_clientBranch, stockIORequest);
+                var stockIOSaveReq = new StockIOSaveReq(_clientBranch, stockIORequest, stockItem);
+                var stockTrxData = new StockMovData(stockMovement, stockIORequest, stockIOSaveReq);
+                stockMovement.StockMovData = stockTrxData;
+
+                var strJosn = JsonConvert.SerializeObject(stockIOSaveReq);
+
+                return stockMovement;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
         private async Task<bool> CacheSaveStockItem(string streamName, StockItem stockItem)
         {
             var res = await _baseDb.SetHashValueAsync(CacheConst.PRODUCT_HASHKEY, stockItem.CacheKey, new StockItemKey(stockItem));
@@ -511,6 +555,8 @@ namespace iTaxSuite.Library.Services
                             await _dbContext.ProductData.Where(e => e.ProductCode == stockItem.ProductCode).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                             );
                             await _dbContext.StockItems.Where(e => e.ProductCode == stockItem.ProductCode && e.BranchCode == stockItem.BranchCode)
                                 .ExecuteUpdateAsync(x => x
@@ -552,6 +598,8 @@ namespace iTaxSuite.Library.Services
                         await _dbContext.ProductData.Where(e => e.ProductCode == stockItem.ProductCode).ExecuteUpdateAsync(x => x
                             .SetProperty(x => x.ResponsePayload, saveItemResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
+                            .SetProperty(x => x.UpdatedOn, tStamp)
+                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                         );
                         await _dbContext.StockItems.Where(e => e.ProductCode == stockItem.ProductCode && e.BranchCode == stockItem.BranchCode)
                             .ExecuteUpdateAsync(x => x
@@ -604,9 +652,15 @@ namespace iTaxSuite.Library.Services
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
                     .Where(e => e.BranchCode == saveStockLevel.BranchCode && e.ProductCode == saveStockLevel.ProductCode)
                     .OrderBy(e => e.CreatedOn).AsNoTracking().FirstOrDefaultAsync();
-                if (stockItem is null || !completeStatii.Contains(stockItem.RecordStatus))
+                if (stockItem is null)
                 {
                     _strError = $"StockItem with BranchCode {saveStockLevel.BranchCode} and ProductCode {saveStockLevel.ProductCode} Not Found";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
+                if (!completeStatii.Contains(stockItem.RecordStatus))
+                {
+                    _strError = $"StockItem with BranchCode {saveStockLevel.BranchCode} and ProductCode {saveStockLevel.ProductCode} Status is not registered successfully";
                     UI.Error($"{_method_} error: {_strError}");
                     return _strError;
                 }
@@ -658,6 +712,111 @@ namespace iTaxSuite.Library.Services
                 }
                 
                 return result;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
+        public async Task<Result<EtimsTransact, string>> ProcessSaveStockIO(EtimsTransact transactIO)
+        {
+            string _method_ = "ProcessSaveStockIO";
+            string _strError = string.Empty;
+            try
+            {
+                var _ioParts = transactIO.DocNumber.Split(":");
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL };
+
+                // Get IO Transaction
+                var stockMovement = await _dbContext.StockMovement.Include(e => e.StockMovData)
+                    .Where(e => e.BranchCode == _ioParts[0] && e.DocNumber == transactIO.DocNumber).OrderBy(e => e.CreatedOn)
+                    .AsNoTracking().FirstOrDefaultAsync();
+                var etimsReqTwo = stockMovement.StockMovData.GetEtimsRequest();
+
+                var eTimsRespIO = await _etimsService.SaveEtimsStockIO(etimsReqTwo);
+                using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        var tStamp = DateTime.Now;
+                        var recordStatus = RecordStatus.POST_FAIL;
+
+                        if (eTimsRespIO.IsError)
+                        {
+                            recordStatus = RecordStatus.POST_FAIL;
+                            _strError = eTimsRespIO.GetError();
+                            UI.Error($"Saving StockMovement: {stockMovement.CacheKey} failed: {eTimsRespIO.GetError()}");
+
+                            // Update & Save Transact Changes
+                            await _dbContext.EtimsTransacts.Where(x => x.DocNumber == transactIO.DocNumber && x.ReqType == transactIO.ReqType
+                                && x.BranchCode == transactIO.BranchCode && x.DocStamp == transactIO.DocStamp).ExecuteUpdateAsync(x => x
+                                .SetProperty(x => x.RecordStatus, recordStatus)
+                                .SetProperty(x => x.Tries, x => x.Tries + 1)
+                                .SetProperty(x => x.LastTry, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            );
+                            await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
+                                .SetProperty(x => x.ResponsePayload, _strError)
+                                .SetProperty(x => x.ResponseTime, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            );
+                            await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
+                                .ExecuteUpdateAsync(x => x
+                                .SetProperty(x => x.Remark, _strError)
+                                .SetProperty(x => x.RecordStatus, recordStatus)
+                                .SetProperty(x => x.Tries, x => x.Tries + 1)
+                                .SetProperty(x => x.LastTry, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            );
+
+                            await _dbTrans.CommitAsync();
+                            return _strError;
+                        }
+
+                        StockIOSaveResp stockIOSaveResp = eTimsRespIO.GetValue();
+                        if (stockIOSaveResp.IsSuccess)
+                            recordStatus = RecordStatus.POST_OK;
+
+                        await _dbContext.EtimsTransacts.Where(x => x.DocNumber == transactIO.DocNumber && x.ReqType == transactIO.ReqType
+                            && x.BranchCode == transactIO.BranchCode && x.DocStamp == transactIO.DocStamp).ExecuteUpdateAsync(x => x
+                            .SetProperty(x => x.RecordStatus, recordStatus)
+                            .SetProperty(x => x.Tries, x => x.Tries + 1)
+                            .SetProperty(x => x.LastTry, tStamp)
+                            .SetProperty(x => x.UpdatedOn, tStamp)
+                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                        );
+                        await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
+                            .SetProperty(x => x.ResponsePayload, stockIOSaveResp.RawResponse)
+                            .SetProperty(x => x.ResponseTime, tStamp)
+                            .SetProperty(x => x.UpdatedOn, tStamp)
+                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                        );
+                        await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
+                            .ExecuteUpdateAsync(x => x
+                            .SetProperty(x => x.Remark, stockIOSaveResp.ResultMsg)
+                            .SetProperty(x => x.RecordStatus, recordStatus)
+                            .SetProperty(x => x.Tries, x => x.Tries + 1)
+                            .SetProperty(x => x.LastTry, tStamp)
+                            .SetProperty(x => x.UpdatedOn, tStamp)
+                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                        );
+
+                        await _dbTrans.CommitAsync();
+                    }
+                    catch (Exception iex)
+                    {
+                        await _dbTrans.RollbackAsync();
+                        UI.Error(iex, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
+                        throw;
+                    }
+                }
+
+                return transactIO;
             }
             catch (Exception ex)
             {

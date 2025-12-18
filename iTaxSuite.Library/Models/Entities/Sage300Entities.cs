@@ -7,7 +7,8 @@ namespace iTaxSuite.Library.Models.Entities
     public enum SourceType
     {
         Sage300CERP = 1001,
-        SageX3ERP = 2001
+        SageX3ERP = 2001,
+        MANUALENTRY = 9001
     }
 
     [Table("ExtSystConfig")]

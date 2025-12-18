@@ -36,8 +36,34 @@ namespace iTaxSuite.Library.Models.Entities
         public string VendorTaxNumber { get; set; }
         [StringLength(64)]
         public string Reference { get; set; }
+        // *** Doc Amounts ***/
+        [StringLength(3)]
+        public string DocSrcCurr { get; set; }
+        [StringLength(3)]
+        public string DocHomeCurr { get; set; }
         [Precision(19, 3)]
-        public decimal TotalAmount { get; set; }
+        public decimal DocExchRate { get; set; }
+        [Required]
+        [NotMinValue]
+        public DateTime DocRateDate { get; set; }
+        // *** Doc Amounts ***/
+        [Precision(19, 3)]
+        public decimal SrcTBaseAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal HomeTBaseAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal SrcDiscAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal HomeDiscAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal SrcTotTaxAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal HomeTotTaxAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal SrcTotAmtWTax { get; set; }
+        [Precision(19, 3)]
+        public decimal HomeTotAmtWTax { get; set; }
+        // *** EOF Doc Amounts ***/
         [StringLength(32)]
         public string Location { get; set; }
         public PurchTrxData? PurchTrxData { get; set; }
@@ -50,7 +76,7 @@ namespace iTaxSuite.Library.Models.Entities
         public PurchTransact()
         {
         }
-        public PurchTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AP.WebApi.Models.Vendor vendor, Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.Invoice invoice)
+        /*public PurchTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AP.WebApi.Models.Vendor vendor, Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.Invoice invoice)
             : this()
         {
             BranchCode = clientBranch.BranchCode;
@@ -61,10 +87,17 @@ namespace iTaxSuite.Library.Models.Entities
             VendorNumber = vendor.VendorNumber;
             VendorName = vendor.VendorName;
             Reference = invoice.Reference;
-            TotalAmount = invoice.Total;
             Location = invoice.ShipToLocation;
             CreatedBy = "Sys-Admin";
-        }
+
+            DocSrcCurr = DocHomeCurr = clientBranch.TaxClient.Currency;
+            DocExchRate = 1;
+            DocRateDate = DateTime.Today;
+
+            SrcTotAmtWTax = invoice.Total;
+            HomeTotAmtWTax = invoice.Total * DocExchRate;
+
+        }*/
 
         public PurchTransact(ClientBranch clientBranch, PurchaseSale purchaseSale)
             : this()
@@ -86,8 +119,18 @@ namespace iTaxSuite.Library.Models.Entities
             VendorName = purchaseSale.SupplierName;
             VendorTaxNumber = purchaseSale.SupplierPIN;
             Reference = purchaseSale.Reference;
-            TotalAmount = purchaseSale.TotalAmount;
             CreatedBy = "Sys-Admin";
+
+            DocSrcCurr = DocHomeCurr = clientBranch.TaxClient.Currency;
+            DocExchRate = 1;
+            DocRateDate = DateTime.Today;
+
+            SrcTBaseAmt = purchaseSale.TotalTaxableAmount;
+            HomeTBaseAmt = purchaseSale.TotalTaxableAmount * DocExchRate;
+            SrcTotTaxAmt = purchaseSale.TotalTaxAmount;
+            HomeTotTaxAmt = purchaseSale.TotalTaxAmount * DocExchRate;
+            SrcTotAmtWTax = purchaseSale.TotalAmount;
+            HomeTotAmtWTax = purchaseSale.TotalAmount * DocExchRate;
         }
 
         public bool IsValid()
@@ -121,7 +164,7 @@ namespace iTaxSuite.Library.Models.Entities
             SourceStamp = invoice.InvoiceDate.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(invoice);
             TrnsPurchaseSaveReq = purchaseSaveReq;
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSaveReq);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSaveReq, new DecimalFormatConverter());
         }
 
         public PurchTrxData(PurchTransact purchTransact, TrnsPurchaseSaveReq purchaseSaveReq, PurchaseSale purchaseSale)
@@ -129,7 +172,7 @@ namespace iTaxSuite.Library.Models.Entities
             SourceStamp = purchTransact.DocStamp;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSale);
             TrnsPurchaseSaveReq = purchaseSaveReq;
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSaveReq);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSaveReq, new DecimalFormatConverter());
         }
 
         public TrnsPurchaseSaveReq GetEtimsRequest()
@@ -142,7 +185,7 @@ namespace iTaxSuite.Library.Models.Entities
 
     }
 
-    public class PurchaseFilter : APagedFilter
+    public class PurchaseFilter : APDatedFilter
     {
         public bool IsValid => true;
         public RecordStatusGroup RecordGroup { get; set; } = RecordStatusGroup.ALL;

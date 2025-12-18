@@ -96,6 +96,25 @@ namespace iTaxSuite.WebApi.Controllers
             }
         }
         [HttpPost]
+        [Route("createstockmovement")]
+        public async Task<IActionResult> CreateStockMovement(StockIORequest stockIORequest)
+        {
+            string _method_ = "CreateStockMovement";
+            try
+            {
+                var result = await _productSvc.CreateStockMovement(stockIORequest);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+        [HttpPost]
         [Route("setitemtaxcode")]
         public async Task<IActionResult> SetItemTaxCode()
         {

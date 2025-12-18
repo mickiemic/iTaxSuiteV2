@@ -1,6 +1,7 @@
 ﻿using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Sage.CA.SBS.ERP.Sage300.Common.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Runtime.Serialization;
@@ -95,7 +96,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     public record Sorting(string Property, SortOrder Order);
     public abstract class APagedFilter
     {
-        public int Skip { get; set; } = 1;
+        public int Skip { get; set; } = 0;
         public int Take { get; set; } = 0;
         public Sorting? Sort { get; set; }
         public IQueryable<T> PageAndOrder<T>(IQueryable<T> queryable) where T : BaseEntity
@@ -124,8 +125,38 @@ namespace iTaxSuite.Library.Models.ViewModels
             }
             return queryable;
         }
-
     }
+    public abstract class APDatedFilter : APagedFilter
+    {
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public bool HasValidDates()
+        {
+            if (!StartTime.HasValue || !EndTime.HasValue)
+                return false;
+            return (StartTime.Value < EndTime.Value);
+        }
+        public bool HasAnyDate()
+        {
+            return (StartTime.HasValue || EndTime.HasValue);
+        }
+        public string GetDatesError()
+        {
+            if (!HasAnyDate())   // No Dates Provided -> no errors
+                return null;
+            if (HasValidDates())
+                return null;
+            if (!StartTime.HasValue)
+                return "StartTime value is missing/invalid";
+            if (!EndTime.HasValue)
+                return "EndTime value is missing/invalid";
+            if (StartTime.Value >= EndTime.Value)
+                return $"StartTime {StartTime.Value:s} is greater than or equal to {EndTime.Value:s}";
+
+            return null;
+        }
+    }
+
     public class PagedResult<T>
     {
         public int Count { get; set; }

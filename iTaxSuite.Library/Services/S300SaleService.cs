@@ -3,9 +3,11 @@ using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using StackExchange.Redis;
+using System.Xml.Linq;
 
 namespace iTaxSuite.Library.Services
 {
@@ -13,6 +15,7 @@ namespace iTaxSuite.Library.Services
     {
         Task<Result<OEInvoices, string>> FetchOEInvoices();
         Task<Result<Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer, string>> GetARCustomer(SageDocFilter sageFilter);
+        Task<Result<SalesTransact, string>> GetQRImage(int salesTrxId, bool updateMeta = false);
         Task<Result<PagedResult<SalesTransact>, string>> GetSales(SalesFilter filter);
         Task<Result<EtimsTransact, string>> ProcessSaveSale(EtimsTransact transactSale);
         Task<Result<EtimsTransact, string>> QueueSaveSale(QueueSaveSale filter);
@@ -67,6 +70,19 @@ namespace iTaxSuite.Library.Services
 
                 if (!string.IsNullOrWhiteSpace(filter.DocNumber))
                     query = query.Where(x => x.DocNumber.Equals(filter.DocNumber));
+                if (!string.IsNullOrWhiteSpace(filter.CustNumber))
+                    query = query.Where(x => x.CustNumber.Equals(filter.CustNumber));
+
+                if (filter.HasAnyDate())
+                {
+                    string _dtFilterError = filter.GetDatesError();
+                    if (!string.IsNullOrWhiteSpace(_dtFilterError))
+                    {
+                        return _dtFilterError;
+                    }
+                    query = query.Where(x => x.DocStamp >= filter.StartTime.Value 
+                        && x.DocStamp <= filter.EndTime.Value);
+                }
 
                 result.Count = await query.CountAsync();
                 if (filter.Sort != null)
@@ -76,6 +92,67 @@ namespace iTaxSuite.Library.Services
 
                 result.Result = await query.ToListAsync();
                 return result;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
+        public async Task<Result<SalesTransact, string>> GetQRImage(int salesTrxId, bool updateMeta = false)
+        {
+            string _method_ = "GetQRImage";
+            try
+            {
+                if (updateMeta)
+                {
+                    var xData = await _dbContext.SalesTransact.Include(x => x.SalesTrxData)
+                        .Where(x => !string.IsNullOrWhiteSpace(x.SalesTrxData.ResponsePayload) 
+                        //&& (x.QRImage == null || x.QRImage.Length == 0)
+                        ).ToListAsync();
+                    foreach (var item in xData)
+                    {
+                        var etrSalesResp = JsonConvert.DeserializeObject<TrnsSalesSaveResp>(item.SalesTrxData.ResponsePayload);
+                        var cuNumber = etrSalesResp.GetCUNumber(_clientBranch);
+                        if (string.IsNullOrWhiteSpace(cuNumber))
+                        {
+                            UI.Error($"No Valid CUNumber Generated for receipt: {item.SalesTrxID}");
+                            continue;
+                        }
+                        var qrText = etrSalesResp.GetQRText(_clientBranch);
+                        if (string.IsNullOrWhiteSpace(qrText))
+                        {
+                            UI.Error($"No Valid QRText Generated for receipt: {item.SalesTrxID}");
+                            continue;
+                        }
+                        var qrData = FileBinUtils.GenerateQRCode(qrText);
+                        if (qrData is null or [])
+                        {
+                            UI.Error($"No Valid QRImage Generated for receipt: {item.SalesTrxID}");
+                            continue;
+                        }
+
+                        await _dbContext.SalesTransact.Where(e => e.SalesTrxID == item.SalesTrxID)
+                            .ExecuteUpdateAsync(x => x
+                            .SetProperty(x => x.CUNumber, cuNumber)
+                            .SetProperty(x => x.QRText, qrText)
+                            .SetProperty(x => x.QRTime, item.SalesTrxData.ResponseTime)
+                            .SetProperty(x => x.QRImage, qrData)
+                            .SetProperty(x => x.SDCID, etrSalesResp.Data.sdcId)
+                            .SetProperty(x => x.InternalData, etrSalesResp.Data.InternalData)
+                            .SetProperty(x => x.ReceiptNumber, etrSalesResp.Data.ReceiptNumber)
+                            .SetProperty(x => x.ReceiptSignature, etrSalesResp.Data.ReceiptSignature)
+                        );
+                    }
+                }
+
+                var salesTransact = await _dbContext.SalesTransact.FirstOrDefaultAsync(x => x.SalesTrxID == salesTrxId);
+                if (salesTransact is null || salesTransact.QRImage is null)
+                {
+                    return $"No Image found for ID:{salesTrxId}";
+                }
+                return salesTransact;
             }
             catch (Exception ex)
             {
@@ -164,7 +241,7 @@ namespace iTaxSuite.Library.Services
                         }
                         _customer = sCustomer.GetValue();
 
-                        var oeSaleTrx = new SalesTransact(_clientBranch, _customer, invoice);
+                        var oeSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, taxAuthKeys);
                         
                         var trnsSalesSaveReq = new TrnsSalesSaveReq(_clientBranch, invoice, _taxGroup, taxAuthKeys, _customer);
                         var mapResult = await _masterDataSvc.MapSalesInvcAttribs(trnsSalesSaveReq);
@@ -172,9 +249,13 @@ namespace iTaxSuite.Library.Services
                         {
                             _strError = mapResult.GetError();
                             UI.Error($"{_method_} error : {_strError}");
-                            return _strError;
+                            //return _strError;
                         }
                         trnsSalesSaveReq = mapResult.GetValue();
+                        if (trnsSalesSaveReq.RecordStatus == RecordStatus.NONE)
+                            oeSaleTrx.RecordStatus = RecordStatus.QUEUEDOUT;
+                        else
+                            oeSaleTrx.RecordStatus = RecordStatus.DEPENDS;
 
                         var salesTrxData = new SalesTrxData(oeSaleTrx, trnsSalesSaveReq, invoice);
                         oeSaleTrx.SalesTrxData = salesTrxData;
@@ -347,7 +428,7 @@ namespace iTaxSuite.Library.Services
                 var _oldSaveSalesRes = JsonConvert.DeserializeObject<TrnsSalesSaveReq>(salesTrxData.RequestPayload);
                 if (!_oldSaveSalesRes.HasEqualValue(trnsSalesSaveReq))
                 {
-                    salesTrxData.RequestPayload = JsonConvert.SerializeObject(trnsSalesSaveReq);
+                    salesTrxData.RequestPayload = JsonConvert.SerializeObject(trnsSalesSaveReq, new DecimalFormatConverter());
                     salesTrxData.UpdatedOn = DateTime.Now;
                     salesTrxData.UpdatedBy = "Sys-Admin";
                     int affected = await _dbContext.SaveChangesAsync();
@@ -413,27 +494,52 @@ namespace iTaxSuite.Library.Services
         public async Task<Result<EtimsTransact, string>> QueueSaveSale(QueueSaveSale filter)
         {
             string _method_ = "QueueSaveSale";
+            string _strError = null;
             EtimsTransact transactSale = null, transactStock = null;
             try
             {
                 if (string.IsNullOrWhiteSpace(filter.DocNumber) || string.IsNullOrWhiteSpace(filter.BranchCode))
-                    return $"Invalid Filter Provided : [{filter.BranchCode}:{filter.DocNumber}]";
+                {
+                    _strError = $"Invalid Filter Provided : [{filter.BranchCode}:{filter.DocNumber}]";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
 
                 var saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
                     .Where(e => e.BranchCode.Equals(filter.BranchCode) && e.DocNumber.Equals(filter.DocNumber))
                     .FirstOrDefaultAsync();
                 if (saleTransact is null)
-                    return $"No valid stock item found for Document: {filter.DocNumber}";
+                {
+                    _strError = $"No valid stock item found for Document: {filter.DocNumber}";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
                 //TODO: Check Status before queueing
 
                 transactSale = saleTransact.GetSalesTransact(_clientBranch);
                 if (transactSale is null)
-                    return $"No valid Sales transaction generated for Document: {filter.DocNumber}";
+                {
+                    _strError = $"No valid Sales transaction generated for Document: {filter.DocNumber}";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
+                // check status before processing
+                if (saleTransact.RecordStatus == RecordStatus.POST_OK || saleTransact.RecordStatus == RecordStatus.POST_FAIL
+                    || saleTransact.RecordStatus == RecordStatus.POST_DUPL || !saleTransact.IsValid())
+                {
+                    _strError = $"EtimsTransact generation for Sale : [{filter.BranchCode}:{filter.DocNumber}] failed: invalid status";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
 
                 transactStock = saleTransact.GetStockTransact(_clientBranch);
                 if (transactStock is null)
-                    return $"No valid StockIO transaction generated for Document: {filter.DocNumber}";
-
+                {
+                    _strError = $"No valid StockIO transaction generated for Document: {filter.DocNumber}";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
+                
                 using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
                 {
                     try
@@ -441,12 +547,16 @@ namespace iTaxSuite.Library.Services
                         if (_dbContext.EtimsTransacts.AddIfNotExists(transactSale, x => x.DocNumber == transactSale.DocNumber
                             && x.ReqType == transactSale.ReqType && x.BranchCode == transactSale.BranchCode && x.DocStamp == transactSale.DocStamp) == null)
                         {
-                            return $"EtimsTransaction for Document: {filter.DocNumber} Already Exists";
+                            _strError = $"EtimsTransaction for Document: {filter.DocNumber} Already Exists";
+                            UI.Error($"{_method_} error: {_strError}");
+                            return _strError;
                         }
                         if (_dbContext.EtimsTransacts.AddIfNotExists(transactStock, x => x.DocNumber == transactStock.DocNumber
                             && x.ReqType == transactStock.ReqType && x.BranchCode == transactStock.BranchCode && x.DocStamp == transactStock.DocStamp) == null)
                         {
-                            return $"EtimsTransaction for Document: {filter.DocNumber} Already Exists";
+                            _strError = $"EtimsTransaction for Document: {filter.DocNumber} Already Exists";
+                            UI.Error($"{_method_} error: {_strError}");
+                            return _strError;
                         }
                         if (_dbContext.SaveChanges() < 1)
                         {
@@ -511,6 +621,8 @@ namespace iTaxSuite.Library.Services
                             await _dbContext.SalesTrxData.Where(e => e.SalesTrxID == saleTransact.SalesTrxID).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                             );
                             await _dbContext.SalesTransact.Where(e => e.SalesTrxID == saleTransact.SalesTrxID)
                                 .ExecuteUpdateAsync(x => x
@@ -533,6 +645,29 @@ namespace iTaxSuite.Library.Services
                         else if (saleTrxResp.IsDuplicate)
                             recordStatus = RecordStatus.POST_DUPL;
 
+                        var cuNumber = saleTrxResp.GetCUNumber(_clientBranch);
+                        if (string.IsNullOrWhiteSpace(cuNumber))
+                        {
+                            _strError = $"No Valid CUNumber Generated for receipt: {saleTransact.SalesTrxID}";
+                            UI.Error($"{_method_} error: {saleTransact.SalesTrxID}");
+                        }
+                        byte[] qrData = null;
+                        string qrText = saleTrxResp.GetQRText(_clientBranch);
+                        if (string.IsNullOrWhiteSpace(qrText))
+                        {
+                            _strError = $"No Valid QRText Generated for receipt: {saleTransact.SalesTrxID}";
+                            UI.Error($"{_method_} error: {saleTransact.SalesTrxID}");
+                        }
+                        else
+                        {
+                            qrData = FileBinUtils.GenerateQRCode(qrText);
+                            if (qrData is null or [])
+                            {
+                                _strError = $"No Valid QRImage Generated for receipt: {saleTransact.SalesTrxID}";
+                                UI.Error($"{_method_} error: {saleTransact.SalesTrxID}");
+                            }
+                        }
+
                         // Update & Save Transact Changes
                         await _dbContext.EtimsTransacts.Where(x => x.DocNumber == transactSale.DocNumber && x.ReqType == transactSale.ReqType
                             && x.BranchCode == transactSale.BranchCode && x.DocStamp == transactSale.DocStamp).ExecuteUpdateAsync(x => x
@@ -542,23 +677,49 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.UpdatedOn, tStamp)
                             .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                         );
-                        await _dbContext.SalesTrxData.Where(e => e.SalesTrxID == saleTransact.SalesTrxID).ExecuteUpdateAsync(x => x
-                            .SetProperty(x => x.ResponsePayload, saleTrxResp.RawResponse)
-                            .SetProperty(x => x.ResponseTime, tStamp)
-                        );
+                        if (saleTrxResp.IsDuplicate && !string.IsNullOrWhiteSpace(saleTransact.SalesTrxData.RequestPayload))
+                        {
+                            var oldEtrResp = JsonConvert.DeserializeObject<TrnsSalesSaveResp>(saleTransact.SalesTrxData.RequestPayload);
+                            if (!oldEtrResp.IsSuccess) // Only update when the newer response is better than the old one
+                            {
+                                await _dbContext.SalesTrxData.Where(e => e.SalesTrxID == saleTransact.SalesTrxID).ExecuteUpdateAsync(x => x
+                                    .SetProperty(x => x.ResponsePayload, saleTrxResp.RawResponse)
+                                    .SetProperty(x => x.ResponseTime, tStamp)
+                                    .SetProperty(x => x.UpdatedOn, tStamp)
+                                    .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                );
+                            }
+                        }
+                        else
+                        {
+                            await _dbContext.SalesTrxData.Where(e => e.SalesTrxID == saleTransact.SalesTrxID).ExecuteUpdateAsync(x => x
+                                .SetProperty(x => x.ResponsePayload, saleTrxResp.RawResponse)
+                                .SetProperty(x => x.ResponseTime, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            );
+                        }
                         await _dbContext.SalesTransact.Where(e => e.SalesTrxID == saleTransact.SalesTrxID)
                             .ExecuteUpdateAsync(x => x
                             .SetProperty(x => x.Remark, saleTrxResp.ResultMsg)
                             .SetProperty(x => x.RecordStatus, recordStatus)
+                            .SetProperty(x => x.CUNumber, cuNumber)
+                            .SetProperty(x => x.QRText, qrText)
+                            .SetProperty(x => x.QRTime, tStamp)
+                            .SetProperty(x => x.QRImage, qrData)
+                            .SetProperty(x => x.SDCID, saleTrxResp.Data.sdcId)
+                            .SetProperty(x => x.InternalData, saleTrxResp.Data.InternalData)
+                            .SetProperty(x => x.ReceiptNumber, saleTrxResp.Data.ReceiptNumber)
+                            .SetProperty(x => x.ReceiptSignature, saleTrxResp.Data.ReceiptSignature)
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
                             .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                         );
-                        await _dbTrans.CommitAsync();
 
                         if (!saleTrxResp.IsSuccess && !saleTrxResp.IsDuplicate)
-                        { 
+                        {
+                            await _dbTrans.CommitAsync();
                             _strError = etimsRespSale.GetError();
                             UI.Error($"Saving SaleTransact: {saleTransact.CacheKey} failed: {etimsRespSale.GetError()}");
                             return _strError;
@@ -567,7 +728,7 @@ namespace iTaxSuite.Library.Services
                         // *** Process StockIO
                         var transactIO = await _dbContext.EtimsTransacts.Where(e => e.ParentKey == transactSale.ReqKey)
                             .OrderBy(e => e.CreatedOn).AsNoTracking().FirstOrDefaultAsync();
-                        var _ioParts = transactSale.DocNumber.Split(":");
+                        var _ioParts = transactIO.DocNumber.Split(":");
                         if (completeStatii.Contains(transactIO.RecordStatus))
                         {
                             UI.Warn($"IO EtimsTransact for DocNumber {transactSale.DocNumber} is already processed.");
@@ -576,7 +737,7 @@ namespace iTaxSuite.Library.Services
 
                         // Get IO Transaction
                         var stockMovement = await _dbContext.StockMovement.Include(e => e.StockMovData)
-                            .Where(e => e.BranchCode == _ioParts[0] && e.DocNumber == _ioParts[1]).OrderBy(e => e.CreatedOn)
+                            .Where(e => e.BranchCode == _ioParts[0] && e.DocNumber == transactSale.DocNumber).OrderBy(e => e.CreatedOn)
                             .AsNoTracking().FirstOrDefaultAsync();
                         var etimsReqTwo = stockMovement.StockMovData.GetEtimsRequest();
 
@@ -585,7 +746,7 @@ namespace iTaxSuite.Library.Services
                         if (eTimsRespIO.IsError)
                         {
                             recordStatus = RecordStatus.POST_FAIL;
-                            _strError = etimsRespSale.GetError();
+                            _strError = eTimsRespIO.GetError();
                             UI.Error($"Saving StockMovement: {stockMovement.CacheKey} failed: {eTimsRespIO.GetError()}");
 
                             // Update & Save Transact Changes
@@ -600,6 +761,8 @@ namespace iTaxSuite.Library.Services
                             await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                             );
                             await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
                                 .ExecuteUpdateAsync(x => x
@@ -628,12 +791,14 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                         );
                         await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
-                            .SetProperty(x => x.ResponsePayload, _strError)
+                            .SetProperty(x => x.ResponsePayload, stockIOSaveResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
+                            .SetProperty(x => x.UpdatedOn, tStamp)
+                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                         );
                         await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
                             .ExecuteUpdateAsync(x => x
-                            .SetProperty(x => x.Remark, _strError)
+                            .SetProperty(x => x.Remark, stockIOSaveResp.ResultMsg)
                             .SetProperty(x => x.RecordStatus, recordStatus)
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)

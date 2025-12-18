@@ -21,7 +21,7 @@ namespace iTaxSuite.Library.Models.Entities
         public string DocNumber { get; set; }
         [Required]
         [NotMinValue]
-        public string DocStamp { get; set; }
+        public DateTime DocStamp { get; set; }
         [Required]
         [StringLength(3)]
         public string SourceApp { get; set; }    // OE,AP,AR,IC
@@ -50,10 +50,22 @@ namespace iTaxSuite.Library.Models.Entities
         public override string CacheKey => $"{BranchCode}:{ReqType}:{DocNumber}:{DocStamp:s}";
         public virtual ClientBranch ClientBranch { get; set; }
     }
-    public class TransactFilter : APagedFilter
+    public class TransactFilter : APDatedFilter
     {
         public bool IsValid => true;
         public RecordStatusGroup RecordGroup { get; set; } = RecordStatusGroup.ALL;
+        public ETIMSReqType ReqType { get; set; } = ETIMSReqType.NONE;
+        [StringLength(2)]
+        public string BranchCode { get; set; }
+        [StringLength(64)]
+        public string DocNumber { get; set; }
+        [StringLength(64)]
+        public string ParentKey { get; set; }
+    }
+    public class TransactKey
+    {
+        public RecordStatusGroup RecordGroup { get; set; } = RecordStatusGroup.ALL;
+        public ETIMSReqType ReqType { get; set; } = ETIMSReqType.NONE;
         [StringLength(2)]
         public string BranchCode { get; set; }
         [StringLength(64)]

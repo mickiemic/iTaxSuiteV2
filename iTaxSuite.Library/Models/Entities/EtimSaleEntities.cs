@@ -48,14 +48,24 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [NotMinValue]
         public DateTime DocRateDate { get; set; }
+        // *** Doc Amounts ***/
         [Precision(19, 3)]
-        public decimal SrcAmtWTX { get; set; }
+        public decimal SrcTBaseAmt { get; set; }
         [Precision(19, 3)]
-        public decimal HomeAmtWTX { get; set; }
+        public decimal HomeTBaseAmt { get; set; }
         [Precision(19, 3)]
-        public decimal SrcDiscWTX { get; set; }
+        public decimal SrcDiscAmt { get; set; }
         [Precision(19, 3)]
-        public decimal HomeDiscWTX { get; set; }
+        public decimal HomeDiscAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal SrcTotTaxAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal HomeTotTaxAmt { get; set; }
+        [Precision(19, 3)]
+        public decimal SrcTotAmtWTax { get; set; }
+        [Precision(19, 3)]
+        public decimal HomeTotAmtWTax { get; set; }
+        // *** EOF Doc Amounts ***/
         [StringLength(64)]
         public string CUNumber { get; set; }
         [StringLength(64)]
@@ -63,7 +73,19 @@ namespace iTaxSuite.Library.Models.Entities
         [StringLength(256)]
         public string QRText { get; set; }
         public DateTime? QRTime { get; set; }
-        public string QRImage { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public byte[] QRImage { get; set; }
+        [StringLength(64)]
+        public string SDCID { get; set; }
+        [StringLength(64)]
+        public string InternalData { get; set; }
+        [StringLength(64)]
+        public int ReceiptNumber { get; set; }
+        [StringLength(64)]
+        public string ReceiptSignature { get; set; }
+        [StringLength(1)]
+        public string EtrTaxClass { get; set; }
         public SalesTrxData? SalesTrxData { get; set; }
         [NotMapped]
         [Newtonsoft.Json.JsonIgnore]
@@ -75,23 +97,17 @@ namespace iTaxSuite.Library.Models.Entities
         {
         }
         public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
-            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice)
+            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice,
+            HashSet<string> taxAuthKeys)
             : this()
         {
             BranchCode = clientBranch.BranchCode;
             DocNumber = invoice.InvoiceNumber;
+            DocType = DocumentType.INVOICE;
             ReqType = ETIMSReqType.SAVE_SALE;
             DocStamp = invoice.InvoiceDate.Value;
             SourceApp = "OE";
-
-            DocSrcCurr = invoice.InvoiceSourceCurrency;
-            DocHomeCurr = invoice.InvoiceHomeCurrency;
-            DocExchRate = invoice.InvoiceRate;
-            DocRateDate = invoice.InvoiceRateDate.Value;
-            SrcAmtWTX = invoice.InvoiceTotalWithTax;
-            HomeAmtWTX = invoice.InvoiceTotalWithTax * invoice.InvoiceRate;
-            SrcDiscWTX = invoice.InvoiceDiscountAmount;
-            HomeDiscWTX = invoice.InvoiceDiscountAmount * invoice.InvoiceRate;
+            EtrSeqNumber = clientBranch.SaleInvoiceSeq;
 
             CustNumber = invoice.CustomerNumber;
             CustName = invoice.BillTo;
@@ -101,6 +117,39 @@ namespace iTaxSuite.Library.Models.Entities
                 CustTaxNumber = customer.TaxRegistrationNumber1.Trim();
             }
 
+            DocSrcCurr = invoice.InvoiceSourceCurrency;
+            DocHomeCurr = invoice.InvoiceHomeCurrency;
+            DocExchRate = invoice.InvoiceRate;
+            DocRateDate = invoice.InvoiceRateDate.Value;
+            SrcTotAmtWTax = invoice.InvoiceTotalWithTax;
+            HomeTotAmtWTax = invoice.InvoiceTotalWithTax * DocExchRate;
+            SrcDiscAmt = invoice.InvoiceDiscountAmount;
+            HomeDiscAmt = invoice.InvoiceDiscountAmount * DocExchRate;
+            SrcTBaseAmt = invoice.InvoiceRunningTotal;
+            HomeTBaseAmt = invoice.InvoiceRunningTotal * DocExchRate;
+
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority1) && taxAuthKeys.Contains(invoice.TaxAuthority1))
+            {
+                SrcTotTaxAmt += invoice.TotalTaxAmount1;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority2) && taxAuthKeys.Contains(invoice.TaxAuthority2))
+            {
+                SrcTotTaxAmt += invoice.TotalTaxAmount2;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority3) && taxAuthKeys.Contains(invoice.TaxAuthority3))
+            {
+                SrcTotTaxAmt += invoice.TotalTaxAmount3;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority4) && taxAuthKeys.Contains(invoice.TaxAuthority4))
+            {
+                SrcTotTaxAmt += invoice.TotalTaxAmount4;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority5) && taxAuthKeys.Contains(invoice.TaxAuthority5))
+            {
+                SrcTotTaxAmt += invoice.TotalTaxAmount5;
+            }
+            HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
+
             CreatedBy = "Sys-Admin";
         }
         public bool IsValid()
@@ -109,16 +158,16 @@ namespace iTaxSuite.Library.Models.Entities
         }
         public EtimsTransact GetSalesTransact(ClientBranch clientBranch)
         {
-            if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL
+            /*if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL
                 || RecordStatus == RecordStatus.POST_DUPL || !IsValid())
-                return null;
+                return null;*/
 
             var etimsTransact = new EtimsTransact()
             {
                 BranchCode = BranchCode,
                 ReqType = ETIMSReqType.SAVE_SALE,
                 DocNumber = CacheKey,
-                DocStamp = SalesTrxData?.SourceStamp?.ToString("s"),
+                DocStamp = SalesTrxData?.SourceStamp ?? DateTime.Now,
                 SourceApp = SourceApp,
                 ReqAddress = $"{clientBranch.EtrAddress}/trnsSales/saveSales",
                 ReqKey = $"{nameof(ETIMSReqType.SAVE_SALE)}:{CacheKey}",
@@ -130,16 +179,16 @@ namespace iTaxSuite.Library.Models.Entities
         }
         public EtimsTransact GetStockTransact(ClientBranch clientBranch)
         {
-            if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL
+            /*if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL
                 || RecordStatus == RecordStatus.POST_DUPL || !IsValid())
-                return null;
+                return null;*/
 
             var etimsTransact = new EtimsTransact()
             {
                 BranchCode = BranchCode,
                 ReqType = ETIMSReqType.SAVE_STOCKIO,
                 DocNumber = CacheKey,
-                DocStamp = SalesTrxData?.SourceStamp?.ToString("s"),
+                DocStamp = SalesTrxData?.SourceStamp ?? DateTime.Now,
                 SourceApp = SourceApp,
                 ReqAddress = $"{clientBranch.EtrAddress}/stock/saveStockItems",
                 ReqKey = $"{nameof(ETIMSReqType.SAVE_STOCKIO)}:{CacheKey}",
@@ -150,7 +199,7 @@ namespace iTaxSuite.Library.Models.Entities
             return etimsTransact;
         }
     }
-    [Table("SalesInvData")]
+    [Table("SalesTrxData")]
     public class SalesTrxData : BaseDataEntity
     {
         [Key]
@@ -176,7 +225,7 @@ namespace iTaxSuite.Library.Models.Entities
             SourceStamp = invoice.InvoiceDate.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(invoice);
             TrnsSalesSaveReq = trnsSalesSave;
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
         }
         public TrnsSalesSaveReq GetEtimsRequest()
         {

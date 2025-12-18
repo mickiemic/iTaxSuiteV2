@@ -191,7 +191,15 @@ namespace iTaxSuite.Library.Services
                 {
                     throw new Exception($"MasterDataSvc::InitializeCacheData failed for branch code:{clientBranch.BranchCode}");
                 }
-                return true;
+                int _dbChanges = await _dbContext.ClientBranch.Where(b => b.BranchCode == clientBranch.BranchCode)
+                    .ExecuteUpdateAsync(x => x
+                    .SetProperty(c => c.ProductSeq, clientBranch.ProductSeq)
+                    .SetProperty(c => c.PurchInvoiceSeq, clientBranch.PurchInvoiceSeq)
+                    .SetProperty(c => c.SaleInvoiceSeq, clientBranch.SaleInvoiceSeq)
+                    .SetProperty(c => c.UpdatedOn, DateTime.Now)
+                    .SetProperty(c => c.UpdatedBy, "SYS-ADMIN")
+                    );
+                return (_dbChanges > 0);
             }
             catch (Exception ex)
             {
@@ -309,7 +317,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 itemMap = await GetProductMap();
-                Console.WriteLine($"itemMap length:{itemMap.Count}");
+                //Console.WriteLine($"itemMap length:{itemMap.Count}");
                 var invalidSatii = new List<RecordStatus>() { RecordStatus.INVALID, RecordStatus.DEPENDS, RecordStatus.NONE };
 
                 for (int i = 0; i < salesSaveReq.ItemList.Count; i++)
@@ -321,7 +329,9 @@ namespace iTaxSuite.Library.Services
                     var stockItemKey = itemMap[salesSaveReq.ItemList[i]._icItemNumber];
                     if (invalidSatii.Contains(stockItemKey.RecordStatus))
                     {
-                        return $"Invalid Status for IC ItemNumber {salesSaveReq.ItemList[i]._icItemNumber}";
+                        UI.Warn($"Invalid Status for IC ItemNumber {salesSaveReq.ItemList[i]._icItemNumber}");
+                        //return $"Invalid Status for IC ItemNumber {salesSaveReq.ItemList[i]._icItemNumber}";
+                        salesSaveReq.RecordStatus = RecordStatus.DEPENDS;
                     }
                     salesSaveReq.ItemList[i].ItemSeqNumber = stockItemKey.EtrSeqNumber;
                     salesSaveReq.ItemList[i].ItemCode = stockItemKey.TaxItemCode;

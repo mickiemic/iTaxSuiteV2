@@ -149,8 +149,15 @@ namespace iTaxSuite.Library.Models.Entities
         [StringLength(32)]
         public string TaxNumber { get; set; }
         [Required]
+        [StringLength(3)]
+        public string Currency { get; set; }
+        [Required]
         [StringLength(16)]
         public string SystemCode { get; set; }
+        [Required]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool IsProduction { get;set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         [StringLength(1)]

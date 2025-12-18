@@ -39,12 +39,12 @@ namespace iTaxSuite.WebApi.Controllers
 
         [HttpPost]
         [Route("posttransaction")]
-        public async Task<IActionResult> PostTransaction()
+        public async Task<IActionResult> PostTransaction(TransactKey filter)
         {
             string _method_ = "PostTransaction";
             try
             {
-                var result = await _transactService.ExecTransaction();
+                var result = await _transactService.ExecTransaction(filter);
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else
@@ -56,5 +56,26 @@ namespace iTaxSuite.WebApi.Controllers
                 return StatusCode(500, ex.GetBaseException().Message);
             }
         }
+
+        [HttpPost]
+        [Route("retrytransaction")]
+        public async Task<IActionResult> RetryTransaction(EtimsTransact transact)
+        {
+            string _method_ = "RetryTransaction";
+            try
+            {
+                var result = await _transactService.RetryTransaction(transact);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+
     }
 }

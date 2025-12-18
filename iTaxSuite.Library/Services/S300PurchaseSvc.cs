@@ -66,6 +66,17 @@ namespace iTaxSuite.Library.Services
                 if (!string.IsNullOrWhiteSpace(filter.DocNumber))
                     query = query.Where(x => x.DocNumber.Equals(filter.DocNumber));
 
+                if (filter.HasAnyDate())
+                {
+                    string _dtFilterError = filter.GetDatesError();
+                    if (!string.IsNullOrWhiteSpace(_dtFilterError))
+                    {
+                        return _dtFilterError;
+                    }
+                    query = query.Where(x => x.DocStamp >= filter.StartTime.Value
+                        && x.DocStamp <= filter.EndTime.Value);
+                }
+
                 result.Count = await query.CountAsync();
                 if (filter.Sort != null)
                     query = filter.PageAndOrder(query);
@@ -264,6 +275,8 @@ namespace iTaxSuite.Library.Services
                             await _dbContext.PurchTrxData.Where(e => e.PurchaseID == purchTransact.PurchaseID).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
+                                .SetProperty(x => x.UpdatedOn, tStamp)
+                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                             );
                             await _dbContext.PurchTransact.Where(e => e.PurchaseID == purchTransact.PurchaseID)
                                 .ExecuteUpdateAsync(x => x
@@ -286,6 +299,8 @@ namespace iTaxSuite.Library.Services
                         await _dbContext.PurchTrxData.Where(e => e.PurchaseID == purchTransact.PurchaseID).ExecuteUpdateAsync(x => x
                             .SetProperty(x => x.ResponsePayload, purchaseSaveResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
+                            .SetProperty(x => x.UpdatedOn, tStamp)
+                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
                         );
                         await _dbContext.PurchTransact.Where(e => e.PurchaseID == purchTransact.PurchaseID)
                             .ExecuteUpdateAsync(x => x
