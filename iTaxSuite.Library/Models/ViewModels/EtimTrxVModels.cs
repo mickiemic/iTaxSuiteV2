@@ -192,7 +192,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             }
 
             TotalItemCount = ItemList.Count;
-
+            // TODO: figure out how to set tax Rates A-E for posting
             TotalTaxAmount = TaxAmountA + TaxAmountB + TaxAmountC + TaxAmountD + TaxAmountE;
             TotalTaxableAmount = TaxableAmountA + TaxableAmountB + TaxableAmountC + TaxableAmountD + TaxableAmountE;
         }

@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iTaxSuite.WinForms", "iTaxSuite.WinForms\iTaxSuite.WinForms.csproj", "{50CF6654-F70E-4459-8A64-7A103FB54A98}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iTaxSuite.CLIApp", "iTaxSuite.Console\iTaxSuite.CLIApp.csproj", "{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{50CF6654-F70E-4459-8A64-7A103FB54A98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{50CF6654-F70E-4459-8A64-7A103FB54A98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{50CF6654-F70E-4459-8A64-7A103FB54A98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

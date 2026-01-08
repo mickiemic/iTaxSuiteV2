@@ -1,11 +1,16 @@
-﻿using iTaxSuite.WinForms.Extensions;
+﻿using iTaxSuite.Library.Services;
+using iTaxSuite.WinForms.Extensions;
 
 namespace iTaxSuite.WinForms.Clients
 {
     public partial class ETIMSClient : BaseForm
     {
-        public ETIMSClient()
+        private readonly IMasterDataSvc _masterDataSvc;
+        //public ETIMSClient()
+        public ETIMSClient(IMasterDataSvc masterDataSvc)
         {
+            _masterDataSvc = masterDataSvc;
+
             InitializeComponent();
             FormClosing += MFormClosing;
             KeyDown += OnKeyDown;
@@ -38,6 +43,19 @@ namespace iTaxSuite.WinForms.Clients
             {
                 this.Hide();
                 e.Cancel = true;
+            }
+        }
+
+        private async void btnSetupTaxes_Click(object sender, EventArgs e)
+        {
+            ShowLoadingScreen(this, "Setting Up Tax Metadata");
+            var result = await _masterDataSvc.InitiateTaxSetup();
+            //await Task.Delay(TimeSpan.FromSeconds(3));
+            HideLoadingScreen();
+            if (result.IsError)
+            {
+                MessageBox.Show($"{result.GetError()}", "Tax Setup");
+                return;
             }
         }
     }

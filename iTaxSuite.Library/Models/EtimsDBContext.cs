@@ -164,7 +164,7 @@ namespace iTaxSuite.Library.Models
         {
             base.OnConfiguring(optionsBuilder);
             optionsBuilder.ConfigureWarnings(w => w.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
-            optionsBuilder.EnableSensitiveDataLogging();
+            // optionsBuilder.EnableSensitiveDataLogging();
         }
 
         // Setup Models

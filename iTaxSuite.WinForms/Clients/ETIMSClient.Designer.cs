@@ -466,6 +466,7 @@
             btnSetupTaxes.TabIndex = 7;
             btnSetupTaxes.Text = "Setup Taxes";
             btnSetupTaxes.UseVisualStyleBackColor = true;
+            btnSetupTaxes.Click += btnSetupTaxes_Click;
             // 
             // btnGetNotices
             // 

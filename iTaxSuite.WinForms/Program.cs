@@ -1,9 +1,18 @@
+using Dapper;
+using iTaxSuite.Library.Constants;
+using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Models;
+using iTaxSuite.Library.Models.Configs;
+using iTaxSuite.Library.Models.Entities;
+using iTaxSuite.Library.Services;
 using iTaxSuite.WinForms.Clients;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using System.Text.RegularExpressions;
+using StackExchange.Redis;
 
 namespace iTaxSuite.WinForms
 {
@@ -70,12 +79,12 @@ namespace iTaxSuite.WinForms
                         throw;
                     }*/
 
-                   /* IConfigurationSection sectSage300ERP = configuration.GetRequiredSection("Sage300ERP");
-                    var sage300ERPConfig = sectSage300ERP.Get<Sage300ERPConfig>();
-                    if (sage300ERPConfig == null)
-                    {
-                        throw new Exception("Invalid Sage 300 ERP configuration");
-                    }*/
+                    /* IConfigurationSection sectSage300ERP = configuration.GetRequiredSection("Sage300ERP");
+                     var sage300ERPConfig = sectSage300ERP.Get<Sage300ERPConfig>();
+                     if (sage300ERPConfig == null)
+                     {
+                         throw new Exception("Invalid Sage 300 ERP configuration");
+                     }*/
 
                     //services.AddMemoryCache();
 
@@ -113,7 +122,57 @@ namespace iTaxSuite.WinForms
 
                     services.AddScoped<IZFPTransactSvc, ZFPTransactSvc>();
                     */
-                    
+
+                    _ = services.AddHttpClient();
+                    _ = services.AddHttpClient(GeneralConst.HTTP_CLIENT_UNSAFE, delegate (HttpClient m)
+                    {
+                        m.Timeout = TimeSpan.FromSeconds(180.0);
+                    }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                    {
+                        ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
+                    });
+
+                    ExtSystConfig _extSystConfig = null;
+                    try
+                    {
+                        var iTaxDBConnStr = configuration.GetConnectionString("ITaxDBConnection");
+                        if (string.IsNullOrWhiteSpace(iTaxDBConnStr))
+                            throw new ArgumentNullException($"Database Setup Failed, ITaxDBConnection {iTaxDBConnStr} is invalid");
+                        _ = services.AddSingleton(new DatabaseOptions { iTaxDBConnString = iTaxDBConnStr });
+                        _ = services.AddDbContext<ETimsDBContext>(options => options.UseSqlServer(iTaxDBConnStr), ServiceLifetime.Scoped);
+                        using (var connection = new SqlConnection(iTaxDBConnStr))
+                        {
+                            _extSystConfig = connection.QueryFirst<ExtSystConfig>("select * from [ExtSystConfig]");
+                        }
+                    }
+                    catch (Exception iex)
+                    {
+                        UI.Fatal(iex, $"Fatal Error: Application could not connect to Main SQL DB. Error - {iex.GetBaseException().Message}");
+                        throw;
+                    }
+                    if (_extSystConfig == null)
+                    {
+                        throw new Exception("Invalid Sage 300 ERP configuration");
+                    }
+                    _ = services.AddSingleton(_extSystConfig);
+
+                    try
+                    {
+                        var redisConnection = configuration.GetConnectionString("CacheConnection");
+                        if (string.IsNullOrWhiteSpace(redisConnection))
+                            throw new ArgumentNullException($"Cache Setup Failed, CacheConnection {redisConnection} is invalid");
+                        ConnectionMultiplexer _redisMultiplexer = ConnectionMultiplexer.Connect(redisConnection);
+                        _ = services.AddSingleton<IConnectionMultiplexer>(s => _redisMultiplexer);
+                    }
+                    catch (Exception iex)
+                    {
+                        UI.Fatal(iex, $"Fatal Error: Application cannot continue, Cache database not reachable..." +
+                            $"Error - {iex.GetBaseException().Message}");
+                        throw;
+                    }
+
+                    services.AddScoped<IMasterDataSvc, MasterDataSvc>();
+
                     services.AddTransient<ETIMSClient>();
                     //services.AddTransient<ZFPClient>();
                     //services.AddTransient<TevinClient>();

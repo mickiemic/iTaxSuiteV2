@@ -9,6 +9,7 @@ using iTaxSuite.Library.Models.Configs;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Services;
 using iTaxSuite.WebApi.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -41,6 +42,13 @@ try
             Title = "eTimSuite WebApi"
         });
     });
+
+    _ = builder.Services.AddDataProtection().SetApplicationName(GeneralConst.APPLICATION_NAME);
+    
+    bool UseSecureConn = builder.Configuration.GetValue<bool>(SecureConst.USESECURECONN, true);
+    var serviceProvider = builder.Services.BuildServiceProvider();
+    IDataProtectionProvider protectionProvider = serviceProvider.GetService<IDataProtectionProvider>();
+    IDataProtector _dataProtector = protectionProvider.CreateProtector(SecureConst.DATA_PURPOSE);
 
     // Add Hangfire services.
     try
@@ -82,10 +90,11 @@ try
         .RemoveAllLoggers()
         .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
 
-    ExtSystConfig _extSystConfig = null;
+    ExtSystConfig? _extSystConfig = null;
     try
     {
-        var iTaxDBConnStr = builder.Configuration.GetConnectionString("ITaxDBConnection");
+        var ITaxDBConnection = builder.Configuration.GetConnectionString("ITaxDBConnection");
+        string iTaxDBConnStr = UseSecureConn ? _dataProtector.Unprotect(ITaxDBConnection) : ITaxDBConnection;
         if (string.IsNullOrWhiteSpace(iTaxDBConnStr))
             throw new ArgumentNullException($"Database Setup Failed, ITaxDBConnection {iTaxDBConnStr} is invalid");
         _ = builder.Services.AddSingleton(new DatabaseOptions { iTaxDBConnString = iTaxDBConnStr });
@@ -108,7 +117,8 @@ try
 
     try
     {
-        var redisConnection = builder.Configuration.GetConnectionString("CacheConnection");
+        var CacheConnection = builder.Configuration.GetConnectionString("CacheConnection");
+        var redisConnection = UseSecureConn ? _dataProtector.Unprotect(CacheConnection) : CacheConnection;
         if (string.IsNullOrWhiteSpace(redisConnection))
             throw new ArgumentNullException($"Cache Setup Failed, CacheConnection {redisConnection} is invalid");
         ConnectionMultiplexer _redisMultiplexer = ConnectionMultiplexer.Connect(redisConnection);
