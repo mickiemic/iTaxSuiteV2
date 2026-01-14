@@ -1,5 +1,6 @@
 ﻿using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iTaxSuite.WebApi.Controllers
@@ -78,5 +79,26 @@ namespace iTaxSuite.WebApi.Controllers
             }
         }
 
+        [Authorize]
+        [HttpGet("testauth")]
+        public async Task<IActionResult> TestAuth()
+        {
+            string _method_ = "TestAuth";
+            try
+            {
+                await Task.FromResult(0);
+                var responseObject = new
+                {
+                    Status = string.Format($"eTims {_method_} API reached at {DateTime.Now.ToString("s")}"),
+                };
+                UI.Info($"<< {_method_} pinged: {responseObject.Status}");
+                return Ok(responseObject);
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
     }
 }

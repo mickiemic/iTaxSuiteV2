@@ -163,4 +163,10 @@ namespace iTaxSuite.Library.Models.ViewModels
         public List<T> Result { get; set; } = new();
     }
 
+    public class ApiResponse
+    {
+        public string? Status { get; set; }
+        public string? Message { get; set; }
+    }
+
 }

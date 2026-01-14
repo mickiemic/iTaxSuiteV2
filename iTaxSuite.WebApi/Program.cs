@@ -9,11 +9,15 @@ using iTaxSuite.Library.Models.Configs;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Services;
 using iTaxSuite.WebApi.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using StackExchange.Redis;
+using System.Text;
 
 try
 {
@@ -115,6 +119,11 @@ try
     }
     _ = builder.Services.AddSingleton(_extSystConfig);
 
+    _ =  builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        .AddEntityFrameworkStores<ETimsDBContext>()
+        .AddSignInManager()
+        .AddRoles<IdentityRole>();
+
     try
     {
         var CacheConnection = builder.Configuration.GetConnectionString("CacheConnection");
@@ -131,6 +140,12 @@ try
         throw;
     }
 
+    _ = builder.Services.AddAuthorizationBuilder()
+        .AddPolicy(UserPolicies.AdminUser, o => {
+            o.RequireAuthenticatedUser();
+            o.RequireRole(UserRoles.Admin);
+        });
+
     _ = builder.Services.AddScoped<IMasterDataSvc, MasterDataSvc>();
     _ = builder.Services.AddScoped<ISetupService, SetupService>();
     _ = builder.Services.AddScoped<ISchedulerService, SchedulerService>();
@@ -139,6 +154,27 @@ try
     _ = builder.Services.AddScoped<IS300PurchaseSvc, S300PurchaseSvc>();
     _ = builder.Services.AddScoped<IS300SaleService, S300SaleService>();
     _ = builder.Services.AddScoped<ITransactService, TransactService>();
+
+    _ = builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = true;
+            options.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidIssuer = builder.Configuration["JwtConfig:Issuer"],
+                ValidAudience = builder.Configuration["JwtConfig:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtConfig:Secret"]!)),
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true
+            };
+        });
 
     var app = builder.Build();
 
@@ -153,6 +189,7 @@ try
         });
     }
 
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();

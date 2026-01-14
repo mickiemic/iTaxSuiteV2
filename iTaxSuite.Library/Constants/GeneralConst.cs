@@ -34,4 +34,15 @@
         public const string DATA_PURPOSE = "Cpl6yFLM#k88Ng1^SNO9F&5Sik!i0C7U2c69tst8Vz#9f%gKGUgggCx&?mBLbsQHDPnhqUP1&JjdGdT*?!Ja!S!kn?!q20Q#XDxCIdJzgGtsxEw3WioWMzBXZ@GlLdn7";
 
     }
+
+    public static class UserPolicies
+    {
+        public const string AdminUser = "AdminUserPolicy";
+    }
+
+    public static class UserRoles
+    {
+        public const string Admin = "Admin";
+        public const string User = "User";
+    }
 }
