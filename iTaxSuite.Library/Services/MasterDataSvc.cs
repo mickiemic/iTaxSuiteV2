@@ -20,9 +20,12 @@ namespace iTaxSuite.Library.Services
         Task<Result<Dictionary<string, S300TaxGroup>, string>> InitiateTaxSetup();
         Task InitializeCacheData();
         Task<Result<(string PkgUnitCode, string QtyUnitCode), string>> MapItemAttribs(string pkgUnitCode, string qtyUnitCode);
+        Task<Result<TrnsSalesSaveReq, string>> MapSalesInvcAttribs(TrnsSalesSaveReq salesSaveReq);
         Task<bool> SaveSyncChannel(SyncChannel syncChannel);
         Task<bool> UpdateBranchAsync(ClientBranch clientBranch);
-        Task<Result<TrnsSalesSaveReq, string>> MapSalesInvcAttribs(TrnsSalesSaveReq salesSaveReq);
+        Task<bool> UpdateBranchTrxAsync(ClientBranch clientBranch, ETimsDBContext dbContext);
+        Task<bool> SaveSyncTrxChannel(SyncChannel syncChannel, ETimsDBContext dbContext);
+        Task<bool> UpdateSyncTrxTracker(SyncChannel syncChannel);
     }
     public class MasterDataSvc : IMasterDataSvc
     {
@@ -192,6 +195,31 @@ namespace iTaxSuite.Library.Services
                     throw new Exception($"MasterDataSvc::InitializeCacheData failed for branch code:{clientBranch.BranchCode}");
                 }
                 int _dbChanges = await _dbContext.ClientBranch.Where(b => b.BranchCode == clientBranch.BranchCode)
+                    .ExecuteUpdateAsync(x => x
+                    .SetProperty(c => c.ProductSeq, clientBranch.ProductSeq)
+                    .SetProperty(c => c.PurchInvoiceSeq, clientBranch.PurchInvoiceSeq)
+                    .SetProperty(c => c.SaleInvoiceSeq, clientBranch.SaleInvoiceSeq)
+                    .SetProperty(c => c.UpdatedOn, DateTime.Now)
+                    .SetProperty(c => c.UpdatedBy, "SYS-ADMIN")
+                    );
+                return (_dbChanges > 0);
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                throw;
+            }
+        }
+        public async Task<bool> UpdateBranchTrxAsync(ClientBranch clientBranch, ETimsDBContext dbContext)
+        {
+            string _method_ = "UpdateBranchTrxAsync";
+            try
+            {
+                if (!await _baseDb.SetValueAsync<ClientBranch>(CacheConst.CLIENT_BRANCH, clientBranch))
+                {
+                    throw new Exception($"MasterDataSvc::InitializeCacheData failed for branch code:{clientBranch.BranchCode}");
+                }
+                int _dbChanges = await dbContext.ClientBranch.Where(b => b.BranchCode == clientBranch.BranchCode)
                     .ExecuteUpdateAsync(x => x
                     .SetProperty(c => c.ProductSeq, clientBranch.ProductSeq)
                     .SetProperty(c => c.PurchInvoiceSeq, clientBranch.PurchInvoiceSeq)
@@ -380,6 +408,28 @@ namespace iTaxSuite.Library.Services
                 throw;
             }
         }
+        public async Task<bool> SaveSyncTrxChannel(SyncChannel syncChannel, ETimsDBContext dbContext)
+        {
+            string _method_ = "SaveSyncTrxChannel";
+            try
+            {
+                var entity = await dbContext.SyncChannels.OrderBy(e => e.CreatedOn)
+                    .FirstOrDefaultAsync(s => s.ChannelId == syncChannel.ChannelId);
+                if (entity == null)
+                    return false;
+
+                entity.LastTracked = entity.UpdatedOn = DateTime.Now;
+                entity.UpdatedBy = GeneralConst.SYSNAME_MIDWARE;
+                if (syncChannel.Tracker != null)
+                    entity.SyncTrackExpr = JsonConvert.SerializeObject(syncChannel.Tracker);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                throw;
+            }
+        }
 
         private async Task<bool> UpdateSyncTracker(SyncChannel syncChannel, bool resetOffset = false)
         {
@@ -413,6 +463,34 @@ namespace iTaxSuite.Library.Services
                         }
                     }
                 }
+
+                syncChannelMap[_hashKey_] = syncChannel;
+                if (!await _baseDb.SetHashValueAsync(CacheConst.CHANL_HASHKEY, _hashKey_, syncChannel))
+                {
+                    UI.Error($"MasterDataSvc::{_method_} failed for channel code:{_hashKey_}");
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                throw;
+            }
+        }
+        public async Task<bool> UpdateSyncTrxTracker(SyncChannel syncChannel)
+        {
+            string _method_ = "UpdateSyncTrxTracker";
+            try
+            {
+                if (syncChannel == null)
+                {
+                    UI.Error($"RCacheService::{_method_} failed for channel is null");
+                    return false;
+                }
+
+                var _hashKey_ = syncChannel.ChannelId;
+                if (!syncChannelMap.ContainsKey(_hashKey_))
+                    return false;
 
                 syncChannelMap[_hashKey_] = syncChannel;
                 if (!await _baseDb.SetHashValueAsync(CacheConst.CHANL_HASHKEY, _hashKey_, syncChannel))

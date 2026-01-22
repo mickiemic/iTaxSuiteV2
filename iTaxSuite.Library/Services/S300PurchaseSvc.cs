@@ -152,12 +152,24 @@ namespace iTaxSuite.Library.Services
 
                             if (purchaseTrx.DocStamp > trackerDate)
                                 trackerDate = purchaseTrx.DocStamp;
+
                             syncChannel.UpdateTracker(purchaseTrx.DocNumber);
                             syncChannel.UpdateTracker(trackerDate);
                             _clientBranch.PurchInvoiceSeq = (_etrSeqValue + 1);
 
+                            if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
+                            {
+                                throw new Exception($"{_method_} - UpdateBranchTrxAsync : Failed Updating ClientBranch Details");
+                            }
+                            if (!await _masterDataSvc.SaveSyncTrxChannel(syncChannel, _dbContext))
+                            {
+                                UI.Error($"{_method_} - SaveSyncSchedule : Failed Updating SyncTrxChannel");
+                            }
+
                             await _dbTrans.CommitAsync();
                             _dbContext.ChangeTracker.Clear();
+
+                            await _masterDataSvc.UpdateSyncTrxTracker(syncChannel);
                         }
                         catch (Exception iex)
                         {
@@ -169,15 +181,6 @@ namespace iTaxSuite.Library.Services
                         }
                     }
 
-                }
-
-                if (!await _masterDataSvc.SaveSyncChannel(syncChannel))
-                {
-                    UI.Error($"{_method_} - SaveSyncSchedule : Failed Updating ItemsSync");
-                }
-                if (!await _masterDataSvc.UpdateBranchAsync(_clientBranch))
-                {
-                    UI.Error($"{_method_} - UpdateBranchAsync : Failed Updating ClientBranch Details");
                 }
 
             }

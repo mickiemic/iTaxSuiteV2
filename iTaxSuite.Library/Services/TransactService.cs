@@ -167,8 +167,14 @@ namespace iTaxSuite.Library.Services
                     }
                     result = pResult.GetValue();
                 }
-                
-                return result;
+                else
+                {
+                    _strError = $"EtimsTransact {result.CacheKey} has an invalid ReqType {Enum.GetName(result.ReqType)}";
+                    UI.Error($"{_method_} for {result.DocNumber} failed, error: {_strError}");
+                    return _strError;
+                }
+
+                    return result;
             }
             catch (Exception ex)
             {

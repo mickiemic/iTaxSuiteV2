@@ -97,8 +97,7 @@ namespace iTaxSuite.Library.Models.Entities
         {
         }
         public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
-            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice,
-            HashSet<string> taxAuthKeys)
+            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice, HashSet<string> taxAuthKeys)
             : this()
         {
             BranchCode = clientBranch.BranchCode;
@@ -152,6 +151,65 @@ namespace iTaxSuite.Library.Models.Entities
 
             CreatedBy = "Sys-Admin";
         }
+
+        public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
+            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice, HashSet<string> taxAuthKeys)
+            : this()
+        {
+            BranchCode = clientBranch.BranchCode;
+            DocNumber = invoice.DocumentNumber;
+            DocType = DocumentType.INVOICE;
+            ReqType = ETIMSReqType.SAVE_SALE;
+            DocStamp = invoice.DocumentDate.Value;
+            SourceApp = "AR";
+            EtrSeqNumber = clientBranch.SaleInvoiceSeq;
+
+            CustNumber = invoice.CustomerNumber;
+            //CustName = invoice.BillTo;
+            if (customer != null)
+            {
+                CustName = customer.CustomerName.Trim();
+                CustTaxNumber = customer.TaxRegistrationNumber1.Trim();
+            }
+
+            DocSrcCurr = invoice.CurrencyCode;
+            //TODO: fix AR Invoice HOME Currency Hack
+            //DocHomeCurr = invoice.CurrencyCode;
+            DocHomeCurr = "KES";
+            DocExchRate = invoice.ExchangeRate;
+            DocRateDate = invoice.RateDate.Value;
+            SrcTotAmtWTax = invoice.DocumentTotalIncludingTax;
+            HomeTotAmtWTax = invoice.DocumentTotalIncludingTax * DocExchRate;
+            SrcDiscAmt = invoice.FunctionalDiscountAmount;
+            HomeDiscAmt = invoice.FunctionalDiscountAmount * DocExchRate;
+            SrcTBaseAmt = invoice.TaxableAmount;
+            HomeTBaseAmt = invoice.TaxableAmount * DocExchRate;
+
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority1) && taxAuthKeys.Contains(invoice.TaxAuthority1))
+            {
+                SrcTotTaxAmt += invoice.TaxAmount1;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority2) && taxAuthKeys.Contains(invoice.TaxAuthority2))
+            {
+                SrcTotTaxAmt += invoice.TaxAmount2;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority3) && taxAuthKeys.Contains(invoice.TaxAuthority3))
+            {
+                SrcTotTaxAmt += invoice.TaxAmount3;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority4) && taxAuthKeys.Contains(invoice.TaxAuthority4))
+            {
+                SrcTotTaxAmt += invoice.TaxAmount4;
+            }
+            if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority5) && taxAuthKeys.Contains(invoice.TaxAuthority5))
+            {
+                SrcTotTaxAmt += invoice.TaxAmount5;
+            }
+            HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
+
+            CreatedBy = "Sys-Admin";
+        }
+
         public bool IsValid()
         {
             return true;
@@ -227,6 +285,16 @@ namespace iTaxSuite.Library.Models.Entities
             TrnsSalesSaveReq = trnsSalesSave;
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
         }
+
+        public SalesTrxData(SalesTransact oeSaleTrx, TrnsSalesSaveReq trnsSalesSave, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice)
+            : this()
+        {
+            SourceStamp = invoice.DocumentDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(invoice);
+            TrnsSalesSaveReq = trnsSalesSave;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
+        }
+
         public TrnsSalesSaveReq GetEtimsRequest()
         {
             if (string.IsNullOrWhiteSpace(RequestPayload))

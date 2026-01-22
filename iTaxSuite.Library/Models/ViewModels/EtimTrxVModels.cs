@@ -629,7 +629,13 @@ namespace iTaxSuite.Library.Models.ViewModels
 
             _pkgUnitCode = item.UnitOfMeasure;
             if (string.IsNullOrWhiteSpace(_pkgUnitCode))
+            {
                 _pkgUnitCode = "Service";
+                if (string.IsNullOrWhiteSpace(item.ItemNumber))
+                {
+                    ItemCode = _icItemNumber = "SE002";
+                }
+            }
             _qtyUnitCode = _pkgUnitCode;
             Quantity = Package = (item.Quantity == 0) ? 1 : item.Quantity;
 
@@ -648,7 +654,7 @@ namespace iTaxSuite.Library.Models.ViewModels
                 {
                     var tClass = taxGroup.Authorities[arInvoice.TaxAuthority1].Classes.FirstOrDefault(c => c.ClassKey == arInvoice.TaxClass1 && c.TransactionType == Enum.GetName(Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.TaxClass.TransactionTypeEnum.Sales));
                     if (tClass is null)
-                        throw new Exception($"AR Item {item.ItemNumber} has an invalid TaxClass: {arInvoice.TaxClass1}");
+                        throw new Exception($"AR Item {item.ItemNumber} has an invalid TaxClass: {arInvoice.TaxClass1}");   
                     var tRate = taxGroup.Authorities[arInvoice.TaxAuthority1].Rates.FirstOrDefault(r => r.ItemRate1 == item.TaxRate1);
                     if (tRate is null)
                         throw new Exception($"AR Item {item.ItemNumber} has an invalid Rate: {item.TaxRate1}");
@@ -739,6 +745,19 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [StringLength(32)]
         public string DocNumber { get; set; }
+    }
+    public class SaleBatchTrxKey : SaleTrxKey
+    {
+        [StringLength(32)]
+        public string BatchNumber { get; set; }
+    }
+
+    public class EtimsSalesView
+    {
+        public TrnsSalesSaveReq SalesSaveReq { get; set; }
+        public SalesTransact SalesTransact { get; set; }
+        public StockIOSaveReq StockIOSaveReq { get; set; }
+        public StockMovement StockMovement { get; set; }
     }
 
     // Purchases Models

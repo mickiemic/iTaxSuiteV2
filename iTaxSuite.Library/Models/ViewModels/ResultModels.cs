@@ -1,7 +1,6 @@
 ﻿using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Sage.CA.SBS.ERP.Sage300.Common.Models;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Runtime.Serialization;

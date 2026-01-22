@@ -127,6 +127,18 @@ namespace iTaxSuite.Library.Models.Entities
             CreatedBy = "Sys-Admin";
         }
 
+        public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice)
+            : this()
+        {
+            MovementType = StockMovementType.Sale;
+            SourceType = SourceType.Sage300CERP;
+            BranchCode = clientBranch.BranchCode;
+            DocNumber = $"{BranchCode}:{arInvoice.DocumentNumber}";
+            DocDate = arInvoice.DocumentDate.Value;
+            Description = arInvoice.InvoiceDescription;
+            CreatedBy = "Sys-Admin";
+        }
+
         public StockMovement(ClientBranch clientBranch, StockIORequest stockIORequest)
         {
             MovementType = stockIORequest.MovementType;
@@ -172,9 +184,19 @@ namespace iTaxSuite.Library.Models.Entities
         }
 
         public StockMovData(StockMovement stockMovement, StockIORequest stockIORequest, StockIOSaveReq stockIOSaveReq)
+            : this()
         {
             SourceStamp = stockIORequest.DocDate;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIORequest);
+            StockIOSaveReq = stockIOSaveReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
+        }
+
+        public StockMovData(StockMovement stockMovement, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice, StockIOSaveReq stockIOSaveReq)
+            : this()
+        {
+            SourceStamp = arInvoice.DocumentDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(arInvoice);
             StockIOSaveReq = stockIOSaveReq;
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
         }

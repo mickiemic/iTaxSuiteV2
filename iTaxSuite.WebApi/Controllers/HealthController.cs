@@ -22,7 +22,7 @@ namespace iTaxSuite.WebApi.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("echo")]
-        public async Task<IActionResult> Echo()
+        public async Task<IActionResult> Echo(bool log = false)
         {
             string _method_ = "Echo";
             try
@@ -35,7 +35,8 @@ namespace iTaxSuite.WebApi.Controllers
                 {
                     Status = string.Format($"eTims MidWare API reached at {DateTime.Now.ToString("s")}"),
                 };
-                UI.Info($"<< Status pinged: {responseObject.Status}");
+                if (log)
+                    UI.Info($"<< Status pinged: {responseObject.Status}");
                 return Ok(responseObject);
             }
             catch (Exception ex)
@@ -46,12 +47,12 @@ namespace iTaxSuite.WebApi.Controllers
         }
 
         [HttpGet("testetrconnect")]
-        public async Task<IActionResult> TestETRConnect()
+        public async Task<IActionResult> TestETRConnect(bool log = false)
         {
             string _method_ = "TestETRConnect";
             try
             {
-                var result = await _etimsService.SelectBranches();
+                var result = await _etimsService.SelectBranches(log);
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else
@@ -70,6 +71,7 @@ namespace iTaxSuite.WebApi.Controllers
             string _method_ = "TestERPConnect";
             try
             {
+                await Task.FromResult(0);
                 return Ok(true);
             }
             catch (Exception ex)

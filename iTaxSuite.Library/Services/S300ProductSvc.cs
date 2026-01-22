@@ -330,13 +330,24 @@ namespace iTaxSuite.Library.Services
                                 {
                                     throw new Exception($"Product {product.ProductCode} saving to database failed");
                                 }
-
                                 if (_dbContext.StockItems.AddIfNotExists(stockItem, x => x.ProductCode == stockItem.ProductCode
                                     && x.BranchCode == stockItem.BranchCode) == null)
                                 {
                                     UI.Warn($"StockItem {stockItem.CacheKey} Already Exists");
                                     continue;
                                 }
+
+                                syncChannel.UpdateTracker(item.ItemNumber);
+                                _clientBranch.ProductSeq = (_etrSeqValue + 1);
+                                if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
+                                {
+                                    throw new Exception($"{_method_} - UpdateBranchTrxAsync : Failed Updating ClientBranch Details");
+                                }
+                                if (!await _masterDataSvc.SaveSyncTrxChannel(syncChannel, _dbContext))
+                                {
+                                    UI.Error($"{_method_} - SaveSyncSchedule : Failed Updating ItemsSync");
+                                }
+
                                 if (_dbContext.SaveChanges() < 1)
                                 {
                                     throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
@@ -346,12 +357,11 @@ namespace iTaxSuite.Library.Services
                                 {
                                     throw new Exception($"Product {product.ProductCode} saving to cache failed");
                                 }
-
-                                syncChannel.UpdateTracker(item.ItemNumber);
-                                _clientBranch.ProductSeq = (_etrSeqValue + 1);
                                 
                                 await _dbTrans.CommitAsync();
                                 _dbContext.ChangeTracker.Clear();
+
+                                await _masterDataSvc.UpdateSyncTrxTracker(syncChannel);
                             }
                             catch (Exception iex)
                             {
@@ -363,15 +373,6 @@ namespace iTaxSuite.Library.Services
                             }
                         }
 
-                    }
-
-                    if (!await _masterDataSvc.SaveSyncChannel(syncChannel))
-                    {
-                        UI.Error($"{_method_} - SaveSyncSchedule : Failed Updating ItemsSync");
-                    }
-                    if (!await _masterDataSvc.UpdateBranchAsync(_clientBranch))
-                    {
-                        UI.Error($"{_method_} - UpdateBranchAsync : Failed Updating ClientBranch Details");
                     }
                 }
             }

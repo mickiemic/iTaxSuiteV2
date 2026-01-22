@@ -15,7 +15,7 @@ namespace iTaxSuite.Library.Services
         Task<Result<TrnsSalesSaveResp, string>> SaveEtimsSale(TrnsSalesSaveReq saveSaleReq);
         Task<Result<StockIOSaveResp, string>> SaveEtimsStockIO(StockIOSaveReq stockIOSaveReq);
         Task<Result<StockMstSaveResp, string>> SaveEtimsStockMaster(StockMstSaveReq stockMstSaveReq);
-        Task<Result<bool, string>> SelectBranches();
+        Task<Result<bool, string>> SelectBranches(bool log = false);
         Task<Result<SelectItemResp, string>> SelectItems(string strInput);
         Task<Result<NoticeResp, string>> SelectNotices(string lastReqDt);
         Task<Result<TrnsPurchaseSalesResp, string>> SelectPurchaseSales(string lastReqDt);
@@ -35,7 +35,7 @@ namespace iTaxSuite.Library.Services
             _clientBranch = _masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
         }
 
-        public async Task<Result<bool, string>> SelectBranches()
+        public async Task<Result<bool, string>> SelectBranches(bool log = false)
         {
             string _method_ = "SelectBranches";
             string _strResponse = string.Empty;
@@ -56,7 +56,8 @@ namespace iTaxSuite.Library.Services
                 }
                 else
                 {
-                    UI.Info($"<< {_method_}: {_strResponse}");
+                    if (log)
+                        UI.Info($"<< {_method_}: {_strResponse}");
                     result = JsonConvert.DeserializeObject<SelectBranchResp>(_strResponse);
                     return result.IsSuccess;
                 }

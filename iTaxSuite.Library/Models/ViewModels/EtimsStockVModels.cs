@@ -305,6 +305,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         }
 
         public StockIOSaveReq(ClientBranch clientBranch, StockIORequest stockIORequest, StockItem stockItem)
+            : this()
         {
             PIN = clientBranch.TaxClient.TaxNumber;
             RegistrationTypeCode = ETimsUtils.GetRegistrationType();
@@ -320,6 +321,26 @@ namespace iTaxSuite.Library.Models.ViewModels
             TotalTaxAmount = ioItem.TaxAmount;
             TotalAmount = ioItem.TotalAmount;
             ItemList.Add(ioItem);
+
+            TotalItemCount = 1;
+        }
+
+        public StockIOSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice, TrnsSalesSaveReq eTimsSale)
+            : this()
+        {
+            PIN = clientBranch.TaxClient.TaxNumber;
+            RegistrationTypeCode = ETimsUtils.GetRegistrationType();
+            Remark = eTimsSale.Remark;
+            RegistrantID = eTimsSale.RegistrantID;
+            RegistrantName = eTimsSale.RegistrantName;
+            ModifierID = eTimsSale.ModifierID;
+            ModifierName = eTimsSale.ModifierName;
+
+            CustomerBranchID = "00";
+            CustomerPIN = eTimsSale.CustomerPIN;
+            CustomerName = eTimsSale.CustomerName;
+            //StockTrxDate = arInvoice.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
+            //StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
 
             TotalItemCount = 1;
         }
