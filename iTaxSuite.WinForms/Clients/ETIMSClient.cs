@@ -62,7 +62,7 @@ namespace iTaxSuite.WinForms.Clients
                 {
                     ICItem = "BK001",
                     OEInvoice = "INV20242476",
-                    OECreditNote = "CN000001",
+                    OECreditNote = "CN20230069",
                     ARBatch = "22",
                     ARInvoice = "INV2022/179",
                     ARCreditNote = "",
@@ -118,11 +118,10 @@ namespace iTaxSuite.WinForms.Clients
                 string strInput = Interaction.InputBox("Enter Invoice Number", "Select OE Invoice", _testData.OEInvoice);
                 if (string.IsNullOrWhiteSpace(strInput))
                 {
-                    MessageBox.Show($"Invalid Request {strInput}", "Select Item");
+                    MessageBox.Show($"Invalid Request {strInput}", "Select OE Invoice");
                     return;
                 }
 
-                UI.Info($"{_method_} running..");
                 ShowLoadingScreen(null, $"Loading OE Invoice Number {strInput}");
                 var convertRes = await _saleService.GetConvertOEInvoice(new SaleTrxKey { DocNumber = strInput });
                 HideLoadingScreen();
@@ -132,6 +131,7 @@ namespace iTaxSuite.WinForms.Clients
                 {
                     salesView = convertRes.GetValue();
                     reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
+                    //reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
                 }
                 else
                 {
@@ -144,6 +144,44 @@ namespace iTaxSuite.WinForms.Clients
             {
                 UI.Error($"{_method_} error: {ex.GetBaseException().Message}");
                 MessageBox.Show($"{_method_} error: {ex.GetBaseException().Message}", "OE Invoice Processing", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void btnGetOECRNote_Click(object sender, EventArgs e)
+        {
+            string _method_ = "btnGetOECRNote_Click";
+            var decimalFormat = new DecimalFormatConverter();
+            try
+            {
+                string strInput = Interaction.InputBox("Enter OE CRNote Number", "Select OE CRNote", _testData.OECreditNote);
+                if (string.IsNullOrWhiteSpace(strInput))
+                {
+                    MessageBox.Show($"Invalid Request {strInput}", "Select OE CRNote");
+                    return;
+                }
+
+                ShowLoadingScreen(null, $"Loading OE CRNote Number {strInput}");
+                var convertRes = await _saleService.GetConvertOECRNote(new SaleTrxKey { DocNumber = strInput });
+                HideLoadingScreen();
+
+                EtimsSalesView salesView;
+                if (convertRes.IsSuccess)
+                {
+                    salesView = convertRes.GetValue();
+                    //reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
+                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                }
+                else
+                {
+                    MessageBox.Show($"{convertRes.GetError()}", "Select OE CRNote", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                UI.Error($"{_method_} error: {ex.GetBaseException().Message}");
+                MessageBox.Show($"{_method_} error: {ex.GetBaseException().Message}", "OE CRNote Processing", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -174,7 +212,8 @@ namespace iTaxSuite.WinForms.Clients
                 if (convertRes.IsSuccess)
                 {
                     salesView = convertRes.GetValue();
-                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
+                    // reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
+                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
                 }
                 else
                 {

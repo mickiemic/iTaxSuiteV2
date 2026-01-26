@@ -26,6 +26,7 @@ namespace iTaxSuite.Library.Services
         Task<bool> UpdateBranchTrxAsync(ClientBranch clientBranch, ETimsDBContext dbContext);
         Task<bool> SaveSyncTrxChannel(SyncChannel syncChannel, ETimsDBContext dbContext);
         Task<bool> UpdateSyncTrxTracker(SyncChannel syncChannel);
+        Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact);
     }
     public class MasterDataSvc : IMasterDataSvc
     {
@@ -374,6 +375,45 @@ namespace iTaxSuite.Library.Services
             catch (Exception ex)
             {
                 UI.Error($"{_method_} TraderInvoiceNo:{salesSaveReq.TraderInvoiceNo}, error: {ex.GetBaseException()}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        public async Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact)
+        {
+            string _method_ = "MapSalesInvcAttribs";
+            Dictionary<string, StockItemKey> itemMap = null;
+            try
+            {
+                itemMap = await GetProductMap();
+                //Console.WriteLine($"itemMap length:{itemMap.Count}");
+                var invalidSatii = new List<RecordStatus>() { RecordStatus.INVALID, RecordStatus.DEPENDS, RecordStatus.NONE };
+
+                for (int i = 0; i < salesTransact.SalesItems.Count; i++)
+                {
+                    if (!itemMap.ContainsKey(salesTransact.SalesItems[i].ProductCode))
+                    {
+                        return $"No Mapping for IC ItemNumber {salesTransact.SalesItems[i].ProductCode}";
+                    }
+                    var stockItemKey = itemMap[salesTransact.SalesItems[i].ProductCode];
+                    if (invalidSatii.Contains(stockItemKey.RecordStatus))
+                    {
+                        UI.Warn($"Invalid Status for IC ItemNumber {salesTransact.SalesItems[i].ProductCode}");
+                        salesTransact.RecordStatus = RecordStatus.DEPENDS;
+                    }
+                    salesTransact.SalesItems[i].ItemSeqNumber = stockItemKey.EtrSeqNumber;
+                    salesTransact.SalesItems[i].TaxItemCode = stockItemKey.TaxItemCode;
+                    salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
+                    salesTransact.SalesItems[i].PkgUnitCode = stockItemKey.PackageUnit;
+                    salesTransact.SalesItems[i].QtyUnitCode = stockItemKey.QuantityUnit;
+                    salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
+                    salesTransact.SalesItems[i].RecordStatus = stockItemKey.RecordStatus;
+                }
+
+                return salesTransact;
+            }
+            catch (Exception ex)
+            {
+                UI.Error($"{_method_} SalesTrxID:{salesTransact.SalesTrxID}, error: {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
             }
         }

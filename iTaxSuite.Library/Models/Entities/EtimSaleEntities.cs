@@ -92,12 +92,12 @@ namespace iTaxSuite.Library.Models.Entities
         [System.Text.Json.Serialization.JsonIgnore]
         public override string CacheKey => $"{BranchCode}:{DocNumber}";
         public virtual ClientBranch ClientBranch { get; set; }
-
+        public List<SalesItem> SalesItems { get; set; } = new();
         public SalesTransact()
         {
         }
         public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
-            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice, HashSet<string> taxAuthKeys)
+            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
             : this()
         {
             BranchCode = clientBranch.BranchCode;
@@ -127,6 +127,12 @@ namespace iTaxSuite.Library.Models.Entities
             SrcTBaseAmt = invoice.InvoiceRunningTotal;
             HomeTBaseAmt = invoice.InvoiceRunningTotal * DocExchRate;
 
+            foreach(var line in invoice.InvoiceDetails)
+            {
+                var salesItem = new SalesItem(this, line, taxGroup, taxAuthKeys);
+                SalesItems.Add(salesItem);
+            }
+
             if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority1) && taxAuthKeys.Contains(invoice.TaxAuthority1))
             {
                 SrcTotTaxAmt += invoice.TotalTaxAmount1;
@@ -153,7 +159,7 @@ namespace iTaxSuite.Library.Models.Entities
         }
 
         public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
-            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice, HashSet<string> taxAuthKeys)
+            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
             : this()
         {
             BranchCode = clientBranch.BranchCode;
@@ -185,6 +191,12 @@ namespace iTaxSuite.Library.Models.Entities
             SrcTBaseAmt = invoice.TaxableAmount;
             HomeTBaseAmt = invoice.TaxableAmount * DocExchRate;
 
+            foreach(var line in invoice.InvoiceDetails)
+            {
+                var salesItem = new SalesItem(this, invoice, line, taxGroup, taxAuthKeys);
+                SalesItems.Add(salesItem);
+            }
+
             if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority1) && taxAuthKeys.Contains(invoice.TaxAuthority1))
             {
                 SrcTotTaxAmt += invoice.TaxAmount1;
@@ -204,6 +216,69 @@ namespace iTaxSuite.Library.Models.Entities
             if (!string.IsNullOrWhiteSpace(invoice.TaxAuthority5) && taxAuthKeys.Contains(invoice.TaxAuthority5))
             {
                 SrcTotTaxAmt += invoice.TaxAmount5;
+            }
+            HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
+
+            CreatedBy = "Sys-Admin";
+        }
+
+        public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
+            Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote crNote, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
+            : this()
+        {
+            BranchCode = clientBranch.BranchCode;
+            DocNumber = crNote.CreditDebitNoteNumber;
+            RefInvNumber = crNote.InvoiceNumber;
+            DocType = DocumentType.CREDITNOTE;
+            ReqType = ETIMSReqType.SAVE_SALE;
+            DocStamp = crNote.InvoiceDate.Value;
+            SourceApp = "OE";
+            EtrSeqNumber = clientBranch.SaleInvoiceSeq;
+
+            CustNumber = crNote.CustomerNumber;
+            CustName = crNote.BillTo;
+            if (customer != null)
+            {
+                CustName = customer.CustomerName.Trim();
+                CustTaxNumber = customer.TaxRegistrationNumber1.Trim();
+            }
+
+            DocSrcCurr = crNote.InvoiceSourceCurrency;
+            DocHomeCurr = crNote.InvoiceHomeCurrency;
+            DocExchRate = crNote.InvoiceRate;
+            DocRateDate = crNote.InvoiceRateDate.Value;
+            SrcTotAmtWTax = crNote.CreditDebitNoteTotal;
+            HomeTotAmtWTax = crNote.CreditDebitNoteTotal * DocExchRate;
+            SrcDiscAmt = crNote.CreditDebitNoteDiscountAmt;
+            HomeDiscAmt = crNote.CreditDebitNoteDiscountAmt * DocExchRate;
+            SrcTBaseAmt = crNote.CreditDebitNoteTotBeforeTax;
+            HomeTBaseAmt = crNote.CreditDebitNoteTotBeforeTax * DocExchRate;
+
+            foreach (var line in crNote.CreditDebitDetails)
+            {
+                var salesItem = new SalesItem(this, line, taxGroup, taxAuthKeys);
+                SalesItems.Add(salesItem);
+            }
+
+            if (!string.IsNullOrWhiteSpace(crNote.TaxAuthority1) && taxAuthKeys.Contains(crNote.TaxAuthority1))
+            {
+                SrcTotTaxAmt += crNote.TotalTaxAmount1;
+            }
+            if (!string.IsNullOrWhiteSpace(crNote.TaxAuthority2) && taxAuthKeys.Contains(crNote.TaxAuthority2))
+            {
+                SrcTotTaxAmt += crNote.TotalTaxAmount2;
+            }
+            if (!string.IsNullOrWhiteSpace(crNote.TaxAuthority3) && taxAuthKeys.Contains(crNote.TaxAuthority3))
+            {
+                SrcTotTaxAmt += crNote.TotalTaxAmount3;
+            }
+            if (!string.IsNullOrWhiteSpace(crNote.TaxAuthority4) && taxAuthKeys.Contains(crNote.TaxAuthority4))
+            {
+                SrcTotTaxAmt += crNote.TotalTaxAmount4;
+            }
+            if (!string.IsNullOrWhiteSpace(crNote.TaxAuthority5) && taxAuthKeys.Contains(crNote.TaxAuthority5))
+            {
+                SrcTotTaxAmt += crNote.TotalTaxAmount5;
             }
             HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
 
@@ -295,6 +370,15 @@ namespace iTaxSuite.Library.Models.Entities
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
         }
 
+        public SalesTrxData(SalesTransact oeSaleTrx, TrnsSalesSaveReq trnsSalesSave, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote invoice)
+            : this()
+        {
+            SourceStamp = invoice.InvoiceDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(invoice);
+            TrnsSalesSaveReq = trnsSalesSave;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
+        }
+
         public TrnsSalesSaveReq GetEtimsRequest()
         {
             if (string.IsNullOrWhiteSpace(RequestPayload))
@@ -303,6 +387,288 @@ namespace iTaxSuite.Library.Models.Entities
             return TrnsSalesSaveReq;
         }
 
+    }
+    public class SalesItem : BaseEntity
+    {
+        [Key]
+        [Required]
+        public int SalesTrxID { get; set; }
+        [Required]
+        [StringLength(64)]
+        public string ProductCode { get; set; }
+        [Required]
+        [StringLength(2, MinimumLength = 2)]
+        public string BranchCode { get; set; }
+        [StringLength(64)]
+        public string TaxItemCode { get; set; }
+        [Required]
+        public string TaxTypeCode { get; set; }
+        public string ItemTypeCode { get; set; }
+        public int ItemSeqNumber { get; set; } = -1;
+        [StringLength(10)]
+        public string ItemClassCode { get; set; }
+        [Required]
+        [StringLength(128)]
+        public string Description { get; set; }
+        /*[Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]*/
+        public string _pkgUnitCode { get; set; }
+        [Required]
+        [StringLength(8)]
+        public string PkgUnitCode { get; set; }
+        public decimal Package { get; set; }
+        /*[Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]*/
+        public string _qtyUnitCode { get; set; }
+        [Required]
+        [StringLength(8)]
+        public string QtyUnitCode { get; set; }
+        public decimal Quantity { get; set; }
+        [Required]
+        public bool IsStockable { get; set; }
+        [Precision(19, 3)]
+        public decimal UnitPrice { get; set; }
+        [Precision(19, 3)]
+        public decimal DiscountAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal DiscountRate { get; set; }
+        [Precision(19, 3)]
+        public decimal TaxableAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal TaxAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal TotalAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal SupplyPrice { get; set; }
+        public RecordStatus RecordStatus { get; set; } = RecordStatus.NONE;
+        
+        [ForeignKey("SalesTrxID")]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public SalesTransact SalesTransact { get; set; }
+        public SalesItem()
+        {
+        }
+        public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.InvoiceDetail item,
+            S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
+            : this()
+        {
+            SalesTrxID = salesTransact.SalesTrxID;
+            SalesTransact = salesTransact;
+            BranchCode = salesTransact.BranchCode;
+
+            ItemSeqNumber = -1;
+            ProductCode = item.Item;
+            Description = item.Description;
+            ItemTypeCode = "2";
+            IsStockable = item.StockItem;
+
+            _pkgUnitCode = item.InvoiceUnitOfMeasure;
+            Package = item.QuantityShipped;
+
+            _qtyUnitCode = item.PricingUnit;
+            Quantity = Package * item.PricingUnitConversion;
+
+            SupplyPrice = item.UnitCost;
+            UnitPrice = (item.PricingUnitPrice != 0) ? item.PricingUnitPrice : item.ExtPriceNetOfDiscIncludeTax;
+            if (SupplyPrice == 0)
+                SupplyPrice = UnitPrice;
+
+            /*
+             Match TaxAuthority1 <=> TaxAuthority
+             TransactionType <=> Sales/Purchases
+             TaxClass1 <=> BuyersClass
+             TaxRate1 <=> ItemRate1 = Check After Exempt flag
+             */
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority1) && taxAuthKeys.Contains(item.TaxAuthority1))
+            {
+                TaxAmount += item.TaxAmount1;
+                if (string.IsNullOrWhiteSpace(TaxTypeCode))
+                {
+                    var tClass = taxGroup.Authorities[item.TaxAuthority1].Classes.FirstOrDefault(c => c.ClassKey == item.TaxClass1 && c.TransactionType == Enum.GetName(Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.TaxClass.TransactionTypeEnum.Sales));
+                    var tRate = taxGroup.Authorities[item.TaxAuthority1].Rates.FirstOrDefault(r => r.ItemRate1 == item.TaxRate1);
+                    TaxTypeCode = ETimsUtils.GetTaxRate(tClass, tRate);
+                }
+            }
+            else
+            {
+                //TODO: throw error if TaxAuthority1 invalid
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority2) && taxAuthKeys.Contains(item.TaxAuthority2))
+            {
+                TaxAmount += item.TaxAmount2;
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority3) && taxAuthKeys.Contains(item.TaxAuthority3))
+            {
+                TaxAmount += item.TaxAmount3;
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority4) && taxAuthKeys.Contains(item.TaxAuthority4))
+            {
+                TaxAmount += item.TaxAmount4;
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority5) && taxAuthKeys.Contains(item.TaxAuthority5))
+            {
+                TaxAmount += item.TaxAmount5;
+            }
+
+            TaxableAmount = item.TaxBase1;
+            //TaxAmount = item.TaxAmount1;
+            //TotalAmount = UnitPrice * Quantity;
+            TotalAmount = TaxableAmount + TaxAmount;
+
+            DiscountRate = item.DiscountPercent;
+            DiscountAmount = item.DiscountedExtendedAmount;
+
+        }
+
+        public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice, 
+            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.InvoiceDetail item, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
+        {
+            SalesTrxID = salesTransact.SalesTrxID;
+            SalesTransact = salesTransact;
+            BranchCode = salesTransact.BranchCode;
+
+            ItemSeqNumber = -1; // Internal
+            ProductCode = item.ItemNumber;
+            ItemTypeCode = "3";
+            Description = item.Description;
+            IsStockable = false;
+
+            _pkgUnitCode = item.UnitOfMeasure;
+            if (string.IsNullOrWhiteSpace(_pkgUnitCode))
+            {
+                _pkgUnitCode = "Service";
+                if (string.IsNullOrWhiteSpace(item.ItemNumber))
+                {
+                    ProductCode = "SE002";
+                }
+            }
+            _qtyUnitCode = _pkgUnitCode;
+            Quantity = Package = (item.Quantity == 0) ? 1 : item.Quantity;
+
+            decimal amtValue = item.Price;
+            if (amtValue == 0)
+                amtValue = item.ExtendedAmountWithTIP;
+            if (amtValue <= 0)
+                throw new Exception($"Invalid Amount for {item.Description} :: {amtValue}");
+
+            UnitPrice = SupplyPrice = amtValue;
+
+            if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority1) && taxAuthKeys.Contains(arInvoice.TaxAuthority1))
+            {
+                TaxAmount += item.TaxAmount1;
+                if (string.IsNullOrWhiteSpace(TaxTypeCode))
+                {
+                    var tClass = taxGroup.Authorities[arInvoice.TaxAuthority1].Classes.FirstOrDefault(c => c.ClassKey == arInvoice.TaxClass1 && c.TransactionType == Enum.GetName(Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.TaxClass.TransactionTypeEnum.Sales));
+                    if (tClass is null)
+                        throw new Exception($"AR Item {item.ItemNumber} has an invalid TaxClass: {arInvoice.TaxClass1}");
+                    var tRate = taxGroup.Authorities[arInvoice.TaxAuthority1].Rates.FirstOrDefault(r => r.ItemRate1 == item.TaxRate1);
+                    if (tRate is null)
+                        throw new Exception($"AR Item {item.ItemNumber} has an invalid Rate: {item.TaxRate1}");
+                    TaxTypeCode = ETimsUtils.GetTaxRate(tClass, tRate);
+                }
+            }
+            else
+            {
+                //TODO: throw error if TaxAuthority1 invalid
+            }
+            if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority2) && taxAuthKeys.Contains(arInvoice.TaxAuthority2))
+            {
+                TaxAmount += item.TaxAmount2;
+            }
+            if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority3) && taxAuthKeys.Contains(arInvoice.TaxAuthority3))
+            {
+                TaxAmount += item.TaxAmount3;
+            }
+            if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority4) && taxAuthKeys.Contains(arInvoice.TaxAuthority4))
+            {
+                TaxAmount += item.TaxAmount4;
+            }
+            if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority5) && taxAuthKeys.Contains(arInvoice.TaxAuthority5))
+            {
+                TaxAmount += item.TaxAmount5;
+            }
+
+            TaxableAmount = item.TaxBase1;
+            TotalAmount = TaxableAmount + TaxAmount;
+            if (TotalAmount == 0)
+                TotalAmount = TaxableAmount = amtValue;
+
+            DiscountRate = 0;
+            DiscountAmount = 0;
+        }
+
+        public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitDetail item, 
+            S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
+            : this()
+        {
+            SalesTrxID = salesTransact.SalesTrxID;
+            SalesTransact = salesTransact;
+            BranchCode = salesTransact.BranchCode;
+
+            ItemSeqNumber = -1;
+            ProductCode = item.Item;
+            Description = item.Description;
+            ItemTypeCode = "2";
+            IsStockable = item.StockItem;
+
+            _pkgUnitCode = item.InvoiceUnitOfMeasure;
+            Package = item.QuantityShipped;
+
+            _qtyUnitCode = item.PricingUnit;
+            Quantity = Package * item.PricingUnitConversion;
+
+            SupplyPrice = item.UnitCost;
+            //UnitPrice = (item.PricingUnitPrice != 0) ? item.PricingUnitPrice : item.ExtPriceNetOfDiscIncludeTax;
+            UnitPrice = item.PricingUnitPrice;
+            if (SupplyPrice == 0)
+                SupplyPrice = UnitPrice;
+
+            /*
+             Match TaxAuthority1 <=> TaxAuthority
+             TransactionType <=> Sales/Purchases
+             TaxClass1 <=> BuyersClass
+             TaxRate1 <=> ItemRate1 = Check After Exempt flag
+             */
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority1) && taxAuthKeys.Contains(item.TaxAuthority1))
+            {
+                TaxAmount += item.TaxAmount1;
+                if (string.IsNullOrWhiteSpace(TaxTypeCode))
+                {
+                    var tClass = taxGroup.Authorities[item.TaxAuthority1].Classes.FirstOrDefault(c => c.ClassKey == item.TaxClass1 && c.TransactionType == Enum.GetName(Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.TaxClass.TransactionTypeEnum.Sales));
+                    var tRate = taxGroup.Authorities[item.TaxAuthority1].Rates.FirstOrDefault(r => r.ItemRate1 == item.TaxRate1);
+                    TaxTypeCode = ETimsUtils.GetTaxRate(tClass, tRate);
+                }
+            }
+            else
+            {
+                //TODO: throw error if TaxAuthority1 invalid
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority2) && taxAuthKeys.Contains(item.TaxAuthority2))
+            {
+                TaxAmount += item.TaxAmount2;
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority3) && taxAuthKeys.Contains(item.TaxAuthority3))
+            {
+                TaxAmount += item.TaxAmount3;
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority4) && taxAuthKeys.Contains(item.TaxAuthority4))
+            {
+                TaxAmount += item.TaxAmount4;
+            }
+            if (!string.IsNullOrWhiteSpace(item.TaxAuthority5) && taxAuthKeys.Contains(item.TaxAuthority5))
+            {
+                TaxAmount += item.TaxAmount5;
+            }
+
+            TaxableAmount = item.TaxBase1;
+            //TaxAmount = item.TaxAmount1;
+            //TotalAmount = UnitPrice * Quantity;
+            TotalAmount = TaxableAmount + TaxAmount;
+
+            DiscountRate = item.DiscountPercent;
+            DiscountAmount = item.DiscountedExtendedAmount;
+        }
     }
 
 }

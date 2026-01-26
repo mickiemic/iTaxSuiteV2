@@ -50,6 +50,7 @@
             grpSales = new GroupBox();
             tableLayoutPanel1 = new TableLayoutPanel();
             btnGetARCRNote = new Button();
+            btnGetARInvoice = new Button();
             btnGetOECRNote = new Button();
             btnGetOEInvoice = new Button();
             btnClearSales = new Button();
@@ -67,7 +68,6 @@
             btnSubmitRequest = new Button();
             btnCanceRequest = new Button();
             txtReqAddress = new TextBox();
-            btnGetARInvoice = new Button();
             tabControlEtims.SuspendLayout();
             tabItems.SuspendLayout();
             grpItems.SuspendLayout();
@@ -363,6 +363,18 @@
             btnGetARCRNote.Text = "Select AR CRNote";
             btnGetARCRNote.UseVisualStyleBackColor = true;
             // 
+            // btnGetARInvoice
+            // 
+            btnGetARInvoice.Anchor = AnchorStyles.None;
+            btnGetARInvoice.Location = new Point(864, 9);
+            btnGetARInvoice.Name = "btnGetARInvoice";
+            btnGetARInvoice.Padding = new Padding(0, 0, 10, 0);
+            btnGetARInvoice.Size = new Size(197, 34);
+            btnGetARInvoice.TabIndex = 13;
+            btnGetARInvoice.Text = "Select AR Invoice";
+            btnGetARInvoice.UseVisualStyleBackColor = true;
+            btnGetARInvoice.Click += btnGetARInvoice_Click;
+            // 
             // btnGetOECRNote
             // 
             btnGetOECRNote.Anchor = AnchorStyles.None;
@@ -372,6 +384,7 @@
             btnGetOECRNote.TabIndex = 9;
             btnGetOECRNote.Text = "Select OE CRNote";
             btnGetOECRNote.UseVisualStyleBackColor = true;
+            btnGetOECRNote.Click += btnGetOECRNote_Click;
             // 
             // btnGetOEInvoice
             // 
@@ -562,18 +575,6 @@
             txtReqAddress.Name = "txtReqAddress";
             txtReqAddress.Size = new Size(991, 31);
             txtReqAddress.TabIndex = 11;
-            // 
-            // btnGetARInvoice
-            // 
-            btnGetARInvoice.Anchor = AnchorStyles.None;
-            btnGetARInvoice.Location = new Point(864, 9);
-            btnGetARInvoice.Name = "btnGetARInvoice";
-            btnGetARInvoice.Padding = new Padding(0, 0, 10, 0);
-            btnGetARInvoice.Size = new Size(197, 34);
-            btnGetARInvoice.TabIndex = 13;
-            btnGetARInvoice.Text = "Select AR Invoice";
-            btnGetARInvoice.UseVisualStyleBackColor = true;
-            btnGetARInvoice.Click += btnGetARInvoice_Click;
             // 
             // ETIMSClient
             // 

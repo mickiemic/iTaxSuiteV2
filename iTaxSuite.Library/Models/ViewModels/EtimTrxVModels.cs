@@ -196,9 +196,63 @@ namespace iTaxSuite.Library.Models.ViewModels
             TotalTaxAmount = TaxAmountA + TaxAmountB + TaxAmountC + TaxAmountD + TaxAmountE;
             TotalTaxableAmount = TaxableAmountA + TaxableAmountB + TaxableAmountC + TaxableAmountD + TaxableAmountE;
         }
+        public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice oeInvoice,
+            SalesTransact salesTransact, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
+            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
+            : this()
+        {
+            DocumentType = DocumentType.INVOICE;
+            PIN = clientBranch.TaxClient.TaxNumber;
+            EtimsInvoiceNum = clientBranch.SaleInvoiceSeq;
+            TraderInvoiceNo = oeInvoice.InvoiceNumber;
+            CustomerName = oeInvoice.BillTo;
+            if (oeInvoice.InvoiceDate.HasValue)
+            {
+                ValidateDate = oeInvoice.InvoiceDate.Value.ToString(ETIMSConst.FMT_DATETIME);
+                SalesDate = oeInvoice.InvoiceDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
+            }
+            if (oeInvoice.ShipmentDate.HasValue)
+                StockReleaseDate = oeInvoice.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATETIME);
+
+            // Creator / Modifier
+            ModifierID = ModifierName = oeInvoice.EnteredBy;
+
+            SalesTypeCode = ETimsUtils.ConvertTransactionType(DocumentType.INVOICE);
+            ReceiptTypeCode = ETimsUtils.ConvertSalesReceiptType(DocumentType.INVOICE);
+            PaymentTypeCode = ETimsUtils.ConvertPaymentMethod(oeInvoice.PaymentType);
+            InvoiceStatusCode = ETimsUtils.ConvertTransactionStatus(oeInvoice.InvoiceStatus);
+
+            Remark = oeInvoice.Description;
+            RegistrantID = oeInvoice.Salesperson1;
+            RegistrantName = oeInvoice.SalespersonName1;
+            if (string.IsNullOrWhiteSpace(RegistrantID))
+            {
+                RegistrantID = RegistrantName = oeInvoice.EnteredBy;
+            }
+
+            if (customer != null)
+            {
+                CustomerName = customer.CustomerName.Trim();
+                CustomerPIN = customer.TaxRegistrationNumber1.Trim();
+
+                Receipt = new EtimsReceipt(customer);
+            }
+
+            foreach(var _salesItem in salesTransact.SalesItems)
+            {
+                var salesItem = new EtimsSaleItem(_salesItem);
+                TotalAmount += salesItem.TotalAmount;
+                ItemList.Add(salesItem);
+            }
+
+            TotalItemCount = ItemList.Count;
+            // TODO: figure out how to set tax Rates A-E for posting
+            TotalTaxAmount = TaxAmountA + TaxAmountB + TaxAmountC + TaxAmountD + TaxAmountE;
+            TotalTaxableAmount = TaxableAmountA + TaxableAmountB + TaxableAmountC + TaxableAmountD + TaxableAmountE;
+        }
 
         public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote crNote,
-            S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
+            SalesTransact salesTransact, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
             : this()
         {
@@ -290,6 +344,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice,
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
+            : this()
         {
             PIN = clientBranch.TaxClient.TaxNumber;
             DocumentType = DocumentType.INVOICE;
@@ -374,6 +429,7 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         }
 
+        
     }
     public class TrnsSalesSaveResp : ETIMSBaseResp
     {
@@ -555,6 +611,36 @@ namespace iTaxSuite.Library.Models.ViewModels
 
             DiscountRate = item.DiscountPercent;
             DiscountAmount = item.DiscountedExtendedAmount;
+        }
+        public EtimsSaleItem(SalesItem salesItem)
+            : this()
+        {
+            ItemSeqNumber = salesItem.ItemSeqNumber;
+            _icItemNumber = salesItem.ProductCode;
+
+            ItemCode = salesItem.TaxItemCode;
+            ItemName = salesItem.Description;
+            ItemTypeCode = salesItem.ItemTypeCode;
+            ItemClassCode = salesItem.ItemClassCode;
+
+            _pkgUnitCode = salesItem._pkgUnitCode;
+            PkgUnitCode = salesItem.PkgUnitCode;
+            Package = salesItem.Package;
+
+            _qtyUnitCode = salesItem._qtyUnitCode;
+            QtyUnitCode = salesItem.QtyUnitCode;
+            Quantity = salesItem.Quantity;
+
+            SupplyPrice = salesItem.SupplyPrice;
+            UnitPrice = salesItem.UnitPrice;
+
+            TaxTypeCode = salesItem.TaxTypeCode;
+            TaxAmount = salesItem.TaxAmount;
+            TaxableAmount = salesItem.TaxableAmount;
+            TotalAmount = salesItem.TotalAmount;
+
+            DiscountRate = salesItem.DiscountRate;
+            DiscountAmount = salesItem.DiscountAmount;
         }
 
         public EtimsSaleItem(Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitDetail item,

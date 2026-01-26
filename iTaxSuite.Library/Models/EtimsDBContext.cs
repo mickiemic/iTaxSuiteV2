@@ -146,8 +146,16 @@ namespace iTaxSuite.Library.Models
                     .HasForeignKey<SalesTrxData>(e => e.SalesTrxID)
                     .HasPrincipalKey<SalesTransact>(e => e.SalesTrxID).IsRequired(true);
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
+                /*entity.HasMany(e => e.SalesItems).WithOne(e => e.SalesTransact)
+                    .HasForeignKey<SalesItem>(e => e.SalesTrxID)
+                    .HasPrincipalKey<SalesTransact>(e => e.SalesTrxID).IsRequired(true);*/
             });
             builder.Entity<SalesTrxData>().Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+            builder.Entity<SalesItem>(entity => 
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.SalesTrxID, e.ProductCode, e.BranchCode });
+            });
 
             builder.Entity<EtimsTransact>(entity =>
             {
@@ -191,6 +199,7 @@ namespace iTaxSuite.Library.Models
         // Sales Models
         public virtual DbSet<SalesTransact> SalesTransact { get; set; }
         public virtual DbSet<SalesTrxData> SalesTrxData { get; set; }
+        public virtual DbSet<SalesItem> SalesItem { get; set; }
 
         // Transaction Models
         public virtual DbSet<EtimsTransact> EtimsTransacts { get; set; }
