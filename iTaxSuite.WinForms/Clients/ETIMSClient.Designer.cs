@@ -57,6 +57,7 @@
             tabSetup = new TabPage();
             grpSetup = new GroupBox();
             lytTableSetup = new TableLayoutPanel();
+            btnSelectCodes = new Button();
             btnViewQueue = new Button();
             btnSetupTaxes = new Button();
             btnGetNotices = new Button();
@@ -158,6 +159,7 @@
             btnSelectItem.TabIndex = 1;
             btnSelectItem.Text = "Select Item";
             btnSelectItem.UseVisualStyleBackColor = true;
+            btnSelectItem.Click += btnSelectItem_Click;
             // 
             // btnSaveCompose
             // 
@@ -189,6 +191,7 @@
             btnSaveItem.TabIndex = 2;
             btnSaveItem.Text = "Save Item";
             btnSaveItem.UseVisualStyleBackColor = true;
+            btnSaveItem.Click += btnSaveItem_Click;
             // 
             // tabPurchases
             // 
@@ -362,6 +365,7 @@
             btnGetARCRNote.TabIndex = 14;
             btnGetARCRNote.Text = "Select AR CRNote";
             btnGetARCRNote.UseVisualStyleBackColor = true;
+            btnGetARCRNote.Click += btnGetARCRNote_Click;
             // 
             // btnGetARInvoice
             // 
@@ -438,6 +442,7 @@
             lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
             lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableSetup.Controls.Add(btnSelectCodes, 0, 0);
             lytTableSetup.Controls.Add(btnViewQueue, 2, 0);
             lytTableSetup.Controls.Add(btnSetupTaxes, 4, 0);
             lytTableSetup.Controls.Add(btnGetNotices, 3, 0);
@@ -448,6 +453,18 @@
             lytTableSetup.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
             lytTableSetup.Size = new Size(1367, 52);
             lytTableSetup.TabIndex = 0;
+            // 
+            // btnSelectCodes
+            // 
+            btnSelectCodes.Anchor = AnchorStyles.Left;
+            btnSelectCodes.Location = new Point(8, 9);
+            btnSelectCodes.Margin = new Padding(8, 3, 3, 3);
+            btnSelectCodes.Name = "btnSelectCodes";
+            btnSelectCodes.Size = new Size(177, 34);
+            btnSelectCodes.TabIndex = 15;
+            btnSelectCodes.Text = "Select Codes";
+            btnSelectCodes.UseVisualStyleBackColor = true;
+            btnSelectCodes.Click += btnSelectCodes_Click;
             // 
             // btnViewQueue
             // 
@@ -496,7 +513,7 @@
             // 
             splitContainer1.Panel2.Controls.Add(grpResponse);
             splitContainer1.Size = new Size(1396, 788);
-            splitContainer1.SplitterDistance = 692;
+            splitContainer1.SplitterDistance = 690;
             splitContainer1.TabIndex = 1;
             // 
             // grpRequest
@@ -505,7 +522,7 @@
             grpRequest.Controls.Add(reqEditor);
             grpRequest.Location = new Point(0, 3);
             grpRequest.Name = "grpRequest";
-            grpRequest.Size = new Size(689, 782);
+            grpRequest.Size = new Size(687, 782);
             grpRequest.TabIndex = 1;
             grpRequest.TabStop = false;
             grpRequest.Text = "Request Data";
@@ -513,13 +530,13 @@
             // reqEditor
             // 
             reqEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            reqEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 215);
+            reqEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 212);
             reqEditor.LexerName = null;
             reqEditor.Location = new Point(6, 26);
             reqEditor.Margin = new Padding(2);
             reqEditor.Name = "reqEditor";
             reqEditor.ScrollWidth = 86;
-            reqEditor.Size = new Size(678, 751);
+            reqEditor.Size = new Size(676, 751);
             reqEditor.TabIndex = 0;
             // 
             // grpResponse
@@ -528,7 +545,7 @@
             grpResponse.Controls.Add(respEditor);
             grpResponse.Location = new Point(3, 0);
             grpResponse.Name = "grpResponse";
-            grpResponse.Size = new Size(689, 788);
+            grpResponse.Size = new Size(690, 788);
             grpResponse.TabIndex = 1;
             grpResponse.TabStop = false;
             grpResponse.Text = "Response Data";
@@ -536,14 +553,14 @@
             // respEditor
             // 
             respEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            respEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 215);
+            respEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 212);
             respEditor.LexerName = null;
             respEditor.Location = new Point(6, 29);
             respEditor.Margin = new Padding(2);
             respEditor.Name = "respEditor";
             respEditor.ReadOnly = true;
             respEditor.ScrollWidth = 86;
-            respEditor.Size = new Size(678, 751);
+            respEditor.Size = new Size(679, 751);
             respEditor.TabIndex = 0;
             // 
             // btnSubmitRequest
@@ -657,5 +674,6 @@
         private Button btnCanceRequest;
         private TextBox txtReqAddress;
         private Button btnGetARInvoice;
+        private Button btnSelectCodes;
     }
 }

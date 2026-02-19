@@ -14,8 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using StackExchange.Redis;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace iTaxSuite.WinForms
 {
@@ -162,6 +160,7 @@ namespace iTaxSuite.WinForms
             catch (Exception ex)
             {
                 Console.WriteLine($"Application Startup failed: {ex.GetBaseException()}");
+                UI.Fatal($"Application Startup failed: {ex.GetBaseException()}");
                 Environment.Exit(-1);
             }
         }

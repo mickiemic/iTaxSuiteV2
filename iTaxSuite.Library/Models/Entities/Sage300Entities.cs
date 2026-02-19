@@ -57,6 +57,9 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string CacheKey => $"{AuthorityKey}";
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string ObjData { get; set; }
 
         [NotMapped]
         public List<S300TaxClass> Classes { get; set; } = new();
@@ -86,6 +89,53 @@ namespace iTaxSuite.Library.Models.Entities
             public string AuthorityKey { get; set; }
             [StringLength(3)]
             public string Currency { get; set; }
+        }
+    }
+    public class S300TaxClassRates
+    {
+        public List<S300TaxClass> Classes { get; set; } = new();
+        public List<S300TaxRate> Rates { get; set; } = new();
+        public S300TaxClassRates()
+        {
+        }
+        public S300TaxClassRates(S300TaxAuthority taxAuthority)
+        {
+            Classes = taxAuthority.Classes;
+            Rates = taxAuthority.Rates;
+        }
+    }
+    public class S300TaxAuthKey
+    {
+        [StringLength(48, MinimumLength = 3)]
+        public string AuthorityKey { get; set; }
+        public string CacheKey { get; set; }
+        [StringLength(3, MinimumLength = 3)]
+        public string Currency { get; set; }
+        public bool Active { get; set; } = false;
+        public Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.TaxAuthority.TaxTypeEnum TaxType { get; set; }
+        public Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.TaxAuthority.TaxBaseEnum TaxBase { get; set; }
+        public DateTime LastMaintained { get; set; }
+        public List<S300TaxClass> Classes { get; set; } = new();
+        public List<S300TaxRate> Rates { get; set; } = new();
+        public S300TaxAuthKey()
+        {
+        }
+        public S300TaxAuthKey(S300TaxAuthority taxAuthority)
+            : this()
+        {
+            AuthorityKey = taxAuthority.AuthorityKey;
+            CacheKey = taxAuthority.CacheKey;
+            Currency = taxAuthority.Currency;
+            Active = taxAuthority.Active;
+            TaxType = taxAuthority.TaxType;
+            TaxBase = taxAuthority.TaxBase;
+            LastMaintained = taxAuthority.LastMaintained;
+            if (!string.IsNullOrWhiteSpace(taxAuthority.ObjData))
+            {
+                var classRates = Newtonsoft.Json.JsonConvert.DeserializeObject<S300TaxClassRates>(taxAuthority.ObjData);
+                Classes = classRates.Classes;
+                Rates = classRates.Rates;
+            }
         }
     }
 

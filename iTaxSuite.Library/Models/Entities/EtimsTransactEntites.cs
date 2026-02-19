@@ -49,6 +49,10 @@ namespace iTaxSuite.Library.Models.Entities
         [System.Text.Json.Serialization.JsonIgnore]
         public override string CacheKey => $"{BranchCode}:{ReqType}:{DocNumber}:{DocStamp:s}";
         public virtual ClientBranch ClientBranch { get; set; }
+        public EtimsTransact()
+        {
+            RecordStatus = RecordStatus.QUEUEDOUT;
+        }
     }
     public class TransactFilter : APDatedFilter
     {

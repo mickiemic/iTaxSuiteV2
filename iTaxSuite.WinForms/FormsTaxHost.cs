@@ -1,5 +1,6 @@
-using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Services;
 using iTaxSuite.WinForms.Clients;
+using iTaxSuite.WinForms.Models;
 using iTaxSuite.WinForms.Properties;
 using System.Diagnostics;
 
@@ -7,10 +8,11 @@ namespace iTaxSuite.WinForms
 {
     public partial class FormsTaxHost : Form
     {
+        private readonly VSCUConfig _vscuConfig;
         private readonly ETIMSClient _eTIMSClient;
 
         private readonly HashSet<string> _clients;
-        public FormsTaxHost(ETIMSClient eTIMSClient)
+        public FormsTaxHost(ETIMSClient eTIMSClient, VSCUConfig vscuConfig)
         {
             _clients = new HashSet<string>()
             {
@@ -18,11 +20,13 @@ namespace iTaxSuite.WinForms
             };
 
             _eTIMSClient = eTIMSClient;
+            _vscuConfig = vscuConfig;
 
             Load += FormsTaxHost_Load;
             FormClosing += FormsTaxHost_FormClosing;
 
             InitializeComponent();
+            toolStripStatusClient.Text = _vscuConfig.ClientCode;
             SetStatus("We are loaded...");
         }
 

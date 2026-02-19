@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iTaxSuite.Library.Models;
 
@@ -11,9 +12,11 @@ using iTaxSuite.Library.Models;
 namespace iTaxSuite.Library.Migrations
 {
     [DbContext(typeof(ETimsDBContext))]
-    partial class ETimsDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260216190258_add-salesitem-linenumber")]
+    partial class addsalesitemlinenumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,7 +227,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("RequestID");
 
-                    b.ToTable("ApiRequestLog", (string)null);
+                    b.ToTable("ApiRequestLog");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ApplicationUser", b =>
@@ -392,7 +395,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasIndex("BranchCode");
 
-                    b.ToTable("BranchCustomer", (string)null);
+                    b.ToTable("BranchCustomer");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.BranchUser", b =>
@@ -475,7 +478,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasIndex("BranchCode");
 
-                    b.ToTable("BranchUser", (string)null);
+                    b.ToTable("BranchUser");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.BranchVendor", b =>
@@ -530,7 +533,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasIndex("BranchCode");
 
-                    b.ToTable("BranchVendor", (string)null);
+                    b.ToTable("BranchVendor");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ClientBranch", b =>
@@ -621,7 +624,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("ClientCode", "BranchCode");
 
-                    b.ToTable("ClientBranch", (string)null);
+                    b.ToTable("ClientBranch");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.EntityAttribute", b =>
@@ -681,7 +684,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("AttributeID");
 
-                    b.ToTable("EntityAttribute", (string)null);
+                    b.ToTable("EntityAttribute");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.EtimsTransact", b =>
@@ -767,7 +770,7 @@ namespace iTaxSuite.Library.Migrations
                     b.HasIndex("EtimsTrxID")
                         .IsUnique();
 
-                    b.ToTable("EtimsTransact", (string)null);
+                    b.ToTable("EtimsTransact");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ExtSystConfig", b =>
@@ -826,7 +829,7 @@ namespace iTaxSuite.Library.Migrations
                     b.HasIndex("LockColumn")
                         .IsUnique();
 
-                    b.ToTable("ExtSystConfig", null, t =>
+                    b.ToTable("ExtSystConfig", t =>
                         {
                             t.HasCheckConstraint("CK_SingleRowOnly", "[LockColumn] = 'X'");
                         });
@@ -891,7 +894,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("ProductCode");
 
-                    b.ToTable("Product", (string)null);
+                    b.ToTable("Product");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ProductData", b =>
@@ -938,7 +941,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("ProductCode");
 
-                    b.ToTable("ProductData", (string)null);
+                    b.ToTable("ProductData");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.PurchTransact", b =>
@@ -1074,7 +1077,7 @@ namespace iTaxSuite.Library.Migrations
                     b.HasIndex("PurchaseID")
                         .IsUnique();
 
-                    b.ToTable("PurchTransact", (string)null);
+                    b.ToTable("PurchTransact");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.PurchTrxData", b =>
@@ -1120,7 +1123,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("PurchaseID");
 
-                    b.ToTable("PurchTrxData", (string)null);
+                    b.ToTable("PurchTrxData");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.S300TaxAuthority", b =>
@@ -1167,7 +1170,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("AuthorityKey");
 
-                    b.ToTable("S300TaxAuthority", (string)null);
+                    b.ToTable("S300TaxAuthority");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SalesItem", b =>
@@ -1281,7 +1284,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasIndex("SalesTrxID", "BranchCode");
 
-                    b.ToTable("SalesItem", (string)null);
+                    b.ToTable("SalesItem");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SalesTransact", b =>
@@ -1458,7 +1461,7 @@ namespace iTaxSuite.Library.Migrations
                     b.HasIndex("SalesTrxID")
                         .IsUnique();
 
-                    b.ToTable("SalesTransact", (string)null);
+                    b.ToTable("SalesTransact");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SalesTrxData", b =>
@@ -1504,7 +1507,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("SalesTrxID");
 
-                    b.ToTable("SalesTrxData", (string)null);
+                    b.ToTable("SalesTrxData");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.StockItem", b =>
@@ -1569,7 +1572,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasIndex("BranchCode");
 
-                    b.ToTable("StockItem", (string)null);
+                    b.ToTable("StockItem");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.StockMovData", b =>
@@ -1615,7 +1618,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("MovementID");
 
-                    b.ToTable("StockMovData", (string)null);
+                    b.ToTable("StockMovData");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.StockMovement", b =>
@@ -1683,7 +1686,7 @@ namespace iTaxSuite.Library.Migrations
                     b.HasIndex("MovementID")
                         .IsUnique();
 
-                    b.ToTable("StockMovement", (string)null);
+                    b.ToTable("StockMovement");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SyncChannel", b =>
@@ -1748,7 +1751,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasKey("ChannelId");
 
-                    b.ToTable("SyncChannel", (string)null);
+                    b.ToTable("SyncChannel");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.TaxClient", b =>
@@ -1808,7 +1811,7 @@ namespace iTaxSuite.Library.Migrations
 
                     b.HasIndex("SystemCode");
 
-                    b.ToTable("TaxClient", null, t =>
+                    b.ToTable("TaxClient", t =>
                         {
                             t.HasCheckConstraint("CK_SingleRowOnly", "[LockColumn] = 'X'")
                                 .HasName("CK_SingleRowOnly1");

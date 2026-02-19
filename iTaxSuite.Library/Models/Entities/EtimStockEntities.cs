@@ -66,7 +66,8 @@ namespace iTaxSuite.Library.Models.Entities
                 ReqKey = CacheKey,
                 ParentKey = null,
                 IsNewRequest = true,
-                NextSeqNumber = -1
+                NextSeqNumber = -1,
+                RecordStatus = RecordStatus.QUEUEDOUT
             };
             return etimsTransact;
         }
@@ -318,6 +319,5 @@ namespace iTaxSuite.Library.Models.Entities
             return Newtonsoft.Json.JsonConvert.DeserializeObject<SaveItemReq>(RequestPayload);
         }
     }
-       
-
+    
 }

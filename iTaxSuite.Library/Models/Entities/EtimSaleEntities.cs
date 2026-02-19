@@ -306,7 +306,8 @@ namespace iTaxSuite.Library.Models.Entities
                 ReqKey = $"{nameof(ETIMSReqType.SAVE_SALE)}:{CacheKey}",
                 ParentKey = null,
                 IsNewRequest = true,
-                NextSeqNumber = -1
+                NextSeqNumber = -1,
+                RecordStatus = RecordStatus.QUEUEDOUT
             };
             return etimsTransact;
         }
@@ -327,7 +328,8 @@ namespace iTaxSuite.Library.Models.Entities
                 ReqKey = $"{nameof(ETIMSReqType.SAVE_STOCKIO)}:{CacheKey}",
                 ParentKey = $"{nameof(ETIMSReqType.SAVE_SALE)}:{CacheKey}",
                 IsNewRequest = true,
-                NextSeqNumber = -1
+                NextSeqNumber = -1,
+                RecordStatus = RecordStatus.QUEUEDOUT
             };
             return etimsTransact;
         }
@@ -393,6 +395,7 @@ namespace iTaxSuite.Library.Models.Entities
         [Key]
         [Required]
         public int SalesTrxID { get; set; }
+        public int SourceLineNo { get; set; }
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
@@ -410,19 +413,19 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(128)]
         public string Description { get; set; }
-        /*[Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]*/
+        [NotMapped]
         public string _pkgUnitCode { get; set; }
         [Required]
         [StringLength(8)]
         public string PkgUnitCode { get; set; }
+        [Precision(19, 3)]
         public decimal Package { get; set; }
-        /*[Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]*/
+        [NotMapped]
         public string _qtyUnitCode { get; set; }
         [Required]
         [StringLength(8)]
         public string QtyUnitCode { get; set; }
+        [Precision(19, 3)]
         public decimal Quantity { get; set; }
         [Required]
         public bool IsStockable { get; set; }
@@ -434,6 +437,9 @@ namespace iTaxSuite.Library.Models.Entities
         public decimal DiscountRate { get; set; }
         [Precision(19, 3)]
         public decimal TaxableAmount { get; set; }
+        [NotMapped]
+        [Precision(19, 3)]
+        public decimal TaxRate { get; set; }
         [Precision(19, 3)]
         public decimal TaxAmount { get; set; }
         [Precision(19, 3)]
@@ -442,7 +448,7 @@ namespace iTaxSuite.Library.Models.Entities
         public decimal SupplyPrice { get; set; }
         public RecordStatus RecordStatus { get; set; } = RecordStatus.NONE;
         
-        [ForeignKey("SalesTrxID")]
+        //[ForeignKey("SalesTrxID")]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public SalesTransact SalesTransact { get; set; }
@@ -457,6 +463,7 @@ namespace iTaxSuite.Library.Models.Entities
             SalesTransact = salesTransact;
             BranchCode = salesTransact.BranchCode;
 
+            SourceLineNo = item.LineUniquifier;
             ItemSeqNumber = -1;
             ProductCode = item.Item;
             Description = item.Description;
@@ -489,6 +496,7 @@ namespace iTaxSuite.Library.Models.Entities
                     var tRate = taxGroup.Authorities[item.TaxAuthority1].Rates.FirstOrDefault(r => r.ItemRate1 == item.TaxRate1);
                     TaxTypeCode = ETimsUtils.GetTaxRate(tClass, tRate);
                 }
+                TaxRate = item.TaxRate1;
             }
             else
             {
@@ -497,18 +505,22 @@ namespace iTaxSuite.Library.Models.Entities
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority2) && taxAuthKeys.Contains(item.TaxAuthority2))
             {
                 TaxAmount += item.TaxAmount2;
+                TaxRate = item.TaxRate2;
             }
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority3) && taxAuthKeys.Contains(item.TaxAuthority3))
             {
                 TaxAmount += item.TaxAmount3;
+                TaxRate = item.TaxRate3;
             }
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority4) && taxAuthKeys.Contains(item.TaxAuthority4))
             {
                 TaxAmount += item.TaxAmount4;
+                TaxRate = item.TaxRate4;
             }
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority5) && taxAuthKeys.Contains(item.TaxAuthority5))
             {
                 TaxAmount += item.TaxAmount5;
+                TaxRate = item.TaxRate5;
             }
 
             TaxableAmount = item.TaxBase1;
@@ -528,6 +540,7 @@ namespace iTaxSuite.Library.Models.Entities
             SalesTransact = salesTransact;
             BranchCode = salesTransact.BranchCode;
 
+            SourceLineNo = Convert.ToInt32(item.LineNumber);
             ItemSeqNumber = -1; // Internal
             ProductCode = item.ItemNumber;
             ItemTypeCode = "3";
@@ -567,6 +580,7 @@ namespace iTaxSuite.Library.Models.Entities
                         throw new Exception($"AR Item {item.ItemNumber} has an invalid Rate: {item.TaxRate1}");
                     TaxTypeCode = ETimsUtils.GetTaxRate(tClass, tRate);
                 }
+                TaxRate = item.TaxRate1;
             }
             else
             {
@@ -575,18 +589,22 @@ namespace iTaxSuite.Library.Models.Entities
             if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority2) && taxAuthKeys.Contains(arInvoice.TaxAuthority2))
             {
                 TaxAmount += item.TaxAmount2;
+                TaxRate = item.TaxRate2;
             }
             if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority3) && taxAuthKeys.Contains(arInvoice.TaxAuthority3))
             {
                 TaxAmount += item.TaxAmount3;
+                TaxRate = item.TaxRate3;
             }
             if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority4) && taxAuthKeys.Contains(arInvoice.TaxAuthority4))
             {
                 TaxAmount += item.TaxAmount4;
+                TaxRate = item.TaxRate4;
             }
             if (!string.IsNullOrWhiteSpace(arInvoice.TaxAuthority5) && taxAuthKeys.Contains(arInvoice.TaxAuthority5))
             {
                 TaxAmount += item.TaxAmount5;
+                TaxRate = item.TaxRate5;
             }
 
             TaxableAmount = item.TaxBase1;
@@ -639,6 +657,7 @@ namespace iTaxSuite.Library.Models.Entities
                     var tRate = taxGroup.Authorities[item.TaxAuthority1].Rates.FirstOrDefault(r => r.ItemRate1 == item.TaxRate1);
                     TaxTypeCode = ETimsUtils.GetTaxRate(tClass, tRate);
                 }
+                TaxRate = item.TaxRate1;
             }
             else
             {
@@ -647,18 +666,22 @@ namespace iTaxSuite.Library.Models.Entities
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority2) && taxAuthKeys.Contains(item.TaxAuthority2))
             {
                 TaxAmount += item.TaxAmount2;
+                TaxRate = item.TaxRate2;
             }
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority3) && taxAuthKeys.Contains(item.TaxAuthority3))
             {
                 TaxAmount += item.TaxAmount3;
+                TaxRate = item.TaxRate3;
             }
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority4) && taxAuthKeys.Contains(item.TaxAuthority4))
             {
                 TaxAmount += item.TaxAmount4;
+                TaxRate = item.TaxRate4;
             }
             if (!string.IsNullOrWhiteSpace(item.TaxAuthority5) && taxAuthKeys.Contains(item.TaxAuthority5))
             {
                 TaxAmount += item.TaxAmount5;
+                TaxRate = item.TaxRate5;
             }
 
             TaxableAmount = item.TaxBase1;

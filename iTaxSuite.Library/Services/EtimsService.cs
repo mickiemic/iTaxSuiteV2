@@ -16,6 +16,7 @@ namespace iTaxSuite.Library.Services
         Task<Result<StockIOSaveResp, string>> SaveEtimsStockIO(StockIOSaveReq stockIOSaveReq);
         Task<Result<StockMstSaveResp, string>> SaveEtimsStockMaster(StockMstSaveReq stockMstSaveReq);
         Task<Result<bool, string>> SelectBranches(bool log = false);
+        Task<Result<SelectCodeResp, string>> SelectCodes(string strInput);
         Task<Result<SelectItemResp, string>> SelectItems(string strInput);
         Task<Result<NoticeResp, string>> SelectNotices(string lastReqDt);
         Task<Result<TrnsPurchaseSalesResp, string>> SelectPurchaseSales(string lastReqDt);
@@ -96,6 +97,43 @@ namespace iTaxSuite.Library.Services
                 {
                     UI.Info($"<< {_method_}: {_strResponse}");
                     result = JsonConvert.DeserializeObject<SelectItemResp>(_strResponse);
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
+        public async Task<Result<SelectCodeResp, string>> SelectCodes(string strInput)
+        {
+            string _method_ = "SelectCodes";
+            string _strResponse = string.Empty;
+            SelectCodeResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/code/selectCodes");
+                var requestObj = new SelectCodeReq
+                {
+                    PIN = _clientBranch.TaxClient.TaxNumber,
+                    LastRequest = strInput
+                };
+                string jsonRequest = JsonConvert.SerializeObject(requestObj);
+                UI.Info($">> {_method_}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SelectCodeResp>(_strResponse);
                     return result;
                 }
             }

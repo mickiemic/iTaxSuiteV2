@@ -61,6 +61,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class SelectItemResp : ETIMSBaseResp
     {
         [Newtonsoft.Json.JsonProperty("data")]
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
         public EItemsWrapper Data { get; set; }
 
         public int GetItemCount()
@@ -73,6 +74,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class EItemsWrapper
     {
         [Newtonsoft.Json.JsonProperty("itemList")]
+        [System.Text.Json.Serialization.JsonPropertyName("itemList")]
         public List<ETimsItem> ItemList { get; set; } = new();
     }
     public class ETimsItem
@@ -85,33 +87,46 @@ namespace iTaxSuite.Library.Models.ViewModels
         [Newtonsoft.Json.JsonProperty("itemClsCd")]
         public string ItemClassCode { get; set; }
         [Newtonsoft.Json.JsonProperty("itemTyCd")]
-        [System.Text.Json.Serialization.JsonPropertyName("itemTyCd")]
         public string ItemTypeCode { get; set; }
         [Newtonsoft.Json.JsonProperty("itemNm")]
         public string ItemName { get; set; }
-        public string itemStdNm { get; set; }
-        public string orgnNatCd { get; set; }
+        [Newtonsoft.Json.JsonProperty("itemStdNm")]
+        public string ItemStdName { get; set; }
+        [Newtonsoft.Json.JsonProperty("orgnNatCd")]
+        public string OriginNatCode { get; set; }
         [Newtonsoft.Json.JsonProperty("pkgUnitCd")]
         public string PkgUnitCode { get; set; }
         [Newtonsoft.Json.JsonProperty("qtyUnitCd")]
         public string QtyUnitCode { get; set; }
         [Newtonsoft.Json.JsonProperty("taxTyCd")]
         public string TaxTypeCode { get; set; }
-        public string btchNo { get; set; }
-        public string regBhfId { get; set; }
+        [Newtonsoft.Json.JsonProperty("btchNo")]
+        public string BatchNo { get; set; }
+        [Newtonsoft.Json.JsonProperty("regBhfId")]
+        public string RegBranchID { get; set; }
         [Newtonsoft.Json.JsonProperty("bcd")]
         public string Barcode { get; set; }
-        public double dftPrc { get; set; }
-        public double grpPrcL1 { get; set; }
-        public double grpPrcL2 { get; set; }
-        public double grpPrcL3 { get; set; }
-        public double grpPrcL4 { get; set; }
-        public double grpPrcL5 { get; set; }
-        public string addInfo { get; set; }
-        public double sftyQty { get; set; }
-        public string isrcAplcbYn { get; set; }
+        [Newtonsoft.Json.JsonProperty("dftPrc")]
+        public double DftPrc { get; set; }
+        [Newtonsoft.Json.JsonProperty("grpPrcL1")]
+        public double GroupPrcL1 { get; set; }
+        [Newtonsoft.Json.JsonProperty("grpPrcL2")]
+        public double GroupPrcL2 { get; set; }
+        [Newtonsoft.Json.JsonProperty("grpPrcL3")]
+        public double GroupPrcL3 { get; set; }
+        [Newtonsoft.Json.JsonProperty("grpPrcL4")]
+        public double GroupPrcL4 { get; set; }
+        [Newtonsoft.Json.JsonProperty("grpPrcL5")]
+        public string GroupPrcL5 { get; set; }
+        [Newtonsoft.Json.JsonProperty("addInfo")]
+        public string AdditionalInfo { get; set; }
+        [Newtonsoft.Json.JsonProperty("sftyQty")]
+        public string SafetyQty { get; set; }
+        [Newtonsoft.Json.JsonProperty("isrcAplcbYn")]
+        public char InsuranceAplcb { get; set; }
         public string rraModYn { get; set; }
-        public string useYn { get; set; }
+        [Newtonsoft.Json.JsonProperty("useYn")]
+        public char Use { get; set; }
     }
 
     // Notices Models
@@ -153,4 +168,56 @@ namespace iTaxSuite.Library.Models.ViewModels
         public string RegistrationDateTime { get; set; }
     }
 
+    // Codes List
+    public class SelectCodeReq : ETIMSBaseReq
+    {
+        [Newtonsoft.Json.JsonProperty("lastReqDt")]
+        public string LastRequest { get; set; }
+        public SelectCodeReq()
+        {
+        }
+        public SelectCodeReq(ClientBranch clientBranch)
+            : this()
+        {
+            if (string.IsNullOrEmpty(clientBranch?.TaxClient?.TaxNumber))
+                throw new Exception("TaxClient or TaxNumber invalid");
+            PIN = clientBranch.TaxClient.TaxNumber;
+        }
+    }
+    public class SelectCodeResp : ETIMSBaseResp
+    {
+        [Newtonsoft.Json.JsonProperty("data")]
+        [System.Text.Json.Serialization.JsonPropertyName("data")]
+        public ECodesWrapper Data { get; set; }
+    }
+    public class ECodesWrapper
+    {
+        [Newtonsoft.Json.JsonProperty("clsList")]
+        [System.Text.Json.Serialization.JsonPropertyName("clsList")]
+        public List<ClasssList> EtimsCodes { get; set; } = new();
+    }
+    public class ClasssList
+    {
+        public string cdCls { get; set; }
+        public string cdClsNm { get; set; }
+        public string cdClsDesc { get; set; }
+        public string useYn { get; set; }
+        public string userDfnNm1 { get; set; }
+        public string userDfnNm2 { get; set; }
+        public object userDfnNm3 { get; set; }
+        [Newtonsoft.Json.JsonProperty("dtlList")]
+        [System.Text.Json.Serialization.JsonPropertyName("dtlList")]
+        public List<CodeItem> CodeList { get; set; }
+    }
+    public class CodeItem
+    {
+        public string cd { get; set; }
+        public string cdNm { get; set; }
+        public string cdDesc { get; set; }
+        public string useYn { get; set; }
+        public int srtOrd { get; set; }
+        public string userDfnCd1 { get; set; }
+        public string userDfnCd2 { get; set; }
+        public object userDfnCd3 { get; set; }
+    }
 }

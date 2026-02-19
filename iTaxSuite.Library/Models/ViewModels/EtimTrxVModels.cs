@@ -2,6 +2,7 @@
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.Entities;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace iTaxSuite.Library.Models.ViewModels
 {
@@ -148,10 +149,15 @@ namespace iTaxSuite.Library.Models.ViewModels
                 Receipt = new EtimsReceipt(customer);
             }
 
+            var lineErrors = new List<string>();
             foreach (var oeItem in oeInvoice.InvoiceDetails)
             {
                 var salesItem = new EtimsSaleItem(oeItem, taxGroup, taxAuthKeys);
-
+                var _lineError = salesItem.GetErrors();
+                if (!string.IsNullOrWhiteSpace(_lineError))
+                {
+                    lineErrors.Add(_lineError);
+                }
                 TotalAmount += salesItem.TotalAmount;
 
                 switch (salesItem.TaxTypeCode)
@@ -189,6 +195,10 @@ namespace iTaxSuite.Library.Models.ViewModels
                 }
 
                 ItemList.Add(salesItem);
+            }
+            if (lineErrors.Count > 0)
+            {
+                throw new Exception(string.Join(Environment.NewLine, lineErrors));
             }
 
             TotalItemCount = ItemList.Count;
@@ -242,6 +252,50 @@ namespace iTaxSuite.Library.Models.ViewModels
             {
                 var salesItem = new EtimsSaleItem(_salesItem);
                 TotalAmount += salesItem.TotalAmount;
+                switch (salesItem.TaxTypeCode)
+                {
+                    case "A":
+                        {
+                            TaxableAmountA += salesItem.TaxableAmount;
+                            TaxAmountA += salesItem.TaxAmount;
+                            if (TaxRateA == 0 && _salesItem.TaxRate > 0)
+                                TaxRateA = _salesItem.TaxRate;
+                        }
+                        break;
+                    case "B":
+                        {
+                            TaxableAmountB += salesItem.TaxableAmount;
+                            TaxAmountB += salesItem.TaxAmount;
+                            if (TaxRateB == 0 && _salesItem.TaxRate > 0)
+                                TaxRateB = _salesItem.TaxRate;
+                        }
+                        break;
+                    case "C":
+                        {
+                            TaxableAmountC += salesItem.TaxableAmount;
+                            TaxAmountC += salesItem.TaxAmount;
+                            if (TaxRateC == 0 && _salesItem.TaxRate > 0)
+                                TaxRateC = _salesItem.TaxRate;
+                        }
+                        break;
+                    case "D":
+                        {
+                            TaxableAmountD += salesItem.TaxableAmount;
+                            TaxAmountD += salesItem.TaxAmount;
+                            if (TaxRateD == 0 && _salesItem.TaxRate > 0)
+                                TaxRateD = _salesItem.TaxRate;
+                        }
+                        break;
+                    case "E":
+                        {
+                            TaxableAmountE += salesItem.TaxableAmount;
+                            TaxAmountE += salesItem.TaxAmount;
+                            if (TaxRateE == 0 && _salesItem.TaxRate > 0)
+                                TaxRateE = _salesItem.TaxRate;
+                        }
+                        break;
+                }
+
                 ItemList.Add(salesItem);
             }
 
@@ -292,42 +346,50 @@ namespace iTaxSuite.Library.Models.ViewModels
                 Receipt = new EtimsReceipt(customer);
             }
 
-            foreach (var oeItem in crNote.CreditDebitDetails)
+            foreach (var _salesItem in salesTransact.SalesItems)
             {
-                var salesItem = new EtimsSaleItem(oeItem, taxGroup, taxAuthKeys);
-
+                var salesItem = new EtimsSaleItem(_salesItem);
                 TotalAmount += salesItem.TotalAmount;
-
                 switch (salesItem.TaxTypeCode)
                 {
                     case "A":
                         {
                             TaxableAmountA += salesItem.TaxableAmount;
                             TaxAmountA += salesItem.TaxAmount;
+                            if (TaxRateA == 0 && _salesItem.TaxRate > 0)
+                                TaxRateA = _salesItem.TaxRate;
                         }
                         break;
                     case "B":
                         {
                             TaxableAmountB += salesItem.TaxableAmount;
                             TaxAmountB += salesItem.TaxAmount;
+                            if (TaxRateB == 0 && _salesItem.TaxRate > 0)
+                                TaxRateB = _salesItem.TaxRate;
                         }
                         break;
                     case "C":
                         {
                             TaxableAmountC += salesItem.TaxableAmount;
                             TaxAmountC += salesItem.TaxAmount;
+                            if (TaxRateC == 0 && _salesItem.TaxRate > 0)
+                                TaxRateC = _salesItem.TaxRate;
                         }
                         break;
                     case "D":
                         {
                             TaxableAmountD += salesItem.TaxableAmount;
                             TaxAmountD += salesItem.TaxAmount;
+                            if (TaxRateD == 0 && _salesItem.TaxRate > 0)
+                                TaxRateD = _salesItem.TaxRate;
                         }
                         break;
                     case "E":
                         {
                             TaxableAmountE += salesItem.TaxableAmount;
                             TaxAmountE += salesItem.TaxAmount;
+                            if (TaxRateE == 0 && _salesItem.TaxRate > 0)
+                                TaxRateE = _salesItem.TaxRate;
                         }
                         break;
                 }
@@ -342,7 +404,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         }
 
         public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice,
-            S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
+            SalesTransact salesTransact, S300TaxGroup taxGroup, HashSet<string> taxAuthKeysx,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
             : this()
         {
@@ -379,10 +441,9 @@ namespace iTaxSuite.Library.Models.ViewModels
                 Receipt = new EtimsReceipt(customer);
             }
 
-            foreach (var arItem in arInvoice.InvoiceDetails)
+            foreach (var _salesItem in salesTransact.SalesItems)
             {
-                var salesItem = new EtimsSaleItem(arInvoice, arItem, taxGroup, taxAuthKeys);
-
+                var salesItem = new EtimsSaleItem(_salesItem);
                 TotalAmount += salesItem.TotalAmount;
 
                 switch (salesItem.TaxTypeCode)
@@ -391,34 +452,43 @@ namespace iTaxSuite.Library.Models.ViewModels
                         {
                             TaxableAmountA += salesItem.TaxableAmount;
                             TaxAmountA += salesItem.TaxAmount;
+                            if (TaxRateA == 0 && _salesItem.TaxRate > 0)
+                                TaxRateA = _salesItem.TaxRate;
                         }
                         break;
                     case "B":
                         {
                             TaxableAmountB += salesItem.TaxableAmount;
                             TaxAmountB += salesItem.TaxAmount;
+                            if (TaxRateB == 0 && _salesItem.TaxRate > 0)
+                                TaxRateB = _salesItem.TaxRate;
                         }
                         break;
                     case "C":
                         {
                             TaxableAmountC += salesItem.TaxableAmount;
                             TaxAmountC += salesItem.TaxAmount;
+                            if (TaxRateC == 0 && _salesItem.TaxRate > 0)
+                                TaxRateC = _salesItem.TaxRate;
                         }
                         break;
                     case "D":
                         {
                             TaxableAmountD += salesItem.TaxableAmount;
                             TaxAmountD += salesItem.TaxAmount;
+                            if (TaxRateD == 0 && _salesItem.TaxRate > 0)
+                                TaxRateD = _salesItem.TaxRate;
                         }
                         break;
                     case "E":
                         {
                             TaxableAmountE += salesItem.TaxableAmount;
                             TaxAmountE += salesItem.TaxAmount;
+                            if (TaxRateE == 0 && _salesItem.TaxRate > 0)
+                                TaxRateE = _salesItem.TaxRate;
                         }
                         break;
                 }
-
                 ItemList.Add(salesItem);
             }
 
@@ -649,6 +719,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             //TODO: Add Error handling while converting
 
             ItemSeqNumber = -1; // Internal
+            _icItemNumber = item.Item;
 
             ItemCode = item.Item;
             ItemName = item.Description;
@@ -705,10 +776,12 @@ namespace iTaxSuite.Library.Models.ViewModels
             DiscountAmount = item.DiscountedExtendedAmount;
         }
 
-        public EtimsSaleItem(Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.InvoiceDetail item,
+        public EtimsSaleItem(Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice, 
+            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.InvoiceDetail item,
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
         {
             ItemSeqNumber = -1; // Internal
+            _icItemNumber = item.ItemNumber;
 
             ItemCode = item.ItemNumber;
             ItemName = item.Description;
@@ -777,6 +850,18 @@ namespace iTaxSuite.Library.Models.ViewModels
 
             DiscountRate = 0;
             DiscountAmount = 0;
+        }
+
+        public string GetErrors()
+        {
+            var sb = new StringBuilder();
+            if (string.IsNullOrWhiteSpace(TaxTypeCode))
+            {
+                if (sb.Length == 0)
+                    sb.AppendLine($"Item Number:{_icItemNumber} Code:{ItemCode} has the following errors:");
+                sb.AppendLine($"TaxTypeCode (taxTyCd) is missing");
+            }
+            return sb.ToString();
         }
 
     }

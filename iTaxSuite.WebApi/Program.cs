@@ -211,8 +211,8 @@ try
             DataSeeder.InitializeDB(context);
 
             var masterSvc = services.GetRequiredService<IMasterDataSvc>();
-            await masterSvc.InitializeCacheData();
             await masterSvc.InitiateTaxSetup();
+            await masterSvc.InitializeCacheData();
 
             var cancellationTokenSource = new CancellationTokenSource();
             var scheduler = services.GetRequiredService<ISchedulerService>();
@@ -231,6 +231,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Application Startup failed: {ex.GetBaseException().ToString()}");
+    UI.Fatal($"Application Startup failed: {ex.GetBaseException().ToString()}");
     Environment.Exit(-1);
 }
 finally

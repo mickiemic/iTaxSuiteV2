@@ -29,8 +29,8 @@ namespace iTaxSuite.Tester
             var _httpClientFactory = A.Fake<IHttpClientFactory>();
             var _connectionMultiplexer = A.Fake<IConnectionMultiplexer>();
 
-            _masterDataSvc = new MasterDataSvc(_dbContext, _connectionMultiplexer);
-            _etimsService = new EtimsService(_httpClientFactory, _dbContext, _masterDataSvc, _connectionMultiplexer);
+            //_masterDataSvc = new MasterDataSvc(_dbContext, _connectionMultiplexer);
+            //_etimsService = new EtimsService(_httpClientFactory, _dbContext, _masterDataSvc, _connectionMultiplexer);
         }
 
         [Fact]

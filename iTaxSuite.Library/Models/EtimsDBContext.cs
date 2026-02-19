@@ -142,19 +142,24 @@ namespace iTaxSuite.Library.Models
                 entity.HasAlternateKey(e => e.SalesTrxID);
                 entity.HasIndex(e => e.SalesTrxID).IsUnique();
                 entity.Property(e => e.SalesTrxID).UseIdentityColumn(1001, 1);
+                
                 entity.HasOne(e => e.SalesTrxData).WithOne(e => e.SalesTransact)
                     .HasForeignKey<SalesTrxData>(e => e.SalesTrxID)
                     .HasPrincipalKey<SalesTransact>(e => e.SalesTrxID).IsRequired(true);
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
-                /*entity.HasMany(e => e.SalesItems).WithOne(e => e.SalesTransact)
-                    .HasForeignKey<SalesItem>(e => e.SalesTrxID)
-                    .HasPrincipalKey<SalesTransact>(e => e.SalesTrxID).IsRequired(true);*/
+                
+                entity.HasAlternateKey(e => new { e.SalesTrxID, e.BranchCode });
+                entity.HasMany(e => e.SalesItems).WithOne(e => e.SalesTransact)
+                    .HasForeignKey(e => new { e.SalesTrxID, e.BranchCode })
+                    .HasPrincipalKey(e => new { e.SalesTrxID, e.BranchCode })
+                    .IsRequired(true);
             });
             builder.Entity<SalesTrxData>().Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
             builder.Entity<SalesItem>(entity => 
             {
                 entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
                 entity.HasKey(e => new { e.SalesTrxID, e.ProductCode, e.BranchCode });
+                // entity.HasIndex(e => new { e.SalesTrxID, e.SourceLineNo });
             });
 
             builder.Entity<EtimsTransact>(entity =>

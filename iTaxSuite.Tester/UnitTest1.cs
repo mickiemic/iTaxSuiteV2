@@ -8,13 +8,13 @@ namespace iTaxSuite.Tester
         // [Fact]
         public async Task Test1()
         {
-            var controller = new HealthController();
+            /*var controller = new HealthController();
 
             var actionResult = await controller.Echo();
 
             var okResult = Assert.IsType<OkObjectResult>(actionResult);
             //var echoResult = Assert.IsType<string>(okResult.Value);
-            Assert.Equal(200, okResult.StatusCode);
+            Assert.Equal(200, okResult.StatusCode);*/
         }
     }
 }

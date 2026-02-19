@@ -92,12 +92,18 @@ namespace iTaxSuite.Library.Services
 
                 // Tax Setup
                 await _baseDb.KeyDeleteAsync(CacheConst.TAXAUTH_HASHKEY);
-                foreach (var authority in _dbContext.S300TaxAuthority.Where(x => x.Active == true).AsNoTracking())
+                int _taxAuthCount = 0;
+                foreach (var authority in _dbContext.S300TaxAuthority.Where(x => x.Active == true).Select(x => new S300TaxAuthKey(x)).AsNoTracking())
                 {
+                    _taxAuthCount++;
                     if (!await _baseDb.SetHashValueAsync(CacheConst.TAXAUTH_HASHKEY, authority.CacheKey, authority))
                     {
                         UI.Error($"{_method_} failed for authority code:{authority.CacheKey}");
                     }
+                }
+                if (_taxAuthCount == 0)
+                {
+                    throw new Exception($"{_method_} failed, Invalid TaxAuthoritySetup, No Active Authorities");
                 }
 
                 // Products
@@ -555,7 +561,9 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var tGroupsResult = await GetTaxGroups();
-                if (tGroupsResult.IsSuccess && tGroupsResult.GetValue().Count > 0)
+                var tAuthoritiesResult = await GetActiveAuthorities();
+                if (tGroupsResult.IsSuccess && tGroupsResult.GetValue().Count > 0 
+                    && tAuthoritiesResult.IsSuccess && tAuthoritiesResult.GetValue().Count > 0)
                 {
                     result = tGroupsResult.GetValue();
                     return result;
@@ -600,6 +608,16 @@ namespace iTaxSuite.Library.Services
                 authorities.Authories.ForEach(authority =>
                 {
                     var taxAuthority = new S300TaxAuthority(authority);
+                    var _rates = rates.Rates.Where(r => r.TaxAuthority.Equals(taxAuthority.AuthorityKey)).ToList();
+                    if (_rates != null && _rates.Any())
+                    {
+                        _rates.ForEach(rate =>
+                        {
+                            taxAuthority.Rates.Add(new S300TaxRate(rate));
+                        });
+                    }
+                    var classRates = new S300TaxClassRates(taxAuthority);
+                    taxAuthority.ObjData = JsonConvert.SerializeObject(classRates);
                     if (_dbContext.S300TaxAuthority.AddIfNotExists(taxAuthority, p => p.AuthorityKey == taxAuthority.AuthorityKey) == null)
                     {
                         UI.Warn($"S300TaxAuthority {taxAuthority.AuthorityKey} Already Exists");
@@ -612,14 +630,6 @@ namespace iTaxSuite.Library.Services
                         }
                     }
                     
-                    var _rates = rates.Rates.Where(r => r.TaxAuthority.Equals(taxAuthority.AuthorityKey)).ToList();
-                    if (_rates != null && _rates.Any())
-                    {
-                        _rates.ForEach(rate =>
-                        {
-                            taxAuthority.Rates.Add(new S300TaxRate(rate));
-                        });
-                    }
                     authorityMap.Add(taxAuthority.CacheKey, taxAuthority);
 
                 });
