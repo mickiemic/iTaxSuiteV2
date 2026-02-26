@@ -357,13 +357,29 @@ namespace iTaxSuite.Library.Models.ViewModels
             return string.IsNullOrWhiteSpace(apiError);
         }
     }
+    public class ARItems : Sage300ERPResp
+    {
+        [Newtonsoft.Json.JsonProperty("value")]
+        public List<Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item> Items { get; set; }
+    }
 
-    // AP Vendors
+    // AP Models
     public class APVendors : Sage300ERPResp
     {
         [Newtonsoft.Json.JsonProperty("value")]
         public List<Sage.CA.SBS.ERP.Sage300.AP.WebApi.Models.Vendor> Vendors { get; set; }
     }
 
+    // GL Models
+    public class GLAccountGroups : Sage300ERPResp
+    {
+        [Newtonsoft.Json.JsonProperty("value")]
+        public List<Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.AccountGroup> AccountGroups { get; set; }
+    }
+    public class GLAccounts : Sage300ERPResp
+    {
+        [Newtonsoft.Json.JsonProperty("value")]
+        public List<Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account> Accounts { get; set; }
+    }
 
 }

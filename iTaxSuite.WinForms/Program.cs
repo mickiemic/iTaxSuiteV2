@@ -136,6 +136,7 @@ namespace iTaxSuite.WinForms
 
                     _ = services.AddScoped<IMasterDataSvc, MasterDataSvc>();
                     _ = services.AddScoped<IEtimsService, EtimsService>();
+                    _ = services.AddScoped<IS300ProductSvc, S300ProductSvc>();
                     _ = services.AddScoped<IS300SaleService, S300SaleService>();
 
 

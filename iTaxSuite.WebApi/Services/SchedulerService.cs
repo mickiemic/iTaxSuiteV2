@@ -32,11 +32,11 @@ namespace iTaxSuite.WebApi.Services
 
                 foreach (var channel in syncChannels.Values)
                 {
-                    if (channel.ChannelId == GeneralConst.PRODUCT_SYNC)
+                    if (channel.ChannelId == GeneralConst.IC_PRODUCT_SYNC)
                     {
-                        RecurringJob.RemoveIfExists(ProductsFetcher.JobId);
+                        RecurringJob.RemoveIfExists(ICProductsFetcher.JobId);
                         if (channel.IsActive)
-                            RecurringJob.AddOrUpdate<ProductsFetcher>(ProductsFetcher.JobId,
+                            RecurringJob.AddOrUpdate<ICProductsFetcher>(ICProductsFetcher.JobId,
                             x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
                     }
                     else if (channel.ChannelId == GeneralConst.PO_INVOICE_SYNC)
@@ -48,9 +48,30 @@ namespace iTaxSuite.WebApi.Services
                     }
                     else if (channel.ChannelId == GeneralConst.OE_INVOICE_SYNC)
                     {
-                        RecurringJob.RemoveIfExists(OESalesFetcher.JobId);
+                        RecurringJob.RemoveIfExists(OEInvoiceFetcher.JobId);
                         if (channel.IsActive)
-                            RecurringJob.AddOrUpdate<OESalesFetcher>(OESalesFetcher.JobId,
+                            RecurringJob.AddOrUpdate<OEInvoiceFetcher>(OEInvoiceFetcher.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
+                    else if (channel.ChannelId == GeneralConst.OE_CRDRNOTE_SYNC)
+                    {
+                        RecurringJob.RemoveIfExists(OECRNoteFetcher.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<OECRNoteFetcher>(OECRNoteFetcher.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
+                    else if (channel.ChannelId == GeneralConst.AR_INVOICE_SYNC)
+                    {
+                        RecurringJob.RemoveIfExists(ARInvoiceFetcher.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<ARInvoiceFetcher>(ARInvoiceFetcher.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
+                    else if (channel.ChannelId == GeneralConst.AR_CRDRNOTE_SYNC)
+                    {
+                        RecurringJob.RemoveIfExists(ARCRNoteFetcher.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<ARCRNoteFetcher>(ARCRNoteFetcher.JobId,
                             x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
                     }
                 }

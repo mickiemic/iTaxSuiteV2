@@ -13,9 +13,12 @@
         public const string TAXAUTH_HASHKEY = "tax-authorities";
 
         public const string CUSTOMER_HASHKEY = "ar-customers";
-        public const string PRODUCT_HASHKEY = "ic-products";
+        public const string IC_PRODUCT_HASHKEY = "ic-products";
 
-        public const string TXSALES_HASHKEY = "tax-sales";
+        public const string TXSALES_OEINV_HASHKEY = "tax-oesalesinv";
+        public const string TXSALES_OECNT_HASHKEY = "tax-oesalescnt";
+        public const string TXSALES_ARINV_HASHKEY = "tax-arsalesinv";
+        public const string TXSALES_ARCNT_HASHKEY = "tax-arsalescnt";
         public const string TXPURCHASE_HASHKEY = "tax-purchases";
         public const string TXSTOCKMVT_HASHKEY = "stock-movement";
     }

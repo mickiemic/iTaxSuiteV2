@@ -411,6 +411,7 @@
             btnClearSales.TabIndex = 7;
             btnClearSales.Text = "Clear";
             btnClearSales.UseVisualStyleBackColor = true;
+            btnClearSales.Click += btnClearSales_Click;
             // 
             // tabSetup
             // 

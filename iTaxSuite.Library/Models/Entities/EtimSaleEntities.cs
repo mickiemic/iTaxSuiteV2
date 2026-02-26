@@ -448,7 +448,6 @@ namespace iTaxSuite.Library.Models.Entities
         public decimal SupplyPrice { get; set; }
         public RecordStatus RecordStatus { get; set; } = RecordStatus.NONE;
         
-        //[ForeignKey("SalesTrxID")]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public SalesTransact SalesTransact { get; set; }

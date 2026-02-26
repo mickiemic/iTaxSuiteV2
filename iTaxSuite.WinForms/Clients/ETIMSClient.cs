@@ -8,13 +8,13 @@ using iTaxSuite.WinForms.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
-using static QRCoder.PayloadGenerator.ShadowSocksConfig;
 
 namespace iTaxSuite.WinForms.Clients
 {
     public partial class ETIMSClient : BaseForm
     {
         private readonly IMasterDataSvc _masterDataSvc;
+        private readonly IS300ProductSvc _s300ProductSvc;
         private readonly IS300SaleService _saleService;
         private readonly IEtimsService _etimsService;
         private readonly VSCUConfig _vscuConfig;
@@ -22,13 +22,14 @@ namespace iTaxSuite.WinForms.Clients
 
         private readonly TestData _testData;
         public ETIMSClient(IMasterDataSvc masterDataSvc, IS300SaleService s300SaleService, VSCUConfig vscuConfig,
-            ETimsDBContext dbContext, IEtimsService etimsService)
+            ETimsDBContext dbContext, IEtimsService etimsService, IS300ProductSvc s300ProductSvc)
         {
             _masterDataSvc = masterDataSvc;
             _saleService = s300SaleService;
             _vscuConfig = vscuConfig;
             _dbContext = dbContext;
             _etimsService = etimsService;
+            _s300ProductSvc = s300ProductSvc;
 
             InitializeComponent();
             FormClosing += MFormClosing;
@@ -139,7 +140,7 @@ namespace iTaxSuite.WinForms.Clients
                     return;
                 }
 
-                ShowLoadingScreen(null, $"Loading OE Invoice Number {strInput}");
+                ShowLoadingScreen(this, $"Loading OE Invoice Number {strInput}");
                 var convertRes = await _saleService.GetConvertOEInvoice(new SaleTrxKey { DocNumber = strInput });
                 HideLoadingScreen();
 
@@ -177,7 +178,7 @@ namespace iTaxSuite.WinForms.Clients
                     return;
                 }
 
-                ShowLoadingScreen(null, $"Loading OE CRNote Number {strInput}");
+                ShowLoadingScreen(this, $"Loading OE CRNote Number {strInput}");
                 var convertRes = await _saleService.GetConvertOECRNote(new SaleTrxKey { DocNumber = strInput });
                 HideLoadingScreen();
 
@@ -221,7 +222,7 @@ namespace iTaxSuite.WinForms.Clients
                 }
 
                 UI.Info($"{_method_} running..");
-                ShowLoadingScreen(null, $"Loading AR Batch Number {strBatch}, Invoice: {strInvoice}");
+                ShowLoadingScreen(this, $"Loading AR Batch Number {strBatch}, Invoice: {strInvoice}");
                 var convertRes = await _saleService.GetConvertARInvoice(new SaleBatchTrxKey { BatchNumber = strBatch, DocNumber = strInvoice });
                 HideLoadingScreen();
 
@@ -265,7 +266,7 @@ namespace iTaxSuite.WinForms.Clients
                 }
 
                 UI.Info($"{_method_} running..");
-                ShowLoadingScreen(null, $"Loading AR Batch Number {strBatch}, Credit Note: {strInvoice}");
+                ShowLoadingScreen(this, $"Loading AR Batch Number {strBatch}, Credit Note: {strInvoice}");
                 var convertRes = await _saleService.GetConvertARCRNote(new SaleBatchTrxKey { BatchNumber = strBatch, DocNumber = strInvoice });
                 HideLoadingScreen();
 
@@ -335,7 +336,7 @@ namespace iTaxSuite.WinForms.Clients
                     return;
                 }
 
-                ShowLoadingScreen(null, $"Creating Product Code {strInput}");
+                ShowLoadingScreen(this, $"Creating Product Code {strInput}");
                 var eTimsResp = await _etimsService.CreateEtimsItem(etimsRequest);
                 HideLoadingScreen();
                 using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
@@ -430,7 +431,7 @@ namespace iTaxSuite.WinForms.Clients
                 return;
             }
 
-            ShowLoadingScreen(null, $"Loading Codes Request DT:{strInput}");
+            ShowLoadingScreen(this, $"Loading Codes Request DT:{strInput}");
             var result = await Task.Run(() => _etimsService.SelectCodes(strInput));
             HideLoadingScreen();
             if (result.IsError)
@@ -452,7 +453,7 @@ namespace iTaxSuite.WinForms.Clients
                 return;
             }
 
-            ShowLoadingScreen(null, $"Loading Items Request DT:{strInput}");
+            ShowLoadingScreen(this, $"Loading Items Request DT:{strInput}");
             var result = await Task.Run(() => _etimsService.SelectItems(strInput));
             HideLoadingScreen();
             if (result.IsError)
@@ -466,39 +467,31 @@ namespace iTaxSuite.WinForms.Clients
 
             await SyncLocalProducts(result.GetValue());
         }
-    
-        private async Task SyncLocalProducts(SelectItemResp selectItemResp)
+
+        private async void btnClearSales_Click(object sender, EventArgs e)
         {
-            string _method_ = "SyncLocalProducts";
-            try
+            //await GenSalesItems();
+
+            /*ShowLoadingScreen(this, $"Query SaleTransact");
+            var result = await _saleService.QuerySaleTransact(new SaleTrxKey { DocNumber = "INV00005" });
+            HideLoadingScreen();
+            if (result.IsError)
             {
-                if (selectItemResp is null || selectItemResp?.Data?.ItemList?.Count == 0)
-                {
-                    return;
-                }
-                var okStatii = new List<RecordStatus>() { };// RecordStatus.POST_OK, RecordStatus.POST_DUPL };
-
-                var dbItemMap = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
-                    .Where(e => !okStatii.Contains(e.RecordStatus)).OrderBy(e => e.CreatedOn)
-                    .AsNoTracking().ToDictionaryAsync(x => new {x.ProductCode, x});
-                if (dbItemMap is null || dbItemMap.Count == 0)
-                    return;
-
-                var kraItemMap = new Dictionary<string, ETimsItem>();
-                selectItemResp.Data.ItemList.ForEach(x => kraItemMap.Add(x.AdditionalInfo, x));
-                foreach(var itemKey in dbItemMap.Keys.Where(x => kraItemMap.ContainsKey(x.ProductCode)))
-                {
-                    UI.Info($"ItemCode: {itemKey} can be fixed locally");
-                }
-
+                MessageBox.Show($"{result.GetError()}", "Query SaleTransact");
             }
-            catch (Exception ex)
+            else
             {
-                UI.Error($"{_method_} error: {ex.GetBaseException().Message}");
-                MessageBox.Show($"{_method_} error: {ex.GetBaseException().Message}", "OE Invoice Processing", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+                MessageBox.Show($"SaleTransact status is OK", "Query SaleTransact");
+            }*/
+
+            ShowLoadingScreen(this, "Querying Products");
+            var glProducts = await _s300ProductSvc.FetchGLProducts();
+            var strJson1 = JsonConvert.SerializeObject(glProducts);
+            var arProducts = await _s300ProductSvc.FetchARProducts();
+            var strJson2 = JsonConvert.SerializeObject(arProducts);
+            HideLoadingScreen();
+            Console.WriteLine($"GLProducts: {glProducts?.Count}, ARProducts:{arProducts?.Count}");
         }
-    
     }
 
 }

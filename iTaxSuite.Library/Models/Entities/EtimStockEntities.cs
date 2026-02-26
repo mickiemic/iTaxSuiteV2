@@ -1,6 +1,7 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.ViewModels;
+using Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -115,6 +116,17 @@ namespace iTaxSuite.Library.Models.Entities
             Description = oeInvoice.Description;
             CreatedBy = "Sys-Admin";
         }
+        public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote oeCRNote)
+            : this()
+        {
+            MovementType = StockMovementType.Sale;
+            SourceType = SourceType.Sage300CERP;
+            BranchCode = clientBranch.BranchCode;
+            DocNumber = $"{BranchCode}:{oeCRNote.CreditDebitNoteNumber}";
+            DocDate = oeCRNote.CreditDebitNoteDate.Value;
+            Description = oeCRNote.Description;
+            CreatedBy = "Sys-Admin";
+        }
 
         public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.Invoice pInvoice, 
             StockIOSaveReq stockIOSaveReq)
@@ -183,6 +195,15 @@ namespace iTaxSuite.Library.Models.Entities
             StockIOSaveReq = stockIOSaveReq;
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
         }
+        public StockMovData(StockMovement stockMovement, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote oeCRNote,
+            StockIOSaveReq stockIOSaveReq)
+            : this()
+        {
+            SourceStamp = oeCRNote.CreditDebitNoteDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(oeCRNote);
+            StockIOSaveReq = stockIOSaveReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
+        }
 
         public StockMovData(StockMovement stockMovement, StockIORequest stockIORequest, StockIOSaveReq stockIOSaveReq)
             : this()
@@ -218,6 +239,10 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
+        [NotMapped]
+        //[Required]
+        [StringLength(3)]
+        public string SourceApp { get; set; }
         [Required]
         public bool IsStockable { get; set; }
         [Required]
@@ -252,6 +277,7 @@ namespace iTaxSuite.Library.Models.Entities
             : this()
         {
             ProductCode = item.ItemNumber;
+            SourceApp = "IC";
             Description = item.Description;
             _pkgUnitCode = _qtyUnitCode = item.StockingUnitOfMeasure;
             IsStockable = item.StockItem;
@@ -260,6 +286,43 @@ namespace iTaxSuite.Library.Models.Entities
             if (item.ItemOptionalFields != null && item.ItemOptionalFields.Count > 0)
             {
                 var optTaxClass = item.ItemOptionalFields.FirstOrDefault(f => f.OptionalField
+                    .Equals(GeneralConst.OPTFLD_TAXCLASSCODE, StringComparison.InvariantCultureIgnoreCase));
+                if (optTaxClass != null && !string.IsNullOrWhiteSpace(optTaxClass.Value))
+                {
+                    ItemClassCode = optTaxClass.Value;
+                }
+            }
+        }
+
+        public Product(Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
+            : this()
+        {
+            ProductCode = item.ItemNumber;
+            SourceApp = "AR";
+            Description = item.Description;
+            _pkgUnitCode = _qtyUnitCode = "Service";
+            IsStockable = false;
+
+            // Sort Item Class
+            if (!string.IsNullOrWhiteSpace(item.CommodityCode))
+            {
+                ItemClassCode = item.CommodityCode;
+            }
+        }
+
+        public Product(Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account)
+            : this()
+        {
+            ProductCode = account.AccountNumber;
+            SourceApp = "GL";
+            Description = account.Description;
+            _pkgUnitCode = _qtyUnitCode = "Service";
+            IsStockable = false;
+
+            // Sort Item Class
+            if (account.AccountOptionalFields != null && account.AccountOptionalFields.Count > 0)
+            {
+                var optTaxClass = account.AccountOptionalFields.FirstOrDefault(f => f.OptionalField
                     .Equals(GeneralConst.OPTFLD_TAXCLASSCODE, StringComparison.InvariantCultureIgnoreCase));
                 if (optTaxClass != null && !string.IsNullOrWhiteSpace(optTaxClass.Value))
                 {
@@ -306,12 +369,30 @@ namespace iTaxSuite.Library.Models.Entities
         public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item)
             : this()
         {
-            // Sort Request details
             SourceStamp = item.DateLastMaintained.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
             SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
         }
+
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
+            : this()
+        {
+            SourceStamp = item.DateLastMaintained.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+            SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+        }
+
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, Account account)
+            : this()
+        {
+            SourceStamp = account.DateCreated.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(account);
+            SaveItemReq = new SaveItemReq(clientBranch, stockItem, account);
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+        }
+
         public SaveItemReq GetEtimsRequest()
         {
             if (string.IsNullOrWhiteSpace(RequestPayload))

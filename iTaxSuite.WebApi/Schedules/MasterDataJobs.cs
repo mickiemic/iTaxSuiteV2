@@ -5,12 +5,12 @@ using iTaxSuite.Library.Services;
 
 namespace iTaxSuite.WebApi.Schedules
 {
-    public class ProductsFetcher
+    public class ICProductsFetcher
     {
-        public const string JobId = $"job-{CacheConst.PRODUCT_HASHKEY}";
+        public const string JobId = $"job-{CacheConst.IC_PRODUCT_HASHKEY}";
         private readonly IS300ProductSvc _productSvc;
 
-        public ProductsFetcher(IS300ProductSvc productSvc)
+        public ICProductsFetcher(IS300ProductSvc productSvc)
         {
             _productSvc = productSvc;
         }
@@ -21,9 +21,9 @@ namespace iTaxSuite.WebApi.Schedules
             string _method_ = $"{JobId}:ExecuteAsync";
             if (!stoppingToken.IsCancellationRequested)
             {
-                var products = await _productSvc.FetchProducts();
-                if (products != null && products.Items.Count > 0)
-                    UI.Info($"{_method_} products to process count:{products.Items.Count}");
+                var products = await _productSvc.FetchICProducts();
+                if (products != null && products.Count > 0)
+                    UI.Info($"{_method_} products to process count:{products.Count}");
             }
         }
     }
@@ -59,12 +59,12 @@ namespace iTaxSuite.WebApi.Schedules
         }
     }*/
 
-    public class OESalesFetcher
+    public class OEInvoiceFetcher
     {
-        public const string JobId = $"job-{CacheConst.TXSALES_HASHKEY}";
+        public const string JobId = $"job-{CacheConst.TXSALES_OEINV_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public OESalesFetcher(IS300SaleService saleSvc)
+        public OEInvoiceFetcher(IS300SaleService saleSvc)
         {
             _saleSvc = saleSvc;
         }
@@ -79,12 +79,104 @@ namespace iTaxSuite.WebApi.Schedules
                 if (pResult.IsSuccess)
                 {
                     var oeSales = pResult.GetValue();
-                    if (oeSales != null && oeSales.Invoices.Count > 0)
-                        UI.Info($"{_method_} OEInvoices to process count:{oeSales.Invoices.Count}");
+                    if (oeSales != null && oeSales.Count > 0)
+                        UI.Info($"{_method_} OEInvoices to process count:{oeSales.Count}");
                 }
                 else
                 {
                     throw new Exception($"{_method_} FetchOEInvoices error:{pResult.GetError()}");
+                }
+            }
+        }
+    }
+    public class OECRNoteFetcher
+    {
+        public const string JobId = $"job-{CacheConst.TXSALES_OECNT_HASHKEY}";
+        private readonly IS300SaleService _saleSvc;
+
+        public OECRNoteFetcher(IS300SaleService saleSvc)
+        {
+            _saleSvc = saleSvc;
+        }
+
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var pResult = await _saleSvc.FetchOEInvoices();
+                if (pResult.IsSuccess)
+                {
+                    var oeSales = pResult.GetValue();
+                    if (oeSales != null && oeSales.Count > 0)
+                        UI.Info($"{_method_} OECRNotes to process count:{oeSales.Count}");
+                }
+                else
+                {
+                    throw new Exception($"{_method_} FetchOECRNotes error:{pResult.GetError()}");
+                }
+            }
+        }
+    }
+
+    public class ARInvoiceFetcher
+    {
+        public const string JobId = $"job-{CacheConst.TXSALES_ARINV_HASHKEY}";
+        private readonly IS300SaleService _saleSvc;
+
+        public ARInvoiceFetcher(IS300SaleService saleSvc)
+        {
+            _saleSvc = saleSvc;
+        }
+
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var pResult = await _saleSvc.FetchARInvoices();
+                if (pResult.IsSuccess)
+                {
+                    var oeSales = pResult.GetValue();
+                    if (oeSales != null && oeSales.Count > 0)
+                        UI.Info($"{_method_} ARInvoices to process count:{oeSales.Count}");
+                }
+                else
+                {
+                    throw new Exception($"{_method_} FetchARInvoices error:{pResult.GetError()}");
+                }
+            }
+        }
+    }
+
+    public class ARCRNoteFetcher
+    {
+        public const string JobId = $"job-{CacheConst.TXSALES_ARCNT_HASHKEY}";
+        private readonly IS300SaleService _saleSvc;
+
+        public ARCRNoteFetcher(IS300SaleService saleSvc)
+        {
+            _saleSvc = saleSvc;
+        }
+
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var pResult = await _saleSvc.FetchARCRNotes();
+                if (pResult.IsSuccess)
+                {
+                    var oeSales = pResult.GetValue();
+                    if (oeSales != null && oeSales.Count > 0)
+                        UI.Info($"{_method_} ARCRNotes to process count:{oeSales.Count}");
+                }
+                else
+                {
+                    throw new Exception($"{_method_} FetchARCRNotes error:{pResult.GetError()}");
                 }
             }
         }

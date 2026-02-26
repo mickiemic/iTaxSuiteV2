@@ -107,7 +107,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
         }
 
-        public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice oeInvoice,
+        /*public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice oeInvoice,
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
             : this()
@@ -205,7 +205,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             // TODO: figure out how to set tax Rates A-E for posting
             TotalTaxAmount = TaxAmountA + TaxAmountB + TaxAmountC + TaxAmountD + TaxAmountE;
             TotalTaxableAmount = TaxableAmountA + TaxableAmountB + TaxableAmountC + TaxableAmountD + TaxableAmountE;
-        }
+        }*/
         public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice oeInvoice,
             SalesTransact salesTransact, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)

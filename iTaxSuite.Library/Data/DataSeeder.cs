@@ -20,7 +20,7 @@ namespace iTaxSuite.Library.Data
                         new SyncChannel{ ChannelId=GeneralConst.CUSTOMER_SYNC, ChannelName="Customer Sync Channel",
                             KeyCol="CustomerNumber", DateCol=null},
 
-                        new SyncChannel{ ChannelId=GeneralConst.PRODUCT_SYNC, ChannelName="Item Sync Channel",
+                        new SyncChannel{ ChannelId=GeneralConst.IC_PRODUCT_SYNC, ChannelName="Item Sync Channel",
                             KeyCol="ItemNumber", DateCol=null},
 
                         // Stock Control

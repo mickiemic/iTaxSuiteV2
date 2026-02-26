@@ -158,8 +158,7 @@ namespace iTaxSuite.Library.Models
             builder.Entity<SalesItem>(entity => 
             {
                 entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
-                entity.HasKey(e => new { e.SalesTrxID, e.ProductCode, e.BranchCode });
-                // entity.HasIndex(e => new { e.SalesTrxID, e.SourceLineNo });
+                entity.HasKey(e => new { e.SalesTrxID, e.SourceLineNo, e.BranchCode });
             });
 
             builder.Entity<EtimsTransact>(entity =>
@@ -177,7 +176,7 @@ namespace iTaxSuite.Library.Models
         {
             base.OnConfiguring(optionsBuilder);
             optionsBuilder.ConfigureWarnings(w => w.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
-            // optionsBuilder.EnableSensitiveDataLogging();
+            //optionsBuilder.EnableSensitiveDataLogging();
         }
 
         // Setup Models

@@ -83,6 +83,26 @@ namespace iTaxSuite.WebApi.Controllers
         }
 
         [HttpPost]
+        [Route("querysalestrx")]
+        public async Task<IActionResult> QuerySalesTrx(SaleTrxKey saleTrxKey, bool fixTransaction = true)
+        {
+            string _method_ = "QuerySalesTrx";
+            try
+            {
+                var result = await _saleService.QuerySaleTransact(saleTrxKey, fixTransaction);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+
+        [HttpPost]
         [Route("postsale")]
         public async Task<IActionResult> PostSaleTrx(QueueSaveSale filter)
         {

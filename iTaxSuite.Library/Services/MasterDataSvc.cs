@@ -107,10 +107,10 @@ namespace iTaxSuite.Library.Services
                 }
 
                 // Products
-                await _baseDb.KeyDeleteAsync(CacheConst.PRODUCT_HASHKEY);
+                await _baseDb.KeyDeleteAsync(CacheConst.IC_PRODUCT_HASHKEY);
                 foreach (var item in _dbContext.StockItems.Include(s => s.Product).Select(x => new StockItemKey(x)).AsNoTracking())
                 {
-                    string _hashKey_ = CacheConst.PRODUCT_HASHKEY;
+                    string _hashKey_ = CacheConst.IC_PRODUCT_HASHKEY;
                     if (!_baseDb.SetHashValue(_hashKey_, item.ProductCode, item))
                     {
                         throw new Exception($"{_method_} failed for Product code:{item.ProductCode}");
@@ -287,7 +287,7 @@ namespace iTaxSuite.Library.Services
             {
                 if (!reload)
                 {
-                    var itemsArray = await _baseDb.HashGetAllAsync(CacheConst.PRODUCT_HASHKEY);
+                    var itemsArray = await _baseDb.HashGetAllAsync(CacheConst.IC_PRODUCT_HASHKEY);
                     foreach (var item in itemsArray)
                     {
                         var stockItemKey = JsonConvert.DeserializeObject<StockItemKey>(item.Value);
@@ -301,7 +301,7 @@ namespace iTaxSuite.Library.Services
                     {
                         var _hashKey_ = stockItemKey.ProductCode;
                         itemMap[_hashKey_] = stockItemKey;
-                        if (!await _baseDb.SetHashValueAsync(CacheConst.PRODUCT_HASHKEY, _hashKey_, stockItemKey))
+                        if (!await _baseDb.SetHashValueAsync(CacheConst.IC_PRODUCT_HASHKEY, _hashKey_, stockItemKey))
                         {
                             UI.Error($"MasterDataSvc::{_method_} failed for StockItem code:{_hashKey_}");
                         }
@@ -393,7 +393,7 @@ namespace iTaxSuite.Library.Services
                 itemMap = await GetProductMap();
                 //Console.WriteLine($"itemMap length:{itemMap.Count}");
                 var invalidSatii = new List<RecordStatus>() { RecordStatus.INVALID, RecordStatus.DEPENDS, RecordStatus.NONE };
-
+                //TODO: SWITCH from simple mapping to persisted product first
                 for (int i = 0; i < salesTransact.SalesItems.Count; i++)
                 {
                     if (!itemMap.ContainsKey(salesTransact.SalesItems[i].ProductCode))

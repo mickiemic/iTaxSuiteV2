@@ -177,6 +177,58 @@ namespace iTaxSuite.Library.Models.ViewModels
                 ItemClassCode = newItemClassCode;
             UpdateItemCode();
         }
+
+        public SaveItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
+        {
+            PIN = clientBranch.TaxClient.TaxNumber;
+            _offset = stockItem.EtrSeqNumber;
+            AdditionalInfo = stockItem.ProductCode;
+            ItemTypeCode = "3";
+            ItemName = ItemStdName = item.Description;
+            PkgUnitCode = stockItem.Product.PackageUnit;
+            QtyUnitCode = stockItem.Product.QuantityUnit;
+            TaxTypeCode = "B";
+            ItemClassCode = stockItem.Product.ItemClassCode;
+            ItemCode = stockItem.TaxItemCode;
+
+            string newItemClassCode = string.Empty;
+            if (!string.IsNullOrWhiteSpace(item.CommodityCode))
+            {
+                newItemClassCode = item.CommodityCode;
+            }
+            if (newItemClassCode != ItemClassCode)
+                ItemClassCode = newItemClassCode;
+            UpdateItemCode();
+        }
+
+        public SaveItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account)
+        {
+            PIN = clientBranch.TaxClient.TaxNumber;
+            _offset = stockItem.EtrSeqNumber;
+            AdditionalInfo = stockItem.ProductCode;
+            ItemTypeCode = "3";
+            ItemName = ItemStdName = account.Description;
+            PkgUnitCode = stockItem.Product.PackageUnit;
+            QtyUnitCode = stockItem.Product.QuantityUnit;
+            TaxTypeCode = "B";
+            ItemClassCode = stockItem.Product.ItemClassCode;
+            ItemCode = stockItem.TaxItemCode;
+
+            string newItemClassCode = string.Empty;
+            if (account.AccountOptionalFields != null && account.AccountOptionalFields.Count > 0)
+            {
+                var optTaxClass = account.AccountOptionalFields.FirstOrDefault(f => f.OptionalField
+                    .Equals(GeneralConst.OPTFLD_TAXCLASSCODE, StringComparison.InvariantCultureIgnoreCase));
+                if (optTaxClass != null && !string.IsNullOrWhiteSpace(optTaxClass.Value))
+                {
+                    newItemClassCode = optTaxClass.Value;
+                }
+            }
+            if (newItemClassCode != ItemClassCode)
+                ItemClassCode = newItemClassCode;
+            UpdateItemCode();
+        }
+
         public void UpdateItemCode()
         {
             ItemCode = $"{OriginNatCode}{ItemTypeCode}{PkgUnitCode}{QtyUnitCode}{_offset:0000000}";
@@ -290,6 +342,34 @@ namespace iTaxSuite.Library.Models.ViewModels
             CustomerPIN = eTimsSale.CustomerPIN;
             CustomerName = eTimsSale.CustomerName;
             StockTrxDate = oeInvoice.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
+            StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
+
+            foreach (var sItem in eTimsSale.ItemList)
+            {
+                var ioItem = new StockIOItem(sItem);
+                TotalTaxableAmount += ioItem.TaxableAmount;
+                TotalTaxAmount += ioItem.TaxAmount;
+                TotalAmount += ioItem.TotalAmount;
+                ItemList.Add(ioItem);
+            }
+
+            TotalItemCount = ItemList.Count;
+        }
+        public StockIOSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote oeCRNote, TrnsSalesSaveReq eTimsSale)
+            : this()
+        {
+            PIN = clientBranch.TaxClient.TaxNumber;
+            RegistrationTypeCode = ETimsUtils.GetRegistrationType();
+            Remark = eTimsSale.Remark;
+            RegistrantID = eTimsSale.RegistrantID;
+            RegistrantName = eTimsSale.RegistrantName;
+            ModifierID = eTimsSale.ModifierID;
+            ModifierName = eTimsSale.ModifierName;
+
+            CustomerBranchID = "00";
+            CustomerPIN = eTimsSale.CustomerPIN;
+            CustomerName = eTimsSale.CustomerName;
+            StockTrxDate = oeCRNote.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
             StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
 
             foreach (var sItem in eTimsSale.ItemList)

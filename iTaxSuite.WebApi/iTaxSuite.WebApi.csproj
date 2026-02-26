@@ -35,6 +35,9 @@
     <Reference Include="Sage.CA.SBS.ERP.Sage300.Common.WebApi">
       <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.Common.WebApi.dll</HintPath>
     </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.dll</HintPath>
+    </Reference>
     <Reference Include="Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models">
       <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.dll</HintPath>
     </Reference>

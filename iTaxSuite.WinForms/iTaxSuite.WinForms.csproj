@@ -34,6 +34,33 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.Common.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.Common.Models.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.Common.WebApi">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.Common.WebApi.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.dll</HintPath>
+    </Reference>
+    <Reference Include="Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models">
+      <HintPath>E:\SageProducts\Sage300c\Libraries\webapi-bin\Sage.CA.SBS.ERP.Sage300.TX.WebApi.Models.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
