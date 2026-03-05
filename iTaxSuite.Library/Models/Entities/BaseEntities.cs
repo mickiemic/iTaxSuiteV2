@@ -164,6 +164,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Column(TypeName = "char(1)")]
         public string LockColumn { get; set; } = "X";
         public virtual ExtSystConfig ExtSystConfig { get; set; }
+        [StringLength(512)]
+        public string ProcessMeta { get; set; }
     }
 
     [Table("EntityAttribute")]

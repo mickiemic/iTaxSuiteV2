@@ -7,7 +7,7 @@ namespace iTaxSuite.WebApi.Schedules
 {
     public class ICProductsFetcher
     {
-        public const string JobId = $"job-{CacheConst.IC_PRODUCT_HASHKEY}";
+        public const string JobId = $"job-{CacheConst.ALL_PRODUCT_HASHKEY}";
         private readonly IS300ProductSvc _productSvc;
 
         public ICProductsFetcher(IS300ProductSvc productSvc)

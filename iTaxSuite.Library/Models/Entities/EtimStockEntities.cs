@@ -42,7 +42,6 @@ namespace iTaxSuite.Library.Models.Entities
             ProductCode = product.ProductCode;
             BranchCode = clientBranch.BranchCode;
             Product = product;
-            ClientBranch = clientBranch;
             EtrSeqNumber = clientBranch.ProductSeq;
         }
         public bool IsValid()
@@ -239,8 +238,7 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
-        [NotMapped]
-        //[Required]
+        [Required]
         [StringLength(3)]
         public string SourceApp { get; set; }
         [Required]
@@ -276,7 +274,7 @@ namespace iTaxSuite.Library.Models.Entities
         public Product(Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item)
             : this()
         {
-            ProductCode = item.ItemNumber;
+            ProductCode = $"IC:{item.ItemNumber}";
             SourceApp = "IC";
             Description = item.Description;
             _pkgUnitCode = _qtyUnitCode = item.StockingUnitOfMeasure;
@@ -297,10 +295,10 @@ namespace iTaxSuite.Library.Models.Entities
         public Product(Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
             : this()
         {
-            ProductCode = item.ItemNumber;
+            ProductCode = $"AR:{item.ItemNumber}";
             SourceApp = "AR";
             Description = item.Description;
-            _pkgUnitCode = _qtyUnitCode = "Service";
+            _pkgUnitCode = _qtyUnitCode = "NA";
             IsStockable = false;
 
             // Sort Item Class
@@ -313,10 +311,10 @@ namespace iTaxSuite.Library.Models.Entities
         public Product(Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account)
             : this()
         {
-            ProductCode = account.AccountNumber;
+            ProductCode = $"GL:{account.AccountNumber}";
             SourceApp = "GL";
             Description = account.Description;
-            _pkgUnitCode = _qtyUnitCode = "Service";
+            _pkgUnitCode = _qtyUnitCode = "NA";
             IsStockable = false;
 
             // Sort Item Class

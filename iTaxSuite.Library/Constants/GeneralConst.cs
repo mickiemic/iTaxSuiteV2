@@ -21,7 +21,7 @@
 
         public const string IC_PRODUCT_SYNC = "ic-product-sync";
         public const string AR_PRODUCT_SYNC = "ar-product-sync";
-        public const string GL_ACCOUNT_SYNC = "gl-account-sync";
+        public const string GL_PRODUCT_SYNC = "gl-product-sync";
         public const string CUSTOMER_SYNC = "ar-customer-sync";
         public const string OE_INVOICE_SYNC = "oe-invoice-sync";
         public const string OE_CRDRNOTE_SYNC = "oe-crdrnote-sync";

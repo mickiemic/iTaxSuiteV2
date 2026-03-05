@@ -785,15 +785,15 @@ namespace iTaxSuite.Library.Models.ViewModels
 
             ItemCode = item.ItemNumber;
             ItemName = item.Description;
+            if (string.IsNullOrWhiteSpace(item.ItemNumber))
+            {
+                throw new Exception($"Invalid ItemNumber:{item.ItemNumber} Amount for {item.Description}");
+            }
 
             _pkgUnitCode = item.UnitOfMeasure;
             if (string.IsNullOrWhiteSpace(_pkgUnitCode))
             {
-                _pkgUnitCode = "Service";
-                if (string.IsNullOrWhiteSpace(item.ItemNumber))
-                {
-                    ItemCode = _icItemNumber = "SE002";
-                }
+                _pkgUnitCode = "NA";
             }
             _qtyUnitCode = _pkgUnitCode;
             Quantity = Package = (item.Quantity == 0) ? 1 : item.Quantity;

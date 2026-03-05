@@ -35,6 +35,8 @@ namespace iTaxSuite.Library.Models.Entities
         public string InitRequest { get; set; }
         [StringLength(2048)]
         public string InitResponse { get; set; }
+        [StringLength(512)]
+        public string ProcessMeta { get; set; }
         [NotMapped]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]

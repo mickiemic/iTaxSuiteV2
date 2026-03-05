@@ -13,7 +13,7 @@
         public const string TAXAUTH_HASHKEY = "tax-authorities";
 
         public const string CUSTOMER_HASHKEY = "ar-customers";
-        public const string IC_PRODUCT_HASHKEY = "ic-products";
+        public const string ALL_PRODUCT_HASHKEY = "all-products";
 
         public const string TXSALES_OEINV_HASHKEY = "tax-oesalesinv";
         public const string TXSALES_OECNT_HASHKEY = "tax-oesalescnt";

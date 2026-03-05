@@ -464,7 +464,7 @@ namespace iTaxSuite.Library.Models.Entities
 
             SourceLineNo = item.LineUniquifier;
             ItemSeqNumber = -1;
-            ProductCode = item.Item;
+            ProductCode = $"OE:{item.Item}";
             Description = item.Description;
             ItemTypeCode = "2";
             IsStockable = item.StockItem;
@@ -541,19 +541,22 @@ namespace iTaxSuite.Library.Models.Entities
 
             SourceLineNo = Convert.ToInt32(item.LineNumber);
             ItemSeqNumber = -1; // Internal
-            ProductCode = item.ItemNumber;
+            if (arInvoice.InvoiceType == Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice.InvoiceTypeEnum.Item)
+                ProductCode = $"AR:{item.ItemNumber}";
+            else
+                ProductCode = $"GL:{item.ItemNumber}";
             ItemTypeCode = "3";
             Description = item.Description;
             IsStockable = false;
+            if (string.IsNullOrWhiteSpace(item.ItemNumber))
+            {
+                throw new Exception($"Invalid ItemNumber:{item.ItemNumber} Amount for {item.Description}");
+            }
 
             _pkgUnitCode = item.UnitOfMeasure;
             if (string.IsNullOrWhiteSpace(_pkgUnitCode))
             {
-                _pkgUnitCode = "Service";
-                if (string.IsNullOrWhiteSpace(item.ItemNumber))
-                {
-                    ProductCode = "SE002";
-                }
+                _pkgUnitCode = "NA";
             }
             _qtyUnitCode = _pkgUnitCode;
             Quantity = Package = (item.Quantity == 0) ? 1 : item.Quantity;
@@ -624,7 +627,7 @@ namespace iTaxSuite.Library.Models.Entities
             BranchCode = salesTransact.BranchCode;
 
             ItemSeqNumber = -1;
-            ProductCode = item.Item;
+            ProductCode = $"OE:{item.Item}";
             Description = item.Description;
             ItemTypeCode = "2";
             IsStockable = item.StockItem;

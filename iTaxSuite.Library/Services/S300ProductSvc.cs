@@ -57,11 +57,11 @@ namespace iTaxSuite.Library.Services
             var productMap = new Dictionary<string, StockItemKey>();
             try
             {
-                string _hashKey_ = CacheConst.IC_PRODUCT_HASHKEY;
+                string _hashKey_ = CacheConst.ALL_PRODUCT_HASHKEY;
 
                 if (!reload)
                 {
-                    var result = await _baseDb.HashGetAllAsync(CacheConst.IC_PRODUCT_HASHKEY);
+                    var result = await _baseDb.HashGetAllAsync(CacheConst.ALL_PRODUCT_HASHKEY);
                     foreach (var item in result)
                     {
                         var product = JsonConvert.DeserializeObject<StockItemKey>(item.Value);
@@ -264,7 +264,7 @@ namespace iTaxSuite.Library.Services
         }
         private async Task<bool> CacheSaveStockItem(string streamName, StockItem stockItem)
         {
-            var res = await _baseDb.SetHashValueAsync(CacheConst.IC_PRODUCT_HASHKEY, stockItem.CacheKey, new StockItemKey(stockItem));
+            var res = await _baseDb.SetHashValueAsync(CacheConst.ALL_PRODUCT_HASHKEY, stockItem.ProductCode, new StockItemKey(stockItem));
             return res;
         }
         public async Task<List<Product>> FetchICProducts()
@@ -292,7 +292,7 @@ namespace iTaxSuite.Library.Services
                     loop = (icItems.nextLink != null);
                     syncChannel.IncrOffSet(icItems.Items.Count);
 
-                    icItems.Items.RemoveAll(i => productMap.ContainsKey(i.ItemNumber));
+                    icItems.Items.RemoveAll(i => productMap.ContainsKey($"IC:{i.ItemNumber}"));
 
                     foreach (var item in icItems.Items)
                     {
@@ -331,7 +331,7 @@ namespace iTaxSuite.Library.Services
                                 _dbContext.Attach(_clientBranch);
                                 if (_dbContext.SaveChanges() < 1)
                                 {
-                                    throw new Exception($"Product {product.ProductCode} saving to database failed");
+                                    throw new Exception($"IC Product {product.ProductCode} saving to database failed");
                                 }
                                 if (_dbContext.StockItems.AddIfNotExists(stockItem, x => x.ProductCode == stockItem.ProductCode
                                     && x.BranchCode == stockItem.BranchCode) == null)
@@ -358,7 +358,7 @@ namespace iTaxSuite.Library.Services
 
                                 if (!await CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
                                 {
-                                    throw new Exception($"Product {product.ProductCode} saving to cache failed");
+                                    throw new Exception($"IC Product {product.ProductCode} saving to cache failed");
                                 }
                                 
                                 await _dbTrans.CommitAsync();
@@ -488,8 +488,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                // var syncChannel = _syncChannelMap[GeneralConst.AR_PRODUCT_SYNC];
-                var syncChannel = new SyncChannel();
+                var syncChannel = _syncChannelMap[GeneralConst.AR_PRODUCT_SYNC];
                 var productMap = await GetCacheStockItems();
                 var qParams = new Dictionary<string, string>();
 
@@ -507,7 +506,7 @@ namespace iTaxSuite.Library.Services
                     loop = (arItems.nextLink != null);
                     syncChannel.IncrOffSet(arItems.Items.Count);
 
-                    arItems.Items.RemoveAll(i => productMap.ContainsKey(i.ItemNumber));
+                    arItems.Items.RemoveAll(i => productMap.ContainsKey($"AR:{i.ItemNumber}"));
 
                     foreach (var item in arItems.Items)
                     {
@@ -533,7 +532,7 @@ namespace iTaxSuite.Library.Services
 
                         stockItem.TaxItemCode = productData.SaveItemReq.ItemCode;
 
-                        /*using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
+                        using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
                         {
                             int _etrSeqValue = _clientBranch.ProductSeq;
                             try
@@ -543,7 +542,6 @@ namespace iTaxSuite.Library.Services
                                     UI.Warn($"Product {product.ProductCode} Already Exists");
                                     continue;
                                 }
-                                _dbContext.Attach(_clientBranch);
                                 if (_dbContext.SaveChanges() < 1)
                                 {
                                     throw new Exception($"Product {product.ProductCode} saving to database failed");
@@ -555,7 +553,6 @@ namespace iTaxSuite.Library.Services
                                     continue;
                                 }
 
-                                syncChannel.UpdateTracker(item.ItemNumber);
                                 _clientBranch.ProductSeq = (_etrSeqValue + 1);
                                 if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
                                 {
@@ -576,9 +573,10 @@ namespace iTaxSuite.Library.Services
                                     throw new Exception($"Product {product.ProductCode} saving to cache failed");
                                 }
 
+                                syncChannel.UpdateTracker(product.ProductCode);
                                 await _dbTrans.CommitAsync();
-                                _dbContext.ChangeTracker.Clear();
 
+                                _dbContext.ChangeTracker.Clear();
                                 await _masterDataSvc.UpdateSyncTrxTracker(syncChannel);
                             }
                             catch (Exception iex)
@@ -589,7 +587,7 @@ namespace iTaxSuite.Library.Services
                                 UI.Error(iex, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
                                 continue;
                             }
-                        }*/
+                        }
 
                     }
                 }
@@ -610,8 +608,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                //var syncChannel = _syncChannelMap[GeneralConst.GL_ACCOUNT_SYNC];
-                var syncChannel = new SyncChannel();
+                var syncChannel = _syncChannelMap[GeneralConst.GL_PRODUCT_SYNC];
                 var productMap = await GetCacheStockItems();
                 var qParams = new Dictionary<string, string>();
 
@@ -631,6 +628,7 @@ namespace iTaxSuite.Library.Services
                 bool loop = true;
                 _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/GL/GLAccounts");
                 qParams["$filter"] = strFilter;
+
                 while (loop)
                 {
                     qParams["$skip"] = syncChannel.OffSet.ToString();
@@ -641,7 +639,7 @@ namespace iTaxSuite.Library.Services
                     loop = (glAccounts.nextLink != null);
                     syncChannel.IncrOffSet(glAccounts.Accounts.Count);
 
-                    glAccounts.Accounts.RemoveAll(i => productMap.ContainsKey(i.AccountNumber));
+                    glAccounts.Accounts.RemoveAll(i => productMap.ContainsKey($"GL:{i.AccountNumber}"));
                     foreach (var account in glAccounts.Accounts)
                     {
                         var product = new Product(account);
@@ -666,7 +664,7 @@ namespace iTaxSuite.Library.Services
 
                         stockItem.TaxItemCode = productData.SaveItemReq.ItemCode;
 
-                        /*using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
+                        using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
                         {
                             int _etrSeqValue = _clientBranch.ProductSeq;
                             try
@@ -676,10 +674,9 @@ namespace iTaxSuite.Library.Services
                                     UI.Warn($"Product {product.ProductCode} Already Exists");
                                     continue;
                                 }
-                                _dbContext.Attach(_clientBranch);
                                 if (_dbContext.SaveChanges() < 1)
                                 {
-                                    throw new Exception($"Product {product.ProductCode} saving to database failed");
+                                    throw new Exception($"GL Product {product.ProductCode} saving to database failed");
                                 }
                                 if (_dbContext.StockItems.AddIfNotExists(stockItem, x => x.ProductCode == stockItem.ProductCode
                                     && x.BranchCode == stockItem.BranchCode) == null)
@@ -688,7 +685,6 @@ namespace iTaxSuite.Library.Services
                                     continue;
                                 }
 
-                                syncChannel.UpdateTracker(item.ItemNumber);
                                 _clientBranch.ProductSeq = (_etrSeqValue + 1);
                                 if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
                                 {
@@ -706,12 +702,13 @@ namespace iTaxSuite.Library.Services
 
                                 if (!await CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
                                 {
-                                    throw new Exception($"Product {product.ProductCode} saving to cache failed");
+                                    throw new Exception($"GL Product {product.ProductCode} saving to cache failed");
                                 }
 
+                                syncChannel.UpdateTracker(product.ProductCode);
                                 await _dbTrans.CommitAsync();
-                                _dbContext.ChangeTracker.Clear();
 
+                                _dbContext.ChangeTracker.Clear();
                                 await _masterDataSvc.UpdateSyncTrxTracker(syncChannel);
                             }
                             catch (Exception iex)
@@ -722,7 +719,7 @@ namespace iTaxSuite.Library.Services
                                 UI.Error(iex, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
                                 continue;
                             }
-                        }*/
+                        }
                     }
                 }
             }

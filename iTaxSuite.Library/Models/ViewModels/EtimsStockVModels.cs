@@ -28,6 +28,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [StringLength(32)]
         public string ProductCode { get; set; }
+        public string ProdRawCode => string.IsNullOrWhiteSpace(ProductCode) ? null : ProductCode.Split(':').ElementAt(1);
         public int EtrSeqNumber { get; set; }
         [StringLength(64)]
         public string TaxItemCode { get; set; }
@@ -369,7 +370,8 @@ namespace iTaxSuite.Library.Models.ViewModels
             CustomerBranchID = "00";
             CustomerPIN = eTimsSale.CustomerPIN;
             CustomerName = eTimsSale.CustomerName;
-            StockTrxDate = oeCRNote.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
+            if (oeCRNote.CreditDebitNoteDate.HasValue)
+                StockTrxDate = oeCRNote.CreditDebitNoteDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
             StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
 
             foreach (var sItem in eTimsSale.ItemList)
@@ -419,8 +421,8 @@ namespace iTaxSuite.Library.Models.ViewModels
             CustomerBranchID = "00";
             CustomerPIN = eTimsSale.CustomerPIN;
             CustomerName = eTimsSale.CustomerName;
-            //StockTrxDate = arInvoice.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
-            //StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
+            StockTrxDate = arInvoice.DocumentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
+            StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
 
             TotalItemCount = 1;
         }
@@ -428,7 +430,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class StockIOSaveResp : ETIMSBaseResp
     {
         [Newtonsoft.Json.JsonProperty("data")]
-        public Newtonsoft.Json.Linq.JObject data { get; set; }
+        public JObject data { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string RawResponse { get; set; }
@@ -445,29 +447,6 @@ namespace iTaxSuite.Library.Models.ViewModels
         public StockIOItem()
         {
         }
-
-        /*public StockIOItem(EtimsPurchaseItem pItem)
-        {
-            ItemSeqNumber = pItem.ItemSeqNumber;
-            ItemCode = pItem.ItemCode;
-            ItemClassCode = pItem.ItemClassCode;
-            ItemTypeCode = pItem.ItemTypeCode;
-            ItemName = pItem.ItemName;
-            ItemExpiredDate = pItem.ItemExpiredDate;
-            Barcode = pItem.Barcode;
-            PkgUnitCode = pItem.PkgUnitCode;
-            Package = pItem.Package;
-            QtyUnitCode = pItem.QtyUnitCode;
-            Quantity = pItem.Quantity;
-            UnitPrice = pItem.UnitPrice;
-            SupplyPrice = pItem.SupplyPrice;
-            DiscountAmount = pItem.DiscountAmount;
-
-            TaxableAmount = pItem.TaxableAmount;
-            TaxTypeCode = pItem.TaxTypeCode;
-            TaxAmount = pItem.TaxAmount;
-            TotalAmount = pItem.TotalAmount;
-        }*/
 
         public StockIOItem(EtimsSaleItem sItem)
             : this()
@@ -895,7 +874,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             _pkgUnitCode = item.UnitOfMeasure;
             if (string.IsNullOrWhiteSpace(_pkgUnitCode))
             {
-                _pkgUnitCode = "Service";
+                _pkgUnitCode = "NA";
             }
             Package = item.StockingQuantityReceived;
 
