@@ -45,6 +45,31 @@ namespace iTaxSuite.Library.Extensions
             return XmlUtils.Deserialize<T>(_strResponse);
         }
 
+        public static async Task<HttpResponseMessage> ProcessGetJsonAsync(this HttpClient _httpClient,
+            string baseUrl, Dictionary<string, string> headers = null, Dictionary<string, string> parameters = null)
+        {
+            string _requestUrl = baseUrl;
+            if (parameters != null && parameters.Any())
+            {
+                _requestUrl = QueryHelpers.AddQueryString(baseUrl, parameters);
+            }
+            HttpRequestMessage _restRequest = new HttpRequestMessage(HttpMethod.Get, _requestUrl);
+
+            if (headers != null && headers.Any())
+            {
+                foreach (var header in headers)
+                {
+                    if ((header.Key.ToLower().Equals("Content-Type".ToLower())) && (_restRequest.Method == HttpMethod.Get))
+                    {
+                        _restRequest.Content = new StringContent("{}", Encoding.UTF8, header.Value);
+                    }
+                    else
+                        _restRequest.Headers.Add(header.Key, header.Value);
+                }
+            }
+
+            return await _httpClient.SendAsync(_restRequest);
+        }
         public static async Task<T> ProcessGetJsonAsync<T>(this HttpClient _httpClient,
             string baseUrl, Dictionary<string, string> headers = null, Dictionary<string, string> parameters = null)
             where T : class
@@ -497,6 +522,37 @@ namespace iTaxSuite.Library.Extensions
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_httpClient"></param>
+        /// <param name="baseUrl"></param>
+        /// <param name="jsonRequest"></param>
+        /// <param name="headers"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public static async Task<HttpResponseMessage> ProcessPutJsonAsync(this HttpClient _httpClient,
+            string baseUrl, string jsonRequest, Dictionary<string, string> headers = null, Dictionary<string, string> parameters = null)
+        {
+            string _requestUrl = baseUrl;
+            if (parameters != null && parameters.Any())
+            {
+                _requestUrl = QueryHelpers.AddQueryString(baseUrl, parameters);
+            }
+            HttpRequestMessage _restRequest = new HttpRequestMessage(HttpMethod.Put, _requestUrl);
+
+            if (headers != null && headers.Any())
+            {
+                foreach (var header in headers)
+                {
+                    _restRequest.Headers.Add(header.Key, header.Value);
+                }
+            }
+            _restRequest.Content = new StringContent(jsonRequest, Encoding.UTF8, ContentType.JSON);
+
+            return await _httpClient.SendAsync(_restRequest);
+        }
+
+        /// <summary>
         /// Process a POST XML request with <c>text/xml; charset=utf-8</c>
         /// </summary>
         /// <param name="_httpClient"></param>
@@ -741,7 +797,7 @@ namespace iTaxSuite.Library.Extensions
                 RequestID = xRequestID,
                 RespHeaders = FormatResponseHeaders(response.Headers),
                 RespPayload = respPayLoad,
-                Duration = Math.Round(elapsed.TotalMilliseconds, 4)
+                Duration = Convert.ToDecimal(elapsed.TotalMilliseconds)
             };
             requestLog.SetResponse(statusCode, respPayLoad);
             if (response.IsSuccessStatusCode)
@@ -778,7 +834,7 @@ namespace iTaxSuite.Library.Extensions
                 RequestID = xRequestID,
                 RespHeaders = respHeaders,
                 RespPayload = respPayLoad,
-                Duration = Math.Round(elapsed.TotalMilliseconds, 4)
+                Duration = Convert.ToDecimal(elapsed.TotalMilliseconds)
             };
             requestLog.SetResponse(statusCode, respPayLoad);
             _logger.LogError($"<< {requestLog.FormatResponseFailed()}");

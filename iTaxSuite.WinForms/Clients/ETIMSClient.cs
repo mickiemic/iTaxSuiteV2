@@ -1,4 +1,5 @@
 ﻿using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
@@ -14,24 +15,34 @@ namespace iTaxSuite.WinForms.Clients
     public partial class ETIMSClient : BaseForm
     {
         private readonly IMasterDataSvc _masterDataSvc;
-        private readonly IS300ProductSvc _s300ProductSvc;
-        private readonly IS300SaleService _saleService;
-        private readonly IEtimsService _etimsService;
         private readonly VSCUConfig _vscuConfig;
         private readonly ETimsDBContext _dbContext;
 
-        private readonly TestData _testData;
-        public ETIMSClient(IMasterDataSvc masterDataSvc, IS300SaleService s300SaleService, VSCUConfig vscuConfig,
-            ETimsDBContext dbContext, IEtimsService etimsService, IS300ProductSvc s300ProductSvc)
+        private readonly IEnumerable<IS300ProductSvc> _s300ProductSvcs;
+        private IS300ProductSvc _s300ProductSvc;
+
+        private readonly IEnumerable<IS300SaleService> _s300SaleServices;
+        private IS300SaleService _saleService;
+
+        private readonly IEtimsService _etimsService;
+        private readonly IDigiTaxService _digiTaxService;
+        private ClientBranch _clientBranch;
+
+        private TestData _testData;
+        public ETIMSClient(IMasterDataSvc masterDataSvc, IEnumerable<IS300SaleService> s300SaleServices, VSCUConfig vscuConfig,
+            ETimsDBContext dbContext, IEtimsService etimsService, IEnumerable<IS300ProductSvc> s300ProductSvcs, IDigiTaxService digiTaxService)
         {
             _masterDataSvc = masterDataSvc;
-            _saleService = s300SaleService;
-            _vscuConfig = vscuConfig;
             _dbContext = dbContext;
+            _vscuConfig = vscuConfig;
             _etimsService = etimsService;
-            _s300ProductSvc = s300ProductSvc;
+            _digiTaxService = digiTaxService;
+
+            _s300ProductSvcs = s300ProductSvcs;
+            _s300SaleServices = s300SaleServices;
 
             InitializeComponent();
+            Load += MFormLoad;
             FormClosing += MFormClosing;
             KeyDown += OnKeyDown;
 
@@ -39,7 +50,19 @@ namespace iTaxSuite.WinForms.Clients
             EditorHelper.initCodeFolding(reqEditor);
             EditorHelper.initSyntaxColoring(respEditor);
             EditorHelper.initCodeFolding(respEditor);
+        }
 
+        private async void MFormLoad(object? sender, EventArgs e)
+        {
+            _clientBranch = await _masterDataSvc.GetBranchAsync();
+            _s300ProductSvc = _s300ProductSvcs.Single(x => x.GetDeviceType() == _clientBranch.TaxClient.DeviceType);
+            _saleService = _s300SaleServices.Single(x => x.GetDeviceType() == _clientBranch.TaxClient.DeviceType);
+
+            StartupSetup();
+        }
+
+        private async void StartupSetup()
+        {
             if (_vscuConfig.ClientCode == "TSCLTD")
             {
                 _testData = new TestData()
@@ -47,7 +70,7 @@ namespace iTaxSuite.WinForms.Clients
                     ICItem = "SPA001",
                     OEInvoice = "IN008422",
                     OECreditNote = "CN000299",
-                    ARBatch = "9070",
+                    ARInvBatch = "9070",
                     ARInvoice = "",
                     ARCreditNote = "",
                     POReceipt = "ZO01"
@@ -58,11 +81,14 @@ namespace iTaxSuite.WinForms.Clients
                 _testData = new TestData()
                 {
                     ICItem = "BX12024",
-                    OEInvoice = "INV00012",
+                    //OEInvoice = "INV00012",
+                    OEInvoice = "INV00003",
                     OECreditNote = "CN000001",
-                    ARBatch = "56",
-                    ARInvoice = "IN000204",
-                    ARCreditNote = "",
+                    //ARInvBatch = "56",  ARInvoice = "IN000204",
+                    ARInvBatch = "20",
+                    ARInvoice = "IN000110",
+                    ARCNBatch = "27",
+                    ARCreditNote = "CN000004",
                     POReceipt = ""
                 };
             }
@@ -73,19 +99,20 @@ namespace iTaxSuite.WinForms.Clients
                     ICItem = "BK001",
                     OEInvoice = "INV20242476",
                     OECreditNote = "CN20230069",
-                    ARBatch = "22",
+                    ARInvBatch = "22",
                     ARInvoice = "INV2022/179",
                     ARCreditNote = "",
                     POReceipt = "VINV2133"
                 };
             }
-            StartupSetup();
-        }
-        private async void StartupSetup()
-        {
+
             ShowLoadingScreen(this, "Setting Up Tax Metadata");
             await _masterDataSvc.InitiateTaxSetup();
             await _masterDataSvc.InitializeCacheData();
+            if (_clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+                await _digiTaxService.GetBranchCount();
+            else
+                await _etimsService.GetBranchCount();
             HideLoadingScreen();
         }
 
@@ -97,7 +124,7 @@ namespace iTaxSuite.WinForms.Clients
         {
             tabControlEtims.SelectedIndex = tabIndex;
         }
-        private void OnKeyDown(object sender, KeyEventArgs e)
+        private void OnKeyDown(object? sender, KeyEventArgs e)
         {
             if (Control.ModifierKeys == Keys.Control && e.KeyCode == Keys.Space)
             {
@@ -105,7 +132,7 @@ namespace iTaxSuite.WinForms.Clients
             }
         }
 
-        private void MFormClosing(object sender, FormClosingEventArgs e)
+        private void MFormClosing(object? sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {
@@ -148,8 +175,11 @@ namespace iTaxSuite.WinForms.Clients
                 if (convertRes.IsSuccess)
                 {
                     salesView = convertRes.GetValue();
-                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
-                    //reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                    respEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                    if (salesView.DTaxSaveSale != null)
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.DTaxSaveSale, decimalFormat));
+                    else
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
                 }
                 else
                 {
@@ -186,8 +216,11 @@ namespace iTaxSuite.WinForms.Clients
                 if (convertRes.IsSuccess)
                 {
                     salesView = convertRes.GetValue();
-                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
-                    //reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                    respEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                    if (salesView.DTaxSaveCNoteReq != null)
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.DTaxSaveCNoteReq, decimalFormat));
+                    else
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
                 }
                 else
                 {
@@ -209,7 +242,7 @@ namespace iTaxSuite.WinForms.Clients
             var decimalFormat = new DecimalFormatConverter();
             try
             {
-                string strBatch = Interaction.InputBox("Enter Batch Number", "Enter AR Batch Number", _testData.ARBatch);
+                string strBatch = Interaction.InputBox("Enter Batch Number", "Enter AR Batch Number", _testData.ARInvBatch);
                 if (string.IsNullOrWhiteSpace(strBatch))
                 {
                     MessageBox.Show($"Invalid Request {strBatch}", "Select Item");
@@ -230,8 +263,11 @@ namespace iTaxSuite.WinForms.Clients
                 if (convertRes.IsSuccess)
                 {
                     salesView = convertRes.GetValue();
-                    // reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
-                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
+                    respEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                    if (salesView.DTaxSaveSale != null)
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.DTaxSaveSale, decimalFormat));
+                    else
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
                 }
                 else
                 {
@@ -245,6 +281,10 @@ namespace iTaxSuite.WinForms.Clients
                 UI.Error($"{_method_} error: {ex.GetBaseException().Message}");
                 MessageBox.Show($"{_method_} error: {ex.GetBaseException().Message}", "AR Invoice Processing", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                HideLoadingScreen();
+            }
         }
 
         private async void btnGetARCRNote_Click(object sender, EventArgs e)
@@ -253,13 +293,13 @@ namespace iTaxSuite.WinForms.Clients
             var decimalFormat = new DecimalFormatConverter();
             try
             {
-                string strBatch = Interaction.InputBox("Enter Batch Number", "Enter AR Batch Number", _testData.ARBatch);
+                string strBatch = Interaction.InputBox("Enter Batch Number", "Enter AR Batch Number", _testData.ARCNBatch);
                 if (string.IsNullOrWhiteSpace(strBatch))
                 {
                     MessageBox.Show($"Invalid Request {strBatch}", "Select Item");
                     return;
                 }
-                string strInvoice = Interaction.InputBox("Enter Credit Note Number", "Enter AR Credit Note Number", _testData.ARInvoice);
+                string strInvoice = Interaction.InputBox("Enter Credit Note Number", "Enter AR Credit Note Number", _testData.ARCreditNote);
                 if (string.IsNullOrWhiteSpace(strInvoice))
                 {
                     strInvoice = string.Empty;
@@ -274,8 +314,11 @@ namespace iTaxSuite.WinForms.Clients
                 if (convertRes.IsSuccess)
                 {
                     salesView = convertRes.GetValue();
-                    // reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
-                    reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
+                    respEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesTransact, decimalFormat));
+                    if (salesView.DTaxSaveCNoteReq != null)
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.DTaxSaveCNoteReq, decimalFormat));
+                    else
+                        reqEditor.setEditorText(JsonConvert.SerializeObject(salesView.SalesSaveReq, decimalFormat));
                 }
                 else
                 {
@@ -307,6 +350,11 @@ namespace iTaxSuite.WinForms.Clients
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
                     .Where(e => e.ProductCode == strInput).OrderBy(e => e.CreatedOn)
                     .AsNoTracking().FirstOrDefaultAsync();
+                if (stockItem is null)
+                {
+                    MessageBox.Show($"Invalid Request No ProductCode {strInput} found.", "Create Item");
+                    return;
+                }
                 var etimsRequest = stockItem.Product.ProductData.GetEtimsRequest();
                 if (stockItem != null)
                 {
@@ -484,13 +532,67 @@ namespace iTaxSuite.WinForms.Clients
                 MessageBox.Show($"SaleTransact status is OK", "Query SaleTransact");
             }*/
 
-            ShowLoadingScreen(this, "Querying Products");
+            /*ShowLoadingScreen(this, "Querying Products");
             var glProducts = await _s300ProductSvc.FetchGLProducts();
             var strJson1 = JsonConvert.SerializeObject(glProducts);
             var arProducts = await _s300ProductSvc.FetchARProducts();
             var strJson2 = JsonConvert.SerializeObject(arProducts);
             HideLoadingScreen();
-            Console.WriteLine($"GLProducts: {glProducts?.Count}, ARProducts:{arProducts?.Count}");
+            Console.WriteLine($"GLProducts: {glProducts?.Count}, ARProducts:{arProducts?.Count}");*/
+
+            await ConvertDigiTaxData();
+        }
+
+        private async void btnGetPurch_Click(object sender, EventArgs e)
+        {
+            int pageSize = 0;
+            string before = string.Empty, after = string.Empty;
+
+            string strInput = Interaction.InputBox("Enter Page Count", "Select Purchases", "");
+            if (!string.IsNullOrWhiteSpace(strInput))
+            {
+                if (int.TryParse(strInput, out int tempSize))
+                {
+                    pageSize = tempSize;
+                }
+            }
+            strInput = Interaction.InputBox("Enter Previous Item", "Select Purchases", "");
+            if (!string.IsNullOrWhiteSpace(strInput))
+            {
+                before = strInput.Trim();
+            }
+            strInput = Interaction.InputBox("Enter Next Item", "Select Purchases", "");
+            if (!string.IsNullOrWhiteSpace(strInput))
+            {
+                after = strInput.Trim();
+            }
+
+            ShowLoadingScreen(this, $"Loading Items Request DT:{strInput}");
+            var result = await Task.Run(() => _digiTaxService.GetDTaxPurchases(pageSize, before, after));
+            HideLoadingScreen();
+            if (result.IsError)
+            {
+                MessageBox.Show($"{result.GetError()}", "Select Purchases");
+                return;
+            }
+
+            respEditor.ClearAll();
+            respEditor.setEditorText(JsonConvert.SerializeObject(result.GetValue()));
+        }
+
+        private async void btnClearPurch_Click(object sender, EventArgs e)
+        {
+            ShowLoadingScreen(this, $"Loading Notices");
+            var result = await Task.Run(() => _digiTaxService.SelectNotices());
+            HideLoadingScreen();
+            if (result.IsError)
+            {
+                MessageBox.Show($"{result.GetError()}", "Select Notices");
+                return;
+            }
+
+            respEditor.ClearAll();
+            respEditor.setEditorText(JsonConvert.SerializeObject(result.GetValue()));
         }
     }
 

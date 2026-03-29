@@ -39,6 +39,20 @@ namespace iTaxSuite.WebApi.Services
                             RecurringJob.AddOrUpdate<ICProductsFetcher>(ICProductsFetcher.JobId,
                             x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
                     }
+                    else if (channel.ChannelId == GeneralConst.AR_PRODUCT_SYNC)
+                    {
+                        RecurringJob.RemoveIfExists(ARProductsFetcher.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<ARProductsFetcher>(ARProductsFetcher.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
+                    else if (channel.ChannelId == GeneralConst.GL_PRODUCT_SYNC)
+                    {
+                        RecurringJob.RemoveIfExists(GLProductsFetcher.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<GLProductsFetcher>(GLProductsFetcher.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
                     else if (channel.ChannelId == GeneralConst.PO_INVOICE_SYNC)
                     {
                         RecurringJob.RemoveIfExists(PurchasesFetcher.JobId);
@@ -72,6 +86,13 @@ namespace iTaxSuite.WebApi.Services
                         RecurringJob.RemoveIfExists(ARCRNoteFetcher.JobId);
                         if (channel.IsActive)
                             RecurringJob.AddOrUpdate<ARCRNoteFetcher>(ARCRNoteFetcher.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
+                    else if (channel.ChannelId == GeneralConst.ALL_TAXTRXS_POST)
+                    {
+                        RecurringJob.RemoveIfExists(AllTaxTrxsPost.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<AllTaxTrxsPost>(AllTaxTrxsPost.JobId,
                             x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
                     }
                 }

@@ -4,6 +4,7 @@ using Hangfire.MemoryStorage;
 using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Data;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Configs;
 using iTaxSuite.Library.Models.Entities;
@@ -150,9 +151,12 @@ try
     _ = builder.Services.AddScoped<ISetupService, SetupService>();
     _ = builder.Services.AddScoped<ISchedulerService, SchedulerService>();
     _ = builder.Services.AddScoped<IEtimsService, EtimsService>();
-    _ = builder.Services.AddScoped<IS300ProductSvc, S300ProductSvc>();
-    _ = builder.Services.AddScoped<IS300PurchaseSvc, S300PurchaseSvc>();
-    _ = builder.Services.AddScoped<IS300SaleService, S300SaleService>();
+    _ = builder.Services.AddScoped<IDigiTaxService, DigiTaxService>();
+    _ = builder.Services.AddScoped<IS300ProductSvc, S300TimsProductSvc>();
+    _ = builder.Services.AddScoped<IS300ProductSvc, S300DTaxProductSvc>();
+    _ = builder.Services.AddScoped<IS300PurchaseSvc, S300TimsPurchaseSvc>();
+    _ = builder.Services.AddScoped<IS300SaleService, S300TimsSaleService>();
+    _ = builder.Services.AddScoped<IS300SaleService, S300DTaxSaleService>();
     _ = builder.Services.AddScoped<ITransactService, TransactService>();
 
     _ = builder.Services.AddAuthentication(options =>

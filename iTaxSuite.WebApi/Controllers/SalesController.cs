@@ -1,7 +1,10 @@
 ﻿using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
+using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
 using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace iTaxSuite.WebApi.Controllers
 {
@@ -12,9 +15,9 @@ namespace iTaxSuite.WebApi.Controllers
     {
         private readonly IS300SaleService _saleService;
 
-        public SalesController(IS300SaleService saleService)
+        public SalesController(IEnumerable<IS300SaleService> s300SaleServices)
         {
-            _saleService = saleService;
+            _saleService = s300SaleServices.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [HttpPost]
@@ -121,5 +124,29 @@ namespace iTaxSuite.WebApi.Controllers
                 return StatusCode(500, ex.GetBaseException().Message);
             }
         }
+
+        [HttpPost]
+        [Route("salecallback")]
+        public async Task<IActionResult> PostSaleCallback(SaleCallback saleCallback)
+        {
+            string _method_ = "PostSaleCallback";
+            try
+            {
+                if (saleCallback is null)
+                    throw new Exception($"Invalid request received");
+
+                var result = await _saleService.ProcessSaleCallback(saleCallback);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+
     }
 }

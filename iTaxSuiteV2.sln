@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iTaxSuite.WinForms", "iTaxS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iTaxSuite.CLIApp", "iTaxSuite.Console\iTaxSuite.CLIApp.csproj", "{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iTaxSuite.WebHook", "iTaxSuite.WebHook\iTaxSuite.WebHook.csproj", "{253166C9-2C58-4CFB-8C58-1D26E4AAE9E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3244DBC-66B6-4A66-BC98-E603B5A88CDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{253166C9-2C58-4CFB-8C58-1D26E4AAE9E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{253166C9-2C58-4CFB-8C58-1D26E4AAE9E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{253166C9-2C58-4CFB-8C58-1D26E4AAE9E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{253166C9-2C58-4CFB-8C58-1D26E4AAE9E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,7 +15,7 @@ namespace iTaxSuite.Library.Services
         Task<Result<TrnsSalesSaveResp, string>> SaveEtimsSale(TrnsSalesSaveReq saveSaleReq);
         Task<Result<StockIOSaveResp, string>> SaveEtimsStockIO(StockIOSaveReq stockIOSaveReq);
         Task<Result<StockMstSaveResp, string>> SaveEtimsStockMaster(StockMstSaveReq stockMstSaveReq);
-        Task<Result<bool, string>> SelectBranches(bool log = false);
+        Task<Result<int, string>> GetBranchCount(bool log = false);
         Task<Result<SelectCodeResp, string>> SelectCodes(string strInput);
         Task<Result<SelectItemResp, string>> SelectItems(string strInput);
         Task<Result<NoticeResp, string>> SelectNotices(string lastReqDt);
@@ -36,9 +36,9 @@ namespace iTaxSuite.Library.Services
             _clientBranch = _masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
         }
 
-        public async Task<Result<bool, string>> SelectBranches(bool log = false)
+        public async Task<Result<int, string>> GetBranchCount(bool log = false)
         {
-            string _method_ = "SelectBranches";
+            string _method_ = "SelectBranchCount";
             string _strResponse = string.Empty;
             SelectBranchResp result = null;
             try
@@ -60,7 +60,7 @@ namespace iTaxSuite.Library.Services
                     if (log)
                         UI.Info($"<< {_method_}: {_strResponse}");
                     result = JsonConvert.DeserializeObject<SelectBranchResp>(_strResponse);
-                    return result.IsSuccess;
+                    return result.Data.Branches.Count;
                 }
             }
             catch (Exception ex)

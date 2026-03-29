@@ -254,6 +254,7 @@
             btnClearPurch.TabIndex = 7;
             btnClearPurch.Text = "Clear";
             btnClearPurch.UseVisualStyleBackColor = true;
+            btnClearPurch.Click += btnClearPurch_Click;
             // 
             // btnGetPurch
             // 
@@ -265,6 +266,7 @@
             btnGetPurch.TabIndex = 9;
             btnGetPurch.Text = "Select Purchases";
             btnGetPurch.UseVisualStyleBackColor = true;
+            btnGetPurch.Click += btnGetPurch_Click;
             // 
             // tabStock
             // 

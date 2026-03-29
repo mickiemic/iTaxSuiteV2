@@ -1,5 +1,6 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
@@ -9,263 +10,22 @@ using StackExchange.Redis;
 
 namespace iTaxSuite.Library.Services
 {
-    public interface IS300ProductSvc
+    public class S300TimsProductSvc : S300BaseProductSvc, IS300ProductSvc
     {
-        Task<Result<StockMovement, string>> CreateStockMovement(StockIORequest stockIORequest);
-        Task<List<Product>> FetchARProducts();
-        Task<List<Product>> FetchGLProducts();
-        Task<List<Product>> FetchICProducts();
-        Task<Result<PagedResult<Product>, string>> GetProducts(ProductFilter filter);
-        Task<Result<PagedResult<StockItem>, string>> GetStockItems(StockFilter filter);
-        Task<Result<PagedResult<StockMovement>, string>> GetStockMovements(MovementFilter filter);
-        Task<Result<EtimsTransact, string>> ProcessSaveProduct(EtimsTransact transact);
-        Task<Result<EtimsTransact, string>> ProcessSaveStockIO(EtimsTransact transact);
-        Task<Result<EtimsTransact, string>> QueueSaveProduct(BranchStockKey filter);
-        Task<Result<Product, string>> ReFetchProduct(ProductKey productKey);
-        Task<Result<BranchStockLevel, string>> SaveStockLevel(SaveStockLevel saveStockLevel);
-    }
-    public class S300ProductSvc : IS300ProductSvc
-    {
-        private readonly ETimsDBContext _dbContext;
-        private readonly IDatabase _baseDb;
-        private readonly IHttpClientFactory _httpClientFactory;
-
-        private readonly ExtSystConfig _extSystConfig;
-        private readonly IMasterDataSvc _masterDataSvc;
         private readonly IEtimsService _etimsService;
 
-        private readonly Dictionary<string, SyncChannel> _syncChannelMap;
-        private readonly ClientBranch _clientBranch = null;
-
-        public S300ProductSvc(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, ExtSystConfig extSystConfig, 
+        public S300TimsProductSvc(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, ExtSystConfig extSystConfig, 
             IMasterDataSvc masterDataSvc, IHttpClientFactory httpClientFactory, IEtimsService etimsService)
+            : base(dbContext, multiplexer, extSystConfig, masterDataSvc, httpClientFactory)
         {
-            _dbContext = dbContext;
-            _baseDb = multiplexer.GetDatabase();
-            _extSystConfig = extSystConfig;
-            _masterDataSvc = masterDataSvc;
-
             _syncChannelMap = _masterDataSvc.GetChannelsAsync().GetAwaiter().GetResult();
             _clientBranch = _masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
-            _httpClientFactory = httpClientFactory;
+            
             _etimsService = etimsService;
         }
-
-        public async Task<Dictionary<string,StockItemKey>> GetCacheStockItems(bool reload = false)
+        public TaxDeviceType GetDeviceType()
         {
-            string _method_ = "GetCacheStockItems";
-            var productMap = new Dictionary<string, StockItemKey>();
-            try
-            {
-                string _hashKey_ = CacheConst.ALL_PRODUCT_HASHKEY;
-
-                if (!reload)
-                {
-                    var result = await _baseDb.HashGetAllAsync(CacheConst.ALL_PRODUCT_HASHKEY);
-                    foreach (var item in result)
-                    {
-                        var product = JsonConvert.DeserializeObject<StockItemKey>(item.Value);
-                        productMap[item.Name] = product;
-                    }
-                }
-
-                if (reload || !productMap.Any())
-                {
-                    if (_baseDb.KeyExists(_hashKey_))
-                    {
-                        _baseDb.KeyDelete(_hashKey_);
-                    }
-                    
-                    foreach (var item in _dbContext.StockItems.Include(e => e.Product).Select(x => new StockItemKey(x)).AsNoTracking())
-                    {
-                        productMap[item.ProductCode] = item;
-                        if (!_baseDb.SetHashValue(_hashKey_, item.ProductCode, item))
-                        {
-                            UI.Error($"RCacheService::{_method_} failed for Product code:{_hashKey_}");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
-                throw;
-            }
-
-            return productMap;
-        }
-
-        public async Task<Result<PagedResult<Product>,string>> GetProducts(ProductFilter filter)
-        {
-            string _method_ = "GetProducts";
-            PagedResult<Product> result = new();
-            try
-            {
-                var query = _dbContext.Products.AsNoTracking().AsQueryable();
-                if (filter != null && filter.RecordGroup != RecordStatusGroup.ALL)
-                {
-                    if (filter.RecordGroup == RecordStatusGroup.FAILED)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
-                            f.RecordStatus == RecordStatus.INVALID);
-                    else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
-                    else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
-                            f.RecordStatus == RecordStatus.MANUALOUT);
-                }
-
-                if (!string.IsNullOrWhiteSpace(filter.ProductCode))
-                    query = query.Where(x => x.ProductCode.Equals(filter.ProductCode));
-                if (!string.IsNullOrWhiteSpace(filter.Description))
-                    query = query.Where(x => x.Description.Contains(filter.Description));
-
-                result.Count = await query.CountAsync();
-                if (filter.Sort != null)
-                    query = filter.PageAndOrder(query);
-                else
-                    query = filter.PageAndOrderByStamp(query);
-
-                result.Result = await query.ToListAsync();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
-                return ex.GetBaseException().Message;
-            }
-        }
-        public async Task<Result<PagedResult<StockItem>,string>> GetStockItems(StockFilter filter)
-        {
-            string _method_ = "GetStockItems";
-            PagedResult<StockItem> result = new();
-            try
-            {
-                var query = _dbContext.StockItems.Include(e => e.Product).AsQueryable();
-                if (filter != null && filter.RecordGroup != RecordStatusGroup.ALL)
-                {
-                    if (filter.RecordGroup == RecordStatusGroup.FAILED)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
-                            f.RecordStatus == RecordStatus.INVALID);
-                    else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
-                    else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
-                            f.RecordStatus == RecordStatus.MANUALOUT);
-                }
-
-                if (!string.IsNullOrWhiteSpace(filter.ProductCode))
-                    query = query.Where(x => x.ProductCode.Equals(filter.ProductCode));
-                if (!string.IsNullOrWhiteSpace(filter.BranchCode))
-                    query = query.Where(x => x.BranchCode.Equals(filter.BranchCode));
-                if (!string.IsNullOrWhiteSpace(filter.TaxItemCode))
-                    query = query.Where(x => x.TaxItemCode.Equals(filter.TaxItemCode));
-                if (!string.IsNullOrWhiteSpace(filter.Description))
-                    query = query.Where(x => x.Product.Description.Contains(filter.Description));
-
-                result.Count = await query.CountAsync();
-                if (filter.Sort != null)
-                    query = filter.PageAndOrder(query);
-                else
-                    query = filter.PageAndOrderByStamp(query);
-
-                result.Result = await query.ToListAsync();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
-                return ex.GetBaseException().Message;
-            }
-        }
-        public async Task<Result<PagedResult<StockMovement>, string>> GetStockMovements(MovementFilter filter)
-        {
-            string _method_ = "GetStockMovements";
-            PagedResult<StockMovement> result = new();
-            try
-            {
-                var query = _dbContext.StockMovement.AsQueryable();
-                if (filter != null && filter.RecordGroup != RecordStatusGroup.ALL)
-                {
-                    if (filter.RecordGroup == RecordStatusGroup.FAILED)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
-                            f.RecordStatus == RecordStatus.INVALID);
-                    else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
-                    else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
-                            f.RecordStatus == RecordStatus.MANUALOUT);
-                }
-
-                if (!string.IsNullOrWhiteSpace(filter.BranchCode))
-                    query = query.Where(x => x.BranchCode.Equals(filter.BranchCode));
-                if (!string.IsNullOrWhiteSpace(filter.DocNumber))
-                    query = query.Where(x => x.DocNumber.Equals(filter.DocNumber));
-
-                if (filter.HasAnyDate())
-                {
-                    string _dtFilterError = filter.GetDatesError();
-                    if (!string.IsNullOrWhiteSpace(_dtFilterError))
-                    {
-                        return _dtFilterError;
-                    }
-                    query = query.Where(x => x.DocDate >= filter.StartTime.Value
-                        && x.DocDate <= filter.EndTime.Value);
-                }
-
-                result.Count = await query.CountAsync();
-                if (filter.Sort != null)
-                    query = filter.PageAndOrder(query);
-                else
-                    query = filter.PageAndOrderByStamp(query);
-
-                result.Result = await query.ToListAsync();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
-                return ex.GetBaseException().Message;
-            }
-        }
-        public async Task<Result<StockMovement, string>> CreateStockMovement(StockIORequest stockIORequest)
-        {
-            string _method_ = "CreateStockMovement";
-            StockMovement stockMovement = null;
-            string _strError = string.Empty;
-            try
-            {
-                var stockItem = await _dbContext.StockItems.Include(e => e.Product)
-                    .FirstOrDefaultAsync(x => x.BranchCode == _clientBranch.BranchCode 
-                    && x.ProductCode == stockIORequest.ProductCode);
-                if (stockItem is null)
-                {
-                    _strError = $"StockItem with ProductCode:{stockIORequest.ProductCode} not found";
-                    UI.Error($"{_method_} error: {_strError}");
-                    return _strError;
-                }
-
-                stockMovement = new StockMovement(_clientBranch, stockIORequest);
-                var stockIOSaveReq = new StockIOSaveReq(_clientBranch, stockIORequest, stockItem);
-                var stockTrxData = new StockMovData(stockMovement, stockIORequest, stockIOSaveReq);
-                stockMovement.StockMovData = stockTrxData;
-
-                var strJosn = JsonConvert.SerializeObject(stockIOSaveReq);
-
-                return stockMovement;
-            }
-            catch (Exception ex)
-            {
-                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
-                return ex.GetBaseException().Message;
-            }
-        }
-        private async Task<bool> CacheSaveStockItem(string streamName, StockItem stockItem)
-        {
-            var res = await _baseDb.SetHashValueAsync(CacheConst.ALL_PRODUCT_HASHKEY, stockItem.ProductCode, new StockItemKey(stockItem));
-            return res;
+            return TaxDeviceType.VSCU;
         }
         public async Task<List<Product>> FetchICProducts()
         {
@@ -275,7 +35,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var syncChannel = _syncChannelMap[GeneralConst.IC_PRODUCT_SYNC];
-                var productMap = await GetCacheStockItems();
+                var productMap = await _masterDataSvc.GetCacheStockItems();
                 var qParams = new Dictionary<string, string>();
                 
                 var client = _httpClientFactory.CreateClient();
@@ -356,7 +116,7 @@ namespace iTaxSuite.Library.Services
                                     throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
                                 }
 
-                                if (!await CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
+                                if (!await _masterDataSvc.CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
                                 {
                                     throw new Exception($"IC Product {product.ProductCode} saving to cache failed");
                                 }
@@ -387,100 +147,6 @@ namespace iTaxSuite.Library.Services
 
             return products;
         }
-
-        public async Task<Result<Product, string>> ReFetchProduct(ProductKey productKey)
-        {
-            string _method_ = "ReFetchProduct";
-            Product product = null;
-            string _strError = string.Empty;
-            try
-            {
-                if (productKey == null || string.IsNullOrWhiteSpace(productKey.ProductCode))
-                {
-                    _strError = $"Invalid filter for ICItem => {JsonConvert.SerializeObject(productKey)}";
-                    UI.Error($"{_method_} error : {_strError}");
-                    return _strError;
-                }
-
-                var client = _httpClientFactory.CreateClient();
-                string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/IC/ICItems");
-
-                product = await _dbContext.Products.Include(p => p.ProductData)
-                    .FirstOrDefaultAsync(p => p.ProductCode == productKey.ProductCode);
-                if (product is null)
-                {
-                    _strError = $"Invalid or missing Product {productKey.ProductCode} in Products data";
-                    UI.Error($"{_method_} error : {_strError}");
-                    return _strError;
-                }
-                var productData = product.ProductData;
-                if (productData is null)
-                {
-                    _strError = $"Invalid or missing ProductData {productKey.ProductCode} in ProductData data";
-                    UI.Error($"{_method_} error : {_strError}");
-                    return _strError;
-                }
-
-                var qParams = new Dictionary<string, string>();
-                qParams["$filter"] = $"ItemNumber eq '{product.ProductCode}'";
-
-                var result = await client.ProcessGetReqBasicAsync<ICItems>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password, null, qParams);
-                if (result == null && result.Items.Count == 0)
-                {
-                    _strError = $"Not Found ICItems response from Sage for ProductCode {product.ProductCode}";
-                    UI.Error($"{_method_} error : {_strError}");
-                    return _strError;
-                }
-
-                var icItem = result.Items.FirstOrDefault(i => i.ItemNumber == product.ProductCode);
-                
-                var _newProduct = new Product(icItem);
-                var _newStockItem = new StockItem(product, _clientBranch);
-                var _newProductData = new ProductData(_clientBranch, _newStockItem, icItem);
-                if (!_newProductData.SourceStamp.HasValue || productData.SourceStamp.Value >= _newProductData.SourceStamp.Value)
-                {
-                    _strError = $"Not Updates in Sage for ProductCode {product.ProductCode}";
-                    UI.Info($"{_method_} error : {_strError}");
-                    return product;
-                }
-
-                product.ItemClassCode = _newProduct.ItemClassCode;
-                product.RecordStatus = RecordStatus.QUEUEDOUT;
-                product.UpdatedOn = DateTime.Now;
-                product.UpdatedBy = "Sys-Admin";
-
-                var mapResult = await _masterDataSvc.MapItemAttribs(product._pkgUnitCode, product._qtyUnitCode);
-                if (mapResult.IsError)
-                {
-                    _strError = mapResult.GetError();
-                    UI.Error($"{_method_} error : {_strError}");
-                    product.PackageUnit = product.QuantityUnit = ETIMSConst.NOUNIT_CODE;
-                    product.RecordStatus = RecordStatus.INVALID;
-                }
-                else
-                {
-                    product.UpdateAttributes(mapResult.GetValue());
-                }
-
-                product.ProductData.SourceStamp = _newProductData.SourceStamp;
-                product.ProductData.SourcePayload = _newProductData.SourcePayload;
-                product.ProductData.SaveItemReq = _newProductData.SaveItemReq;
-                product.ProductData.RequestPayload = _newProductData.RequestPayload;
-                product.ProductData.UpdatedOn = DateTime.Now;
-                product.ProductData.UpdatedBy = "Sys-Admin";
-
-                int affected = await _dbContext.SaveChangesAsync();
-                UI.Info($"{_method_} update {affected} records updated.");
-            }
-            catch (Exception ex)
-            {
-                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
-                throw;
-            }
-
-            return product;
-
-        }
         public async Task<List<Product>> FetchARProducts()
         {
             string _method_ = "FetchARProducts";
@@ -489,7 +155,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var syncChannel = _syncChannelMap[GeneralConst.AR_PRODUCT_SYNC];
-                var productMap = await GetCacheStockItems();
+                var productMap = await _masterDataSvc.GetCacheStockItems();
                 var qParams = new Dictionary<string, string>();
 
                 var client = _httpClientFactory.CreateClient();
@@ -568,7 +234,7 @@ namespace iTaxSuite.Library.Services
                                     throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
                                 }
 
-                                if (!await CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
+                                if (!await _masterDataSvc.CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
                                 {
                                     throw new Exception($"Product {product.ProductCode} saving to cache failed");
                                 }
@@ -600,7 +266,6 @@ namespace iTaxSuite.Library.Services
 
             return products;
         }
-
         public async Task<List<Product>> FetchGLProducts()
         {
             string _method_ = "FetchGLProducts";
@@ -609,7 +274,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var syncChannel = _syncChannelMap[GeneralConst.GL_PRODUCT_SYNC];
-                var productMap = await GetCacheStockItems();
+                var productMap = await _masterDataSvc.GetCacheStockItems();
                 var qParams = new Dictionary<string, string>();
 
                 var client = _httpClientFactory.CreateClient();
@@ -700,7 +365,7 @@ namespace iTaxSuite.Library.Services
                                     throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
                                 }
 
-                                if (!await CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
+                                if (!await _masterDataSvc.CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
                                 {
                                     throw new Exception($"GL Product {product.ProductCode} saving to cache failed");
                                 }
@@ -732,6 +397,39 @@ namespace iTaxSuite.Library.Services
             return products;
         }
 
+        public async Task<Result<StockMovement, string>> CreateStockMovement(StockIORequest stockIORequest)
+        {
+            string _method_ = "CreateStockMovement";
+            StockMovement stockMovement = null;
+            string _strError = string.Empty;
+            try
+            {
+                var stockItem = await _dbContext.StockItems.Include(e => e.Product)
+                    .FirstOrDefaultAsync(x => x.BranchCode == _clientBranch.BranchCode
+                    && x.ProductCode == stockIORequest.ProductCode);
+                if (stockItem is null)
+                {
+                    _strError = $"StockItem with ProductCode:{stockIORequest.ProductCode} not found";
+                    UI.Error($"{_method_} error: {_strError}");
+                    return _strError;
+                }
+
+                stockMovement = new StockMovement(_clientBranch, stockIORequest);
+                var stockIOSaveReq = new StockIOSaveReq(_clientBranch, stockIORequest, stockItem);
+                var stockTrxData = new StockMovData(stockMovement, stockIORequest, stockIOSaveReq);
+                stockMovement.StockMovData = stockTrxData;
+
+                var strJosn = JsonConvert.SerializeObject(stockIOSaveReq);
+
+                return stockMovement;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        
         public async Task<Result<EtimsTransact, string>> QueueSaveProduct(BranchStockKey filter)
         {
             string _method_ = "QueueSaveProduct";
@@ -1080,5 +778,14 @@ namespace iTaxSuite.Library.Services
             }
         }
 
+        public Task<Result<List<string>, string>> SyncTaxProducts()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Result<int, string>> ProcessItemCallback(ItemCallback itemCallback)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

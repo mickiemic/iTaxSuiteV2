@@ -44,6 +44,19 @@ namespace iTaxSuite.Library.Models.Entities
         }
     }
 
+    public enum TaxDeviceType
+    {
+        [EnumMember(Value = "VSCU")]
+        [Display(Name = "VSCU")]
+        VSCU = 1,
+        [EnumMember(Value = "DIGITAX")]
+        [Display(Name = "DIGITAX")]
+        DIGITAX,
+        [EnumMember(Value = "ZFP")]
+        [Display(Name = "ZFP")]
+        ZFP
+    }
+
     public enum RecordStatus
     {
         [EnumMember(Value = "NONE")]
@@ -142,6 +155,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(16)]
         public string ClientCode { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(100)]
         public string ClientName { get; set; }
@@ -166,6 +181,24 @@ namespace iTaxSuite.Library.Models.Entities
         public virtual ExtSystConfig ExtSystConfig { get; set; }
         [StringLength(512)]
         public string ProcessMeta { get; set; }
+        public TaxDeviceType DeviceType { get; set; } = TaxDeviceType.DIGITAX;
+        [StringLength(128)]
+        public string APIKey { get; set; }
+        [StringLength(256)]
+        public string BaseCallback { get; set; }
+        [NotMapped]
+        public TaxMetadata TaxMetadata { get; set; } = new();
+
+        public void InitMetaData()
+        {
+            if (!string.IsNullOrWhiteSpace(ProcessMeta))
+            {
+                TaxMetadata = Newtonsoft.Json.JsonConvert.DeserializeObject<TaxMetadata>(ProcessMeta);
+            }
+        }
+    }
+    public class TaxMetadata
+    {
     }
 
     [Table("EntityAttribute")]

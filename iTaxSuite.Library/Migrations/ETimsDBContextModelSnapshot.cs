@@ -172,8 +172,9 @@ namespace iTaxSuite.Library.Migrations
                     b.Property<int>("Direction")
                         .HasColumnType("int");
 
-                    b.Property<double>("Duration")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Duration")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
 
                     b.Property<string>("IPAddress")
                         .HasMaxLength(64)
@@ -189,8 +190,8 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ReqHeaders")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("ReqPath")
                         .IsRequired()
@@ -209,8 +210,8 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("RespHeaders")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
 
                     b.Property<string>("RespPayload")
                         .HasMaxLength(4000)
@@ -345,6 +346,10 @@ namespace iTaxSuite.Library.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -415,6 +420,10 @@ namespace iTaxSuite.Library.Migrations
                         .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ExternalID")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
@@ -498,6 +507,10 @@ namespace iTaxSuite.Library.Migrations
                         .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ExternalID")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
@@ -913,6 +926,13 @@ namespace iTaxSuite.Library.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("CallbackPayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("CallbackTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
@@ -997,6 +1017,10 @@ namespace iTaxSuite.Library.Migrations
 
                     b.Property<int>("EtrSeqNumber")
                         .HasColumnType("int");
+
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<decimal>("HomeDiscAmt")
                         .HasPrecision(19, 3)
@@ -1217,6 +1241,10 @@ namespace iTaxSuite.Library.Migrations
                         .HasPrecision(19, 3)
                         .HasColumnType("decimal(19,3)");
 
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
                     b.Property<bool>("IsStockable")
                         .HasColumnType("bit");
 
@@ -1365,6 +1393,14 @@ namespace iTaxSuite.Library.Migrations
                         .HasMaxLength(1)
                         .HasColumnType("nvarchar(1)");
 
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ExternalURL")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<decimal>("HomeDiscAmt")
                         .HasPrecision(19, 3)
                         .HasColumnType("decimal(19,3)");
@@ -1387,6 +1423,10 @@ namespace iTaxSuite.Library.Migrations
 
                     b.Property<DateTime?>("LastTry")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("OfflineURL")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<byte[]>("QRImage")
                         .HasColumnType("varbinary(max)");
@@ -1480,6 +1520,13 @@ namespace iTaxSuite.Library.Migrations
                     b.Property<int>("SalesTrxID")
                         .HasColumnType("int");
 
+                    b.Property<string>("CallbackPayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("CallbackTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
@@ -1545,6 +1592,10 @@ namespace iTaxSuite.Library.Migrations
 
                     b.Property<int>("EtrSeqNumber")
                         .HasColumnType("int");
+
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<DateTime?>("LastMovement")
                         .HasColumnType("datetime2");
@@ -1771,6 +1822,14 @@ namespace iTaxSuite.Library.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("nvarchar(16)");
 
+                    b.Property<string>("APIKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("BaseCallback")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("ClientName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1789,6 +1848,13 @@ namespace iTaxSuite.Library.Migrations
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
+
+                    b.Property<int>("DeviceType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<bool>("IsProduction")
                         .HasColumnType("bit");

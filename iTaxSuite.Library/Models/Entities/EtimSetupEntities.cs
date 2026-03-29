@@ -66,6 +66,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(32)]
         public string CustNumber { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(60)]
         public string CustName { get; set; }
@@ -92,6 +94,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(32)]
         public string UserNumber { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(60)]
         public string UserName { get; set; }
@@ -118,6 +122,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(32)]
         public string VendorNumber { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [StringLength(60)]
         public string VendorName { get; set; }
         [StringLength(11)]
@@ -144,6 +150,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(32)]
         public string CustomerNumber { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(60)]
         public string CustomerName { get; set; }

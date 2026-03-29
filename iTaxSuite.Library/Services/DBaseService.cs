@@ -50,7 +50,7 @@ namespace iTaxSuite.Library.Services
                     .SetProperty(x => x.RespHeaders, requestLog.RespHeaders.WithMaxLength(512, true))
                     .SetProperty(x => x.RespPayload, requestLog.RespPayload.WithMaxLength(4000, true))
                     .SetProperty(x => x.ResponseAt, requestLog.ResponseAt)
-                    .SetProperty(x => x.Duration, double.Round(requestLog.Duration, 4))
+                    .SetProperty(x => x.Duration, requestLog.Duration)
                     );
                 UI.Debug($"{_method_} RequestID:{requestLog.RequestID} Affected Rows: {affectedRows}");
                 return (affectedRows == 1);

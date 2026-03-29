@@ -1,4 +1,5 @@
 ﻿using iTaxSuite.Library.Constants;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
@@ -25,7 +26,7 @@ namespace iTaxSuite.Library.Models.Entities
         public string ReqPath { get; set; }
         [StringLength(64)]
         public string IPAddress { get; set; }
-        [StringLength(512)]
+        [StringLength(1024)]
         public string ReqHeaders { get; set; }
         [StringLength(256)]
         public string QParams { get; set; }
@@ -39,12 +40,13 @@ namespace iTaxSuite.Library.Models.Entities
         public int StatusCode { get; set; } = 999;
 
         // Response Properties
-        [StringLength(256)]
+        [StringLength(2048)]
         public string RespHeaders { get; set; }
         [StringLength(4000)]
         public string RespPayload { get; set; }
         public DateTime? ResponseAt { get; set; }
-        public double Duration { get; set; }
+        [Precision(19, 3)]
+        public decimal Duration { get; set; }
 
         public ApiRequestLog()
         {

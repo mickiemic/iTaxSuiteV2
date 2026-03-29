@@ -1,18 +1,19 @@
 ﻿using Hangfire;
 using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
-using iTaxSuite.Library.Services;
+using iTaxSuite.Library.Interfaces;
+using iTaxSuite.Library.Models.Entities;
 
 namespace iTaxSuite.WebApi.Schedules
 {
     public class ICProductsFetcher
     {
-        public const string JobId = $"job-{CacheConst.ALL_PRODUCT_HASHKEY}";
+        public const string JobId = $"job-{CacheConst.IC_PRODUCT_HASHKEY}";
         private readonly IS300ProductSvc _productSvc;
 
-        public ICProductsFetcher(IS300ProductSvc productSvc)
+        public ICProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs)
         {
-            _productSvc = productSvc;
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [JobDisplayName(JobId + "-executeasync")]
@@ -22,6 +23,50 @@ namespace iTaxSuite.WebApi.Schedules
             if (!stoppingToken.IsCancellationRequested)
             {
                 var products = await _productSvc.FetchICProducts();
+                if (products != null && products.Count > 0)
+                    UI.Info($"{_method_} products to process count:{products.Count}");
+            }
+        }
+    }
+    public class ARProductsFetcher
+    {
+        public const string JobId = $"job-{CacheConst.AR_PRODUCT_HASHKEY}";
+        private readonly IS300ProductSvc _productSvc;
+
+        public ARProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs)
+        {
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+        }
+
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var products = await _productSvc.FetchARProducts();
+                if (products != null && products.Count > 0)
+                    UI.Info($"{_method_} products to process count:{products.Count}");
+            }
+        }
+    }
+    public class GLProductsFetcher
+    {
+        public const string JobId = $"job-{CacheConst.GL_PRODUCT_HASHKEY}";
+        private readonly IS300ProductSvc _productSvc;
+
+        public GLProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs)
+        {
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+        }
+
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var products = await _productSvc.FetchGLProducts();
                 if (products != null && products.Count > 0)
                     UI.Info($"{_method_} products to process count:{products.Count}");
             }
@@ -64,9 +109,9 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_OEINV_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public OEInvoiceFetcher(IS300SaleService saleSvc)
+        public OEInvoiceFetcher(IEnumerable<IS300SaleService> saleSvcs)
         {
-            _saleSvc = saleSvc;
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [JobDisplayName(JobId + "-executeasync")]
@@ -94,9 +139,9 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_OECNT_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public OECRNoteFetcher(IS300SaleService saleSvc)
+        public OECRNoteFetcher(IEnumerable<IS300SaleService> saleSvcs)
         {
-            _saleSvc = saleSvc;
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [JobDisplayName(JobId + "-executeasync")]
@@ -105,7 +150,7 @@ namespace iTaxSuite.WebApi.Schedules
             string _method_ = $"{JobId}:ExecuteAsync";
             if (!stoppingToken.IsCancellationRequested)
             {
-                var pResult = await _saleSvc.FetchOEInvoices();
+                var pResult = await _saleSvc.FetchOECRDRNotes();
                 if (pResult.IsSuccess)
                 {
                     var oeSales = pResult.GetValue();
@@ -125,9 +170,9 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_ARINV_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public ARInvoiceFetcher(IS300SaleService saleSvc)
+        public ARInvoiceFetcher(IEnumerable<IS300SaleService> saleSvcs)
         {
-            _saleSvc = saleSvc;
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [JobDisplayName(JobId + "-executeasync")]
@@ -156,9 +201,9 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_ARCNT_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public ARCRNoteFetcher(IS300SaleService saleSvc)
+        public ARCRNoteFetcher(IEnumerable<IS300SaleService> saleSvcs)
         {
-            _saleSvc = saleSvc;
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [JobDisplayName(JobId + "-executeasync")]
@@ -213,4 +258,34 @@ namespace iTaxSuite.WebApi.Schedules
         }
     }
 
+    public class AllTaxTrxsPost
+    {
+        public const string JobId = $"job-{CacheConst.ALL_TAXPOSTTRX_HASHKEY}";
+        private readonly IS300SaleService _saleSvc;
+
+        public AllTaxTrxsPost(IEnumerable<IS300SaleService> saleSvcs)
+        {
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+        }
+
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var pResult = await _saleSvc.PostReadyTaxTrxs();
+                if (pResult.IsSuccess)
+                {
+                    var trxCount = pResult.GetValue();
+                    if (trxCount > 0)
+                        UI.Info($"{_method_} PostTaxTrx processed count:{trxCount}");
+                }
+                else
+                {
+                    throw new Exception($"{_method_} PostTaxTrx error:{pResult.GetError()}");
+                }
+            }
+        }
+    }
 }

@@ -32,6 +32,8 @@ namespace iTaxSuite.Library.Models.ViewModels
         public int EtrSeqNumber { get; set; }
         [StringLength(64)]
         public string TaxItemCode { get; set; }
+        [StringLength(64)]
+        public string ExternalID { get; set; }
         [StringLength(16)]
         public string ItemClassCode { get; set; }
         [StringLength(128)]
@@ -52,6 +54,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             RecordStatus = stockItem.Product.RecordStatus;
             ProductCode = stockItem.Product.ProductCode;
             TaxItemCode = stockItem.TaxItemCode;
+            ExternalID = stockItem.ExternalID;
             Description = stockItem.Product.Description;
             PackageUnit = stockItem.Product.PackageUnit;
             QuantityUnit = stockItem.Product.QuantityUnit;
@@ -152,7 +155,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
             PIN = clientBranch.TaxClient.TaxNumber;
             _offset = stockItem.EtrSeqNumber;
-            AdditionalInfo = stockItem.ProductCode;
+            BarCode = stockItem.ProductCode;
             if (item.StockItem)
                 ItemTypeCode = "2";
             else
@@ -183,7 +186,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
             PIN = clientBranch.TaxClient.TaxNumber;
             _offset = stockItem.EtrSeqNumber;
-            AdditionalInfo = stockItem.ProductCode;
+            BarCode = stockItem.ProductCode;
             ItemTypeCode = "3";
             ItemName = ItemStdName = item.Description;
             PkgUnitCode = stockItem.Product.PackageUnit;
@@ -206,7 +209,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
             PIN = clientBranch.TaxClient.TaxNumber;
             _offset = stockItem.EtrSeqNumber;
-            AdditionalInfo = stockItem.ProductCode;
+            BarCode = stockItem.ProductCode;
             ItemTypeCode = "3";
             ItemName = ItemStdName = account.Description;
             PkgUnitCode = stockItem.Product.PackageUnit;
@@ -396,7 +399,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             RegistrantName = ModifierName = "S300ETRBridge";
 
             StockTrxDate = stockIORequest.DocDate.ToString(ETIMSConst.FMT_DATEONLY);
-            StockRecordType = StockMovementType.Sale.GetEnumMemberValue();
+            StockRecordType = stockIORequest.MovementType.GetEnumMemberValue();
 
             var ioItem = new StockIOItem(stockIORequest, stockItem);
             TotalTaxableAmount = ioItem.TaxableAmount;
@@ -426,6 +429,7 @@ namespace iTaxSuite.Library.Models.ViewModels
 
             TotalItemCount = 1;
         }
+
     }
     public class StockIOSaveResp : ETIMSBaseResp
     {

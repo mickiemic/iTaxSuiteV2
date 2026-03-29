@@ -1,35 +1,17 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using StackExchange.Redis;
-using System.Collections.Generic;
 using System.Text;
 
 namespace iTaxSuite.Library.Services
 {
-    public interface IS300SaleService
-    {
-        Task<Result<List<EtimsSalesView>, string>> FetchARCRNotes();
-        Task<Result<List<EtimsSalesView>, string>> FetchARInvoices();
-        Task<Result<List<EtimsSalesView>, string>> FetchOECRDRNotes();
-        Task<Result<List<EtimsSalesView>, string>> FetchOEInvoices();
-        Task<Result<Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer, string>> GetARCustomer(SageDocFilter sageFilter);
-        Task<Result<EtimsSalesView, string>> GetConvertARCRNote(SaleBatchTrxKey saleBatchTrxKey);
-        Task<Result<EtimsSalesView, string>> GetConvertARInvoice(SaleBatchTrxKey saleBatchTrxKey);
-        Task<Result<EtimsSalesView, string>> GetConvertOECRNote(SaleTrxKey saleTrxKey);
-        Task<Result<EtimsSalesView, string>> GetConvertOEInvoice(SaleTrxKey saleTrxKey);
-        Task<Result<SalesTransact, string>> GetQRImage(int salesTrxId, bool updateMeta = false);
-        Task<Result<PagedResult<SalesTransact>, string>> GetSales(SalesFilter filter);
-        Task<Result<EtimsTransact, string>> ProcessSaveSale(EtimsTransact transactSale);
-        Task<Result<SalesTransact, string>> QuerySaleTransact(SaleTrxKey saleTrxKey, bool fixTransaction = true);
-        Task<Result<EtimsTransact, string>> QueueSaveSale(QueueSaveSale filter);
-        Task<Result<SalesTransact, string>> ReFetchOEInvoice(SaleTrxKey saleTrxKey);
-    }
-    public class S300SaleService : IS300SaleService
+    public class S300TimsSaleService : IS300SaleService
     {
         private readonly ETimsDBContext _dbContext;
         private readonly IDatabase _baseDb;
@@ -42,7 +24,7 @@ namespace iTaxSuite.Library.Services
         private readonly Dictionary<string, SyncChannel> _syncChannelMap;
         private readonly ClientBranch _clientBranch = null;
 
-        public S300SaleService(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, IHttpClientFactory httpClientFactory, 
+        public S300TimsSaleService(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, IHttpClientFactory httpClientFactory, 
             ExtSystConfig extSystConfig, IMasterDataSvc masterDataSvc, IEtimsService etimsService)
         {
             _dbContext = dbContext;
@@ -56,6 +38,10 @@ namespace iTaxSuite.Library.Services
             _etimsService = etimsService;
         }
 
+        public TaxDeviceType GetDeviceType()
+        {
+            return TaxDeviceType.VSCU;
+        }
         public async Task<Result<PagedResult<SalesTransact>, string>> GetSales(SalesFilter filter)
         {
             string _method_ = "GetSales";
@@ -117,7 +103,7 @@ namespace iTaxSuite.Library.Services
                 {
                     var xData = await _dbContext.SalesTransact.Include(x => x.SalesTrxData)
                         .Where(x => !string.IsNullOrWhiteSpace(x.SalesTrxData.ResponsePayload) 
-                        //&& (x.QRImage == null || x.QRImage.Length == 0)
+                            && (x.QRImage == null || x.QRImage.Length == 0)
                         ).ToListAsync();
                     foreach (var item in xData)
                     {
@@ -255,7 +241,7 @@ namespace iTaxSuite.Library.Services
                         if (mapResult.IsError)
                         {
                             _strError = mapResult.GetError();
-                            UI.Error($"{_method_} MapSalesInvcAttribs error : {_strError}");
+                            UI.Error($"{_method_} OEInvoice:{invoice.InvoiceNumber}, MapSalesInvcAttribs error : {_strError}");
                             return _strError;
                         }
                         oeSaleTrx = mapResult.GetValue();
@@ -920,6 +906,7 @@ namespace iTaxSuite.Library.Services
             var decimalFormat = new DecimalFormatConverter();
             try
             {
+                #region Sage300 section
                 if (saleTrxKey == null || string.IsNullOrWhiteSpace(saleTrxKey.DocNumber))
                 {
                     _strError = $"Invalid filter for OEInvoice => {JsonConvert.SerializeObject(saleTrxKey)}";
@@ -982,6 +969,7 @@ namespace iTaxSuite.Library.Services
                     return _strError;
                 }
                 _customer = sCustomer.GetValue();
+                #endregion
 
                 var oeSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, _taxGroup, taxAuthKeys);
                 var mapResult = await _masterDataSvc.MapSalesInvcAttribs(oeSaleTrx);
@@ -1030,6 +1018,7 @@ namespace iTaxSuite.Library.Services
             var decimalFormat = new DecimalFormatConverter();
             try
             {
+                #region Sage300 section
                 if (saleTrxKey == null || string.IsNullOrWhiteSpace(saleTrxKey.DocNumber))
                 {
                     _strError = $"Invalid filter for OECRNote => {JsonConvert.SerializeObject(saleTrxKey)}";
@@ -1068,8 +1057,8 @@ namespace iTaxSuite.Library.Services
                     return _strError;
                 }
 
-                var invoice = result.CreditDebitNotes.FirstOrDefault(i => i.CreditDebitNoteNumber == saleTrxKey.DocNumber);
-                string strTaxKey = $"{invoice.TaxGroup}:{invoice.TaxReportingTRCurrency}:Sales";
+                var crNote = result.CreditDebitNotes.FirstOrDefault(i => i.CreditDebitNoteNumber == saleTrxKey.DocNumber);
+                string strTaxKey = $"{crNote.TaxGroup}:{crNote.TaxReportingTRCurrency}:Sales";
                 if (!taxGroupMap.ContainsKey(strTaxKey))
                 {
                     _strError = $"Tax Setup Missing GroupKey {strTaxKey}";
@@ -1082,7 +1071,7 @@ namespace iTaxSuite.Library.Services
                 var sageFilter = new SageDocFilter()
                 {
                     docKey = "CustomerNumber",
-                    docNumber = invoice.CustomerNumber
+                    docNumber = crNote.CustomerNumber
                 };
                 var sCustomer = await GetARCustomer(sageFilter);
                 if (sCustomer.IsError)
@@ -1092,7 +1081,9 @@ namespace iTaxSuite.Library.Services
                     return _strError;
                 }
                 _customer = sCustomer.GetValue();
-                var oeSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, _taxGroup, taxAuthKeys);
+                #endregion
+
+                var oeSaleTrx = new SalesTransact(_clientBranch, _customer, crNote, _taxGroup, taxAuthKeys);
                 var mapResult = await _masterDataSvc.MapSalesInvcAttribs(oeSaleTrx);
                 if (mapResult.IsError)
                 {
@@ -1102,20 +1093,20 @@ namespace iTaxSuite.Library.Services
                 }
                 oeSaleTrx = mapResult.GetValue();
 
-                var trnsSalesSaveReq = new TrnsSalesSaveReq(_clientBranch, invoice, oeSaleTrx, _taxGroup, taxAuthKeys, _customer);
+                var trnsSalesSaveReq = new TrnsSalesSaveReq(_clientBranch, crNote, oeSaleTrx, _taxGroup, taxAuthKeys, _customer);
                 UI.Info($"<< {saleTrxKey.DocNumber} TrnsSalesSaveReq : {JsonConvert.SerializeObject(trnsSalesSaveReq, decimalFormat)}");
                 if (trnsSalesSaveReq.RecordStatus == RecordStatus.NONE)
                     oeSaleTrx.RecordStatus = RecordStatus.QUEUEDOUT;
                 else
                     oeSaleTrx.RecordStatus = RecordStatus.DEPENDS;
 
-                var salesTrxData = new SalesTrxData(oeSaleTrx, trnsSalesSaveReq, invoice);
+                var salesTrxData = new SalesTrxData(oeSaleTrx, trnsSalesSaveReq, crNote);
                 oeSaleTrx.SalesTrxData = salesTrxData;
                 UI.Info($"<< {saleTrxKey.DocNumber} SalesTransact : {JsonConvert.SerializeObject(oeSaleTrx, decimalFormat)}");
 
-                var stockMovement = new StockMovement(_clientBranch, invoice);
-                var stockIOSaveReq = new StockIOSaveReq(_clientBranch, invoice, trnsSalesSaveReq);
-                var stockTrxData = new StockMovData(stockMovement, invoice, stockIOSaveReq);
+                var stockMovement = new StockMovement(_clientBranch, crNote);
+                var stockIOSaveReq = new StockIOSaveReq(_clientBranch, crNote, trnsSalesSaveReq);
+                var stockTrxData = new StockMovData(stockMovement, crNote, stockIOSaveReq);
                 stockMovement.StockMovData = stockTrxData;
                 UI.Info($"<< {saleTrxKey.DocNumber} StockMovement : {JsonConvert.SerializeObject(stockMovement, decimalFormat)}");
 
@@ -1135,7 +1126,6 @@ namespace iTaxSuite.Library.Services
             }
 
         }
-
         public async Task<Result<EtimsSalesView, string>> GetConvertARInvoice(SaleBatchTrxKey saleBatchTrxKey)
         {
             string _method_ = "GetConvertARInvoice";
@@ -1146,6 +1136,7 @@ namespace iTaxSuite.Library.Services
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice = null;
             try
             {
+                #region Sage300 section
                 if (saleBatchTrxKey == null || string.IsNullOrWhiteSpace(saleBatchTrxKey.BatchNumber))
                 {
                     _strError = $"Invalid filter for ARInvoice => {JsonConvert.SerializeObject(saleBatchTrxKey)}";
@@ -1230,6 +1221,7 @@ namespace iTaxSuite.Library.Services
                     return _strError;
                 }
                 _customer = sCustomer.GetValue();
+                #endregion
 
                 var arSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, _taxGroup, taxAuthKeys);
                 var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx);
@@ -1284,6 +1276,7 @@ namespace iTaxSuite.Library.Services
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice = null;
             try
             {
+                #region Sage300 section
                 if (saleBatchTrxKey == null || string.IsNullOrWhiteSpace(saleBatchTrxKey.BatchNumber))
                 {
                     _strError = $"Invalid filter for ARInvoice => {JsonConvert.SerializeObject(saleBatchTrxKey)}";
@@ -1368,6 +1361,7 @@ namespace iTaxSuite.Library.Services
                     return _strError;
                 }
                 _customer = sCustomer.GetValue();
+                #endregion
 
                 var arSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, _taxGroup, taxAuthKeys);
                 var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx);
@@ -1793,5 +1787,15 @@ namespace iTaxSuite.Library.Services
             }
         }
 
+        public Task<Result<int, string>> ProcessSaleCallback(SaleCallback saleCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Result<int, string>> PostReadyTaxTrxs()
+        {
+            throw new NotImplementedException();
+        }
+    
     }
 }

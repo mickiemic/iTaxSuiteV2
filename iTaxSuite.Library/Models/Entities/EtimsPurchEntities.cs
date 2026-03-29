@@ -14,6 +14,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PurchaseID { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(2, MinimumLength = 2)]
         public string BranchCode { get; set; }

@@ -3,7 +3,6 @@ using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
 using iTaxSuite.Library.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using static iTaxSuite.Library.Models.Entities.S300TaxAuthority;
@@ -17,13 +16,21 @@ namespace iTaxSuite.WebApi.Controllers
     {
         private readonly ETimsDBContext _dbContext;
         private readonly ISetupService _setupService;
-        private readonly IEtimsService _etimsService;
+        private readonly IMasterDataSvc _masterDataSvc;
+        private ClientBranch _clientBranch = null;
 
-        public SetupController(ETimsDBContext dbContext, ISetupService setupService, IEtimsService etimsService)
+        private readonly IEtimsService _etimsService;
+        private readonly IDigiTaxService _dTaxService;
+
+        public SetupController(ETimsDBContext dbContext, ISetupService setupService, IEtimsService etimsService, IDigiTaxService dTaxService, IMasterDataSvc masterDataSvc)
         {
             _dbContext = dbContext;
             _setupService = setupService;
             _etimsService = etimsService;
+            _dTaxService = dTaxService;
+            _masterDataSvc = masterDataSvc;
+
+            _clientBranch = _masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
         }
 
         [HttpGet("gettaxclient")]
@@ -33,6 +40,7 @@ namespace iTaxSuite.WebApi.Controllers
             try
             {
                 var taxClient = await _dbContext.TaxClient.SingleOrDefaultAsync();
+                taxClient.InitMetaData();
                 return Ok(taxClient);
             }
             catch (Exception ex)
@@ -178,11 +186,22 @@ namespace iTaxSuite.WebApi.Controllers
             string _method_ = "GetNotices";
             try
             {
-                var result = await _etimsService.SelectNotices("20240101000000");
-                if (result.IsSuccess)
-                    return Ok(result.GetValue().NoticeData.NoticeList);
+                if (_clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+                {
+                    var result = await _dTaxService.SelectNotices();
+                    if (result.IsSuccess)
+                        return Ok(result.GetValue().Notices);
+                    else
+                        return StatusCode(500, result.GetError());
+                }
                 else
-                    return StatusCode(500, result.GetError());
+                {
+                    var result = await _etimsService.SelectNotices("20240101000000");
+                    if (result.IsSuccess)
+                        return Ok(result.GetValue().NoticeData.NoticeList);
+                    else
+                        return StatusCode(500, result.GetError());
+                }
             }
             catch (Exception ex)
             {

@@ -1,0 +1,6 @@
+@iTaxSuite.WebHook_HostAddress = http://localhost:5147
+
+GET {{iTaxSuite.WebHook_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

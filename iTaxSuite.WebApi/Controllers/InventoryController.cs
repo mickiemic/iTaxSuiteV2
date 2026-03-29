@@ -1,8 +1,9 @@
 ﻿using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
-using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace iTaxSuite.WebApi.Controllers
 {
@@ -13,9 +14,9 @@ namespace iTaxSuite.WebApi.Controllers
     {
         private readonly IS300ProductSvc _productSvc;
 
-        public InventoryController(IS300ProductSvc productSvc)
+        public InventoryController(IEnumerable<IS300ProductSvc> productSvcs)
         {
-            _productSvc = productSvc;
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
         [HttpPost]
@@ -45,6 +46,25 @@ namespace iTaxSuite.WebApi.Controllers
             try
             {
                 var result = await _productSvc.ReFetchProduct(productKey);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+        [HttpPost]
+        [Route("syncproducts")]
+        public async Task<IActionResult> SyncProducts()
+        {
+            string _method_ = "SyncProducts";
+            try
+            {
+                var result = await _productSvc.SyncTaxProducts();
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else
@@ -164,5 +184,27 @@ namespace iTaxSuite.WebApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("itemcallback")]
+        public async Task<IActionResult> PostItemCallback(ItemCallback itemCallback)
+        {
+            string _method_ = "PostItemCallback";
+            try
+            {
+                if (itemCallback is null)
+                    throw new Exception($"Invalid request received");
+
+                var result = await _productSvc.ProcessItemCallback(itemCallback);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
     }
 }

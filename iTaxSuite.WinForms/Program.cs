@@ -1,6 +1,7 @@
 using Dapper;
 using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Configs;
 using iTaxSuite.Library.Models.Entities;
@@ -136,8 +137,11 @@ namespace iTaxSuite.WinForms
 
                     _ = services.AddScoped<IMasterDataSvc, MasterDataSvc>();
                     _ = services.AddScoped<IEtimsService, EtimsService>();
-                    _ = services.AddScoped<IS300ProductSvc, S300ProductSvc>();
-                    _ = services.AddScoped<IS300SaleService, S300SaleService>();
+                    _ = services.AddScoped<IDigiTaxService, DigiTaxService>();
+                    _ = services.AddScoped<IS300ProductSvc, S300TimsProductSvc>();
+                    _ = services.AddScoped<IS300ProductSvc, S300DTaxProductSvc>();
+                    _ = services.AddScoped<IS300SaleService, S300TimsSaleService>();
+                    _ = services.AddScoped<IS300SaleService, S300DTaxSaleService>();
 
 
                     _ = services.AddTransient<ETIMSClient>();

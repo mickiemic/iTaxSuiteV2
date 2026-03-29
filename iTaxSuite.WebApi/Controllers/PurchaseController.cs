@@ -1,5 +1,6 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,10 @@ namespace iTaxSuite.WebApi.Controllers
     public class PurchaseController : MBaseController
     {
         private readonly IS300PurchaseSvc _purchaseSvc;
-        private readonly IEtimsService _etimsService;
 
-        public PurchaseController(IS300PurchaseSvc purchaseSvc, IEtimsService etimsService)
+        public PurchaseController(IS300PurchaseSvc purchaseSvc)
         {
             _purchaseSvc = purchaseSvc;
-            _etimsService = etimsService;
         }
 
         [HttpPost]
@@ -48,9 +47,7 @@ namespace iTaxSuite.WebApi.Controllers
             string _method_ = "ImportPurchases";
             try
             {
-                DateTime filterDate = filter ?? DateTime.Today;
-                string lastReqDt = filterDate.ToString(ETIMSConst.FMT_DATETIME);
-                var result = await _etimsService.SelectPurchaseSales(lastReqDt);
+                var result = await _purchaseSvc.ImportPurchases(filter);
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else

@@ -2,11 +2,15 @@
 using iTaxSuite.CLIApp;
 using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Models;
+using iTaxSuite.Library.Models.Configs;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using StackExchange.Redis;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
@@ -46,7 +50,8 @@ try
             if (string.IsNullOrWhiteSpace(iTaxDBConnStr))
                 throw new ArgumentNullException($"Database Setup Failed, ITaxDBConnection {iTaxDBConnStr} is invalid");
             UI.Debug($"ITaxDBConnection : {ITaxDBConnection} ==> {iTaxDBConnStr}");
-            //_ = services.AddSingleton(new DatabaseOptions { iTaxDBConnString = iTaxDBConnStr });
+            _ = services.AddSingleton(new DatabaseOptions { iTaxDBConnString = iTaxDBConnStr });
+            _ = services.AddDbContext<ETimsDBContext>(options => options.UseSqlServer(iTaxDBConnStr), ServiceLifetime.Scoped);
         }
         catch (Exception iex)
         {
@@ -61,8 +66,8 @@ try
             if (string.IsNullOrWhiteSpace(redisConnection))
                 throw new ArgumentNullException($"Cache Setup Failed, CacheConnection {redisConnection} is invalid");
             UI.Debug($"CacheConnection : {CacheConnection} ==> {redisConnection}");
-            /*ConnectionMultiplexer _redisMultiplexer = ConnectionMultiplexer.Connect(redisConnection);
-            _ = services.AddSingleton<IConnectionMultiplexer>(s => _redisMultiplexer);*/
+            ConnectionMultiplexer _redisMultiplexer = ConnectionMultiplexer.Connect(redisConnection);
+            _ = services.AddSingleton<IConnectionMultiplexer>(s => _redisMultiplexer);
         }
         catch (Exception iex)
         {

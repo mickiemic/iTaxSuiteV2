@@ -26,7 +26,9 @@ namespace iTaxSuite.Library.Services
         Task<bool> UpdateBranchTrxAsync(ClientBranch clientBranch, ETimsDBContext dbContext);
         Task<bool> SaveSyncTrxChannel(SyncChannel syncChannel, ETimsDBContext dbContext);
         Task<bool> UpdateSyncTrxTracker(SyncChannel syncChannel);
-        Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact);
+        Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, bool useExtID = false);
+        Task<Dictionary<string, StockItemKey>> GetCacheStockItems(bool reload = false);
+        Task<bool> CacheSaveStockItem(string hashKey, StockItem stockItem);
     }
     public class MasterDataSvc : IMasterDataSvc
     {
@@ -69,6 +71,7 @@ namespace iTaxSuite.Library.Services
                 var branch = await _dbContext.ClientBranch.Include(e => e.TaxClient).SingleOrDefaultAsync();
                 if (branch != null)
                 {
+                    branch.TaxClient.InitMetaData();
                     if (!await _baseDb.SetValueAsync<ClientBranch>(CacheConst.CLIENT_BRANCH, branch))
                     {
                         throw new Exception($"{_method_} failed for branch code:{branch.BranchCode}");
@@ -177,6 +180,7 @@ namespace iTaxSuite.Library.Services
                     var branch = await _dbContext.ClientBranch.Include(e => e.TaxClient).AsNoTracking().FirstOrDefaultAsync();
                     if (branch is not null)
                     {
+                        branch.TaxClient.InitMetaData();
                         result = branch;
                         if (!await _baseDb.SetValueAsync<ClientBranch>(CacheConst.CLIENT_BRANCH, branch))
                         {
@@ -384,7 +388,7 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
         }
-        public async Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact)
+        public async Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, bool useExtID = false)
         {
             string _method_ = "MapSalesInvcAttribs";
             Dictionary<string, StockItemKey> itemMap = null;
@@ -405,9 +409,15 @@ namespace iTaxSuite.Library.Services
                     {
                         UI.Warn($"Invalid Status for ItemNumber {_productCode}");
                         salesTransact.RecordStatus = RecordStatus.DEPENDS;
+                    } 
+                    else if (useExtID && string.IsNullOrWhiteSpace(stockItemKey.ExternalID))
+                    {
+                        UI.Warn($"External Mapping missing for ItemNumber {_productCode}");
+                        salesTransact.RecordStatus = RecordStatus.DEPENDS;
                     }
                     salesTransact.SalesItems[i].ItemSeqNumber = stockItemKey.EtrSeqNumber;
                     salesTransact.SalesItems[i].TaxItemCode = stockItemKey.TaxItemCode;
+                    salesTransact.SalesItems[i].ExternalID = stockItemKey.ExternalID;
                     salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
                     salesTransact.SalesItems[i].PkgUnitCode = stockItemKey.PackageUnit;
                     salesTransact.SalesItems[i].QtyUnitCode = stockItemKey.QuantityUnit;
@@ -422,6 +432,55 @@ namespace iTaxSuite.Library.Services
                 UI.Error($"{_method_} SalesTrxID:{salesTransact.SalesTrxID}, error: {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
             }
+        }
+
+        public async Task<Dictionary<string, StockItemKey>> GetCacheStockItems(bool reload = false)
+        {
+            string _method_ = "GetCacheStockItems";
+            var productMap = new Dictionary<string, StockItemKey>();
+            try
+            {
+                string _hashKey_ = CacheConst.ALL_PRODUCT_HASHKEY;
+
+                if (!reload)
+                {
+                    var result = await _baseDb.HashGetAllAsync(CacheConst.ALL_PRODUCT_HASHKEY);
+                    foreach (var item in result)
+                    {
+                        var product = JsonConvert.DeserializeObject<StockItemKey>(item.Value);
+                        productMap[item.Name] = product;
+                    }
+                }
+
+                if (reload || !productMap.Any())
+                {
+                    if (_baseDb.KeyExists(_hashKey_))
+                    {
+                        _baseDb.KeyDelete(_hashKey_);
+                    }
+
+                    foreach (var item in _dbContext.StockItems.Include(e => e.Product).Select(x => new StockItemKey(x)).AsNoTracking())
+                    {
+                        productMap[item.ProductCode] = item;
+                        if (!_baseDb.SetHashValue(_hashKey_, item.ProductCode, item))
+                        {
+                            UI.Error($"{_method_} failed for Product code:{_hashKey_}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                throw;
+            }
+
+            return productMap;
+        }
+        public async Task<bool> CacheSaveStockItem(string hashKey, StockItem stockItem)
+        {
+            var res = await _baseDb.SetHashValueAsync(CacheConst.ALL_PRODUCT_HASHKEY, stockItem.ProductCode, new StockItemKey(stockItem));
+            return res;
         }
 
         public async Task<bool> SaveSyncChannel(SyncChannel syncChannel)
@@ -733,52 +792,6 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
         }
-
-
-        /*public async Task<MyEntity> GetEntityAsync(int id)
-        {
-            var cacheKey = $"MyEntity:{id}";
-            var cachedEntity = await _cache.StringGetAsync(cacheKey);
-
-            if (cachedEntity.HasValue)
-            {
-                return JsonSerializer.Deserialize<MyEntity>(cachedEntity);
-            }
-
-            var entity = await _dbContext.MyEntities.FindAsync(id);
-            if (entity != null)
-            {
-                await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(entity), TimeSpan.FromMinutes(5));
-            }
-
-            return entity;
-        }*/
-
-        /*public async Task UpdateEntityAsync(MyEntity entity)
-        {
-            // Write to the database first
-            _dbContext.MyEntities.Update(entity);
-            await _dbContext.SaveChangesAsync();
-
-            // Now update the cache
-            var cacheKey = $"MyEntity:{entity.Id}";
-            await _cache.StringSetAsync(cacheKey, JsonSerializer.Serialize(entity), TimeSpan.FromMinutes(5));
-        }*/
-
-        /*public async Task DeleteEntityAsync(int id)
-        {
-            // Delete from the database first
-            var entity = await _dbContext.MyEntities.FindAsync(id);
-            if (entity != null)
-            {
-                _dbContext.MyEntities.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-
-                // Now remove from the cache
-                var cacheKey = $"MyEntity:{id}";
-                await _cache.KeyDeleteAsync(cacheKey);
-            }
-        }*/
 
     }
 }

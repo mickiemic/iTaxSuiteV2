@@ -14,6 +14,9 @@
 
         public const string CUSTOMER_HASHKEY = "ar-customers";
         public const string ALL_PRODUCT_HASHKEY = "all-products";
+        public const string IC_PRODUCT_HASHKEY = "ic-products";
+        public const string AR_PRODUCT_HASHKEY = "ar-products";
+        public const string GL_PRODUCT_HASHKEY = "gl-products";
 
         public const string TXSALES_OEINV_HASHKEY = "tax-oesalesinv";
         public const string TXSALES_OECNT_HASHKEY = "tax-oesalescnt";
@@ -21,6 +24,8 @@
         public const string TXSALES_ARCNT_HASHKEY = "tax-arsalescnt";
         public const string TXPURCHASE_HASHKEY = "tax-purchases";
         public const string TXSTOCKMVT_HASHKEY = "stock-movement";
+
+        public const string ALL_TAXPOSTTRX_HASHKEY = "all-taxposttrx";
     }
 
     public static class MapperConst
@@ -40,6 +45,20 @@
         public const string NOITEM_CODE = "0000000000000";
         public const string NOUNIT_CODE = "XX";
         
+        public const string DEFAULT_USER = "S300ETRBridge";
+    }
+
+    public static class DTaxConst
+    {
+        public const string FMT_DATEONLY = "yyyy-MM-dd";
+        public const string FMT_DATETIME = "yyyyMMddHHmmss";
+
+        public const string STRUCT_DATETIME = "yyyy-MM-dd HH:mm:ss";
+
+        public const string NOITEM_CLASS = "0000000000";
+        public const string NOITEM_CODE = "0000000000000";
+        public const string NOUNIT_CODE = "XX";
+
         public const string DEFAULT_USER = "S300ETRBridge";
     }
 

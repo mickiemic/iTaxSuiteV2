@@ -1,7 +1,6 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.ViewModels;
-using Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,6 +12,10 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
+        [NotMapped]
+        public string ProdRawCode => string.IsNullOrWhiteSpace(ProductCode) ? null : ProductCode.Split(':').ElementAt(1);
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(2, MinimumLength = 2)]
         public string BranchCode { get; set; }
@@ -182,6 +185,7 @@ namespace iTaxSuite.Library.Models.Entities
         [System.Text.Json.Serialization.JsonIgnore]
         public StockMovement StockMovement { get; set; }
         public StockIOSaveReq StockIOSaveReq { get;set; }
+        public DTaxStockAdjustReq DTaxStockAdjustReq { get;set; }
         public StockMovData()
         {
         }
@@ -222,6 +226,15 @@ namespace iTaxSuite.Library.Models.Entities
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
         }
 
+        public StockMovData(StockMovement stockMovement, StockIORequest stockIORequest, DTaxStockAdjustReq stockIOSaveReq)
+            : this()
+        {
+            StockMovement = stockMovement;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIORequest);
+            DTaxStockAdjustReq = stockIOSaveReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(stockIOSaveReq, new DecimalFormatConverter());
+        }
+
         public StockIOSaveReq GetEtimsRequest()
         {
             if (string.IsNullOrWhiteSpace(RequestPayload))
@@ -238,6 +251,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
+        [NotMapped]
+        public string ProdRawCode => string.IsNullOrWhiteSpace(ProductCode) ? null : ProductCode.Split(':').ElementAt(1);
         [Required]
         [StringLength(3)]
         public string SourceApp { get; set; }
@@ -269,7 +284,7 @@ namespace iTaxSuite.Library.Models.Entities
         public virtual ProductData? ProductData { get; set; }
         public Product()
         {
-            RecordStatus = RecordStatus.NONE;
+            RecordStatus = RecordStatus.QUEUEDOUT;
         }
         public Product(Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item)
             : this()
@@ -335,6 +350,18 @@ namespace iTaxSuite.Library.Models.Entities
             QuantityUnit = unitCodes.QtyUnitCode;
         }
 
+        public void UpdateByProduct(Product product)
+        {
+            _pkgUnitCode = product._pkgUnitCode;
+            _qtyUnitCode = product._qtyUnitCode;
+            IsStockable = product.IsStockable;
+            Description = product.Description;
+            ItemClassCode = product.ItemClassCode;
+            RecordStatus = RecordStatus.QUEUEDOUT;
+            UpdatedOn = DateTime.Now;
+            UpdatedBy = "Sys-Admin";
+        }
+
         public bool IsValid()
         {
             return PackageUnit != ETIMSConst.NOUNIT_CODE && QuantityUnit != ETIMSConst.NOUNIT_CODE 
@@ -349,6 +376,9 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
+        public DateTime? CallbackTime { get; set; }
+        [StringLength(4000)]
+        public string CallbackPayload { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public Product Product { get; set; }
@@ -356,6 +386,10 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public SaveItemReq SaveItemReq { get; set; }
+        [NotMapped]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public DTaxCreateItemReq CreateItemReq { get; set; }
         [NotMapped]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
@@ -369,8 +403,16 @@ namespace iTaxSuite.Library.Models.Entities
         {
             SourceStamp = item.DateLastMaintained.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
-            SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+            {
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
+            }
+            else
+            {
+                SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            }
         }
 
         public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
@@ -378,17 +420,33 @@ namespace iTaxSuite.Library.Models.Entities
         {
             SourceStamp = item.DateLastMaintained.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
-            SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+            {
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
+            }
+            else
+            {
+                SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            }
         }
 
-        public ProductData(ClientBranch clientBranch, StockItem stockItem, Account account)
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account)
             : this()
         {
             SourceStamp = account.DateCreated.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(account);
-            SaveItemReq = new SaveItemReq(clientBranch, stockItem, account);
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+            {
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, account);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
+            }
+            else
+            {
+                SaveItemReq = new SaveItemReq(clientBranch, stockItem, account);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            }
         }
 
         public SaveItemReq GetEtimsRequest()
@@ -397,6 +455,34 @@ namespace iTaxSuite.Library.Models.Entities
                 return null;
             return Newtonsoft.Json.JsonConvert.DeserializeObject<SaveItemReq>(RequestPayload);
         }
+
+        public DTaxCreateItemReq GetDTaxRequest()
+        {
+            if (string.IsNullOrWhiteSpace(RequestPayload))
+                return null;
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<DTaxCreateItemReq>(RequestPayload);
+        }
+
+        public void UpdateByData(ClientBranch clientBranch, ProductData productData, Product product)
+        {
+            SourceStamp = productData.SourceStamp;
+            SourcePayload = productData.SourcePayload;
+            SaveItemReq = productData.SaveItemReq;
+            CreateItemReq = productData.CreateItemReq;
+            if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+            {
+                CreateItemReq.PkgUnitCode = product.PackageUnit;
+                CreateItemReq.QtyUnitCode = product.QuantityUnit;
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
+            }
+            else
+            {
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            }
+            UpdatedOn = DateTime.Now;
+            UpdatedBy = "Sys-Admin";
+        }
+
     }
     
 }

@@ -12,6 +12,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SalesTrxID { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(2, MinimumLength = 2)]
         public string BranchCode { get; set; }
@@ -86,6 +88,10 @@ namespace iTaxSuite.Library.Models.Entities
         public string ReceiptSignature { get; set; }
         [StringLength(1)]
         public string EtrTaxClass { get; set; }
+        [StringLength(256)]
+        public string ExternalURL { get; set; }
+        [StringLength(256)]
+        public string OfflineURL { get; set; }
         public SalesTrxData? SalesTrxData { get; set; }
         [NotMapped]
         [Newtonsoft.Json.JsonIgnore]
@@ -164,11 +170,20 @@ namespace iTaxSuite.Library.Models.Entities
         {
             BranchCode = clientBranch.BranchCode;
             DocNumber = invoice.DocumentNumber;
-            DocType = DocumentType.INVOICE;
-            ReqType = ETIMSReqType.SAVE_SALE;
             DocStamp = invoice.DocumentDate.Value;
+            ReqType = ETIMSReqType.SAVE_SALE;
+            if (invoice.DocumentType == Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice.DocumentTypeEnum.Invoice)
+            {
+                DocType = DocumentType.INVOICE;
+            } 
+            else if (invoice.DocumentType == Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice.DocumentTypeEnum.CreditNote)
+            {
+                DocType = DocumentType.CREDITNOTE;
+                RefInvNumber = invoice.ApplytoDocument;
+            }
             SourceApp = "AR";
             EtrSeqNumber = clientBranch.SaleInvoiceSeq;
+            Description = invoice.InvoiceDescription;
 
             CustNumber = invoice.CustomerNumber;
             //CustName = invoice.BillTo;
@@ -287,7 +302,15 @@ namespace iTaxSuite.Library.Models.Entities
 
         public bool IsValid()
         {
-            return true;
+            if (DocType == DocumentType.CREDITNOTE)
+            {
+                return !string.IsNullOrWhiteSpace(RefInvNumber);
+            }
+            else if (DocType == DocumentType.INVOICE)
+            {
+                return true;
+            }
+            return false;
         }
         public EtimsTransact GetSalesTransact(ClientBranch clientBranch)
         {
@@ -340,6 +363,9 @@ namespace iTaxSuite.Library.Models.Entities
         [Key]
         [Required]
         public int SalesTrxID { get; set; }
+        public DateTime? CallbackTime { get; set; }
+        [StringLength(4000)]
+        public string CallbackPayload { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public SalesTransact SalesTransact { get; set; }
@@ -347,6 +373,14 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public TrnsSalesSaveReq TrnsSalesSaveReq { get; set; }
+        [NotMapped]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public DTaxSaveSaleReq DTaxSaveSaleReq { get; set; }
+        [NotMapped]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public DTaxSaveCNoteReq DTaxSaveCNoteReq { get; set; }
         [NotMapped]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
@@ -371,14 +405,58 @@ namespace iTaxSuite.Library.Models.Entities
             TrnsSalesSaveReq = trnsSalesSave;
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
         }
+        public SalesTrxData(SalesTransact oeSaleTrx, DTaxSaveSaleReq dTaxSaveSaleReq, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice invoice)
+            : this()
+        {
+            SourceStamp = invoice.DocumentDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(invoice);
+            DTaxSaveSaleReq = dTaxSaveSaleReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(dTaxSaveSaleReq, new DecimalFormatConverter());
+        }
 
-        public SalesTrxData(SalesTransact oeSaleTrx, TrnsSalesSaveReq trnsSalesSave, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote invoice)
+        public SalesTrxData(SalesTransact oeSaleTrx, TrnsSalesSaveReq trnsSalesSave, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote crNote)
+            : this()
+        {
+            SourceStamp = crNote.InvoiceDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(crNote);
+            TrnsSalesSaveReq = trnsSalesSave;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
+        }
+
+        public SalesTrxData(SalesTransact oeSaleTrx, DTaxSaveSaleReq dTaxSaveSaleReq, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice invoice)
             : this()
         {
             SourceStamp = invoice.InvoiceDate.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(invoice);
-            TrnsSalesSaveReq = trnsSalesSave;
-            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(trnsSalesSave, new DecimalFormatConverter());
+            DTaxSaveSaleReq = dTaxSaveSaleReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(dTaxSaveSaleReq, new DecimalFormatConverter());
+        }
+
+        public SalesTrxData(SalesTransact oeSaleTrx, DTaxSaveSaleReq dTaxSaveSaleReq, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote crNote)
+            : this()
+        {
+            SourceStamp = crNote.InvoiceDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(crNote);
+            DTaxSaveSaleReq = dTaxSaveSaleReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(dTaxSaveSaleReq, new DecimalFormatConverter());
+        }
+
+        public SalesTrxData(SalesTransact oeSaleTrx, DTaxSaveCNoteReq dTaxSaveCNoteReq, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote crNote)
+            : this()
+        {
+            SourceStamp = crNote.InvoiceDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(crNote);
+            DTaxSaveCNoteReq = dTaxSaveCNoteReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(dTaxSaveCNoteReq, new DecimalFormatConverter());
+        }
+
+        public SalesTrxData(SalesTransact arSaleTrx, DTaxSaveCNoteReq dTaxSaveCNoteReq, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice crNote)
+            : this()
+        {
+            SourceStamp = crNote.DocumentDate.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(crNote);
+            DTaxSaveCNoteReq = dTaxSaveCNoteReq;
+            RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(dTaxSaveCNoteReq, new DecimalFormatConverter());
         }
 
         public TrnsSalesSaveReq GetEtimsRequest()
@@ -387,6 +465,21 @@ namespace iTaxSuite.Library.Models.Entities
                 return null;
             TrnsSalesSaveReq = Newtonsoft.Json.JsonConvert.DeserializeObject<TrnsSalesSaveReq>(RequestPayload);
             return TrnsSalesSaveReq;
+        }
+
+        public DTaxSaveSaleReq GetDTaxInvRequest()
+        {
+            if (string.IsNullOrWhiteSpace(RequestPayload))
+                return null;
+            DTaxSaveSaleReq = Newtonsoft.Json.JsonConvert.DeserializeObject<DTaxSaveSaleReq>(RequestPayload);
+            return DTaxSaveSaleReq;
+        }
+        public DTaxSaveCNoteReq GetDTaxCNoteRequest()
+        {
+            if (string.IsNullOrWhiteSpace(RequestPayload))
+                return null;
+            DTaxSaveCNoteReq = Newtonsoft.Json.JsonConvert.DeserializeObject<DTaxSaveCNoteReq>(RequestPayload);
+            return DTaxSaveCNoteReq;
         }
 
     }
@@ -399,6 +492,8 @@ namespace iTaxSuite.Library.Models.Entities
         [Required]
         [StringLength(64)]
         public string ProductCode { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
         [Required]
         [StringLength(2, MinimumLength = 2)]
         public string BranchCode { get; set; }
@@ -464,7 +559,7 @@ namespace iTaxSuite.Library.Models.Entities
 
             SourceLineNo = item.LineUniquifier;
             ItemSeqNumber = -1;
-            ProductCode = $"OE:{item.Item}";
+            ProductCode = $"IC:{item.Item}";
             Description = item.Description;
             ItemTypeCode = "2";
             IsStockable = item.StockItem;
@@ -544,13 +639,13 @@ namespace iTaxSuite.Library.Models.Entities
             if (arInvoice.InvoiceType == Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice.InvoiceTypeEnum.Item)
                 ProductCode = $"AR:{item.ItemNumber}";
             else
-                ProductCode = $"GL:{item.ItemNumber}";
+                ProductCode = $"GL:{item.RevenueAccount}";
             ItemTypeCode = "3";
             Description = item.Description;
             IsStockable = false;
-            if (string.IsNullOrWhiteSpace(item.ItemNumber))
+            if (string.IsNullOrWhiteSpace(ProductCode))
             {
-                throw new Exception($"Invalid ItemNumber:{item.ItemNumber} Amount for {item.Description}");
+                throw new Exception($"Invalid ItemNumber:{item.ItemNumber} for ARInvoice:{arInvoice.DocumentNumber} with Description {item.Description}");
             }
 
             _pkgUnitCode = item.UnitOfMeasure;
@@ -627,7 +722,7 @@ namespace iTaxSuite.Library.Models.Entities
             BranchCode = salesTransact.BranchCode;
 
             ItemSeqNumber = -1;
-            ProductCode = $"OE:{item.Item}";
+            ProductCode = $"IC:{item.Item}";
             Description = item.Description;
             ItemTypeCode = "2";
             IsStockable = item.StockItem;

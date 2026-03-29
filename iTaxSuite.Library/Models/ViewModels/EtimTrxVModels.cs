@@ -107,105 +107,6 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
         }
 
-        /*public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice oeInvoice,
-            S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
-            Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
-            : this()
-        {
-            DocumentType = DocumentType.INVOICE;
-            PIN = clientBranch.TaxClient.TaxNumber;
-            EtimsInvoiceNum = clientBranch.SaleInvoiceSeq;
-            TraderInvoiceNo = oeInvoice.InvoiceNumber;
-            CustomerName = oeInvoice.BillTo;
-            if (oeInvoice.InvoiceDate.HasValue)
-            {
-                ValidateDate = oeInvoice.InvoiceDate.Value.ToString(ETIMSConst.FMT_DATETIME);
-                SalesDate = oeInvoice.InvoiceDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
-            }
-            if (oeInvoice.ShipmentDate.HasValue)
-                StockReleaseDate = oeInvoice.ShipmentDate.Value.ToString(ETIMSConst.FMT_DATETIME);
-
-            // Creator / Modifier
-            ModifierID = ModifierName = oeInvoice.EnteredBy;
-
-            SalesTypeCode = ETimsUtils.ConvertTransactionType(DocumentType.INVOICE);
-            ReceiptTypeCode = ETimsUtils.ConvertSalesReceiptType(DocumentType.INVOICE);
-            PaymentTypeCode = ETimsUtils.ConvertPaymentMethod(oeInvoice.PaymentType);
-            InvoiceStatusCode = ETimsUtils.ConvertTransactionStatus(oeInvoice.InvoiceStatus);
-
-            Remark = oeInvoice.Description;
-            RegistrantID = oeInvoice.Salesperson1;
-            RegistrantName = oeInvoice.SalespersonName1;
-            if (string.IsNullOrWhiteSpace(RegistrantID))
-            {
-                RegistrantID = RegistrantName = oeInvoice.EnteredBy;
-            }
-
-            if (customer != null)
-            {
-                CustomerName = customer.CustomerName.Trim();
-                CustomerPIN = customer.TaxRegistrationNumber1.Trim();
-
-                Receipt = new EtimsReceipt(customer);
-            }
-
-            var lineErrors = new List<string>();
-            foreach (var oeItem in oeInvoice.InvoiceDetails)
-            {
-                var salesItem = new EtimsSaleItem(oeItem, taxGroup, taxAuthKeys);
-                var _lineError = salesItem.GetErrors();
-                if (!string.IsNullOrWhiteSpace(_lineError))
-                {
-                    lineErrors.Add(_lineError);
-                }
-                TotalAmount += salesItem.TotalAmount;
-
-                switch (salesItem.TaxTypeCode)
-                {
-                    case "A":
-                        {
-                            TaxableAmountA += salesItem.TaxableAmount;
-                            TaxAmountA += salesItem.TaxAmount;
-                        }
-                        break;
-                    case "B":
-                        {
-                            TaxableAmountB += salesItem.TaxableAmount;
-                            TaxAmountB += salesItem.TaxAmount;
-                        }
-                        break;
-                    case "C":
-                        {
-                            TaxableAmountC += salesItem.TaxableAmount;
-                            TaxAmountC += salesItem.TaxAmount;
-                        }
-                        break;
-                    case "D":
-                        {
-                            TaxableAmountD += salesItem.TaxableAmount;
-                            TaxAmountD += salesItem.TaxAmount;
-                        }
-                        break;
-                    case "E":
-                        {
-                            TaxableAmountE += salesItem.TaxableAmount;
-                            TaxAmountE += salesItem.TaxAmount;
-                        }
-                        break;
-                }
-
-                ItemList.Add(salesItem);
-            }
-            if (lineErrors.Count > 0)
-            {
-                throw new Exception(string.Join(Environment.NewLine, lineErrors));
-            }
-
-            TotalItemCount = ItemList.Count;
-            // TODO: figure out how to set tax Rates A-E for posting
-            TotalTaxAmount = TaxAmountA + TaxAmountB + TaxAmountC + TaxAmountD + TaxAmountE;
-            TotalTaxableAmount = TaxableAmountA + TaxableAmountB + TaxableAmountC + TaxableAmountD + TaxableAmountE;
-        }*/
         public TrnsSalesSaveReq(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.Invoice oeInvoice,
             SalesTransact salesTransact, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
@@ -310,11 +211,11 @@ namespace iTaxSuite.Library.Models.ViewModels
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer)
             : this()
         {
-            DocumentType = DocumentType.INVOICE;
+            DocumentType = DocumentType.CREDITNOTE;
             PIN = clientBranch.TaxClient.TaxNumber;
             TraderInvoiceNo = crNote.CreditDebitNoteNumber;
             CustomerName = crNote.BillTo;
-            if (crNote.InvoiceDate.HasValue)
+            if (crNote.CreditDebitNoteDate.HasValue)
             {
                 ValidateDate = crNote.InvoiceDate.Value.ToString(ETIMSConst.FMT_DATETIME);
                 SalesDate = crNote.InvoiceDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
@@ -416,9 +317,8 @@ namespace iTaxSuite.Library.Models.ViewModels
             {
                 ValidateDate = arInvoice.DocumentDate.Value.ToString(ETIMSConst.FMT_DATETIME);
                 SalesDate = arInvoice.DocumentDate.Value.ToString(ETIMSConst.FMT_DATEONLY);
-            }
-            if (arInvoice.DocumentDate.HasValue)
                 StockReleaseDate = arInvoice.DocumentDate.Value.ToString(ETIMSConst.FMT_DATETIME);
+            }
 
             // Creator / Modifier
             ModifierID = ModifierName = arInvoice.EnteredBy;
@@ -783,11 +683,16 @@ namespace iTaxSuite.Library.Models.ViewModels
             ItemSeqNumber = -1; // Internal
             _icItemNumber = item.ItemNumber;
 
-            ItemCode = item.ItemNumber;
+            //ItemCode = item.ItemNumber;
+            if (arInvoice.InvoiceType == Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice.InvoiceTypeEnum.Item)
+                ItemCode = item.ItemNumber;
+            else
+                ItemCode = item.RevenueAccount;
+
             ItemName = item.Description;
-            if (string.IsNullOrWhiteSpace(item.ItemNumber))
+            if (string.IsNullOrWhiteSpace(ItemCode))
             {
-                throw new Exception($"Invalid ItemNumber:{item.ItemNumber} Amount for {item.Description}");
+                throw new Exception($"Invalid ItemNumber:{item.ItemNumber} for ARInvoice:{arInvoice.DocumentNumber} with Description {item.Description}");
             }
 
             _pkgUnitCode = item.UnitOfMeasure;
@@ -926,6 +831,8 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class EtimsSalesView
     {
         public TrnsSalesSaveReq SalesSaveReq { get; set; }
+        public DTaxSaveSaleReq DTaxSaveSale { get; set; }
+        public DTaxSaveCNoteReq DTaxSaveCNoteReq { get; set; }
         public SalesTransact SalesTransact { get; set; }
         public StockIOSaveReq StockIOSaveReq { get; set; }
         public StockMovement StockMovement { get; set; }

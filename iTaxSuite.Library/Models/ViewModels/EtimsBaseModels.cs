@@ -41,7 +41,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         [EnumMember(Value = "15")]  // Outgoing-Discarding
         Discarding = 15,
         [EnumMember(Value = "16")]  // Outgoing-Adjustment
-        Adjustment = 16
+        OutgoingAdjustment = 16
     }
 
     public enum ETRReverseReason

@@ -28,6 +28,8 @@
         public const string AR_INVOICE_SYNC = "ar-invoice-sync";
         public const string AR_CRDRNOTE_SYNC = "ar-crdrnote-sync";
         public const string PO_INVOICE_SYNC = "po-invoice-sync";
+        
+        public const string ALL_TAXTRXS_POST = "all-taxtrxs-post";
 
     }
 

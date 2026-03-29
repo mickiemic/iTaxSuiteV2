@@ -1,4 +1,5 @@
 ﻿using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +11,19 @@ namespace iTaxSuite.WebApi.Controllers
     [ApiController]
     public class HealthController : MBaseController
     {
-        private readonly IEtimsService _etimsService;
+        protected ClientBranch _clientBranch = null;
+        protected readonly IMasterDataSvc _masterDataSvc;
 
-        public HealthController(IEtimsService etimsService)
+        private readonly IEtimsService _etimsService;
+        private readonly IDigiTaxService _dTaxService;
+
+        public HealthController(IEtimsService etimsService, IMasterDataSvc masterDataSvc, IDigiTaxService dTaxService)
         {
+            _masterDataSvc = masterDataSvc;
             _etimsService = etimsService;
+            _dTaxService = dTaxService;
+
+            _clientBranch = _masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -28,15 +37,17 @@ namespace iTaxSuite.WebApi.Controllers
             try
             {
                 await Task.FromResult(0);
-                /*string ipAddress = GetClientIpAddress();
-				UI.Info($"ClientIP: {ipAddress}, Method:{Request.Method}, Path: {Request.Path}");*/
 
                 var responseObject = new
                 {
                     Status = string.Format($"eTims MidWare API reached at {DateTime.Now.ToString("s")}"),
                 };
                 if (log)
+                {
+                    /*string ipAddress = GetClientIpAddress();
+                    UI.Info($"ClientIP: {ipAddress}, Method:{Request.Method}, Path: {Request.Path}");*/
                     UI.Info($"<< Status pinged: {responseObject.Status}");
+                }
                 return Ok(responseObject);
             }
             catch (Exception ex)
@@ -52,11 +63,22 @@ namespace iTaxSuite.WebApi.Controllers
             string _method_ = "TestETRConnect";
             try
             {
-                var result = await _etimsService.SelectBranches(log);
-                if (result.IsSuccess)
-                    return Ok(result.GetValue());
+                if (_clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+                {
+                    var result = await _dTaxService.GetBranchCount(log);
+                    if (result.IsSuccess)
+                        return Ok(result.GetValue());
+                    else
+                        return StatusCode(500, result.GetError());
+                }
                 else
-                    return StatusCode(500, result.GetError());
+                {
+                    var result = await _etimsService.GetBranchCount(log);
+                    if (result.IsSuccess)
+                        return Ok(result.GetValue());
+                    else
+                        return StatusCode(500, result.GetError());
+                }
             }
             catch (Exception ex)
             {
