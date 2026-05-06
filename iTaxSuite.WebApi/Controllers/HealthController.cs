@@ -57,6 +57,36 @@ namespace iTaxSuite.WebApi.Controllers
             }
         }
 
+        [HttpGet("getversion")]
+        public async Task<IActionResult> GetVersion(bool log = false)
+        {
+            string _method_ = "GetVersion";
+            try
+            {
+                await Task.FromResult(0);
+                var fileInfo = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+                var responseObject = new
+                {
+                    Version = "v1.0.1",
+                    BuildDate = fileInfo.LastWriteTime.ToString("s"),
+                    TimeStamp = DateTime.Now.ToString("s")
+                };
+                if (log)
+                {
+                    /*string ipAddress = GetClientIpAddress();
+                    UI.Info($"ClientIP: {ipAddress}, Method:{Request.Method}, Path: {Request.Path}");*/
+                    UI.Info($"<< {_method_} : {responseObject}");
+                }
+                return Ok(responseObject);
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+
         [HttpGet("testetrconnect")]
         public async Task<IActionResult> TestETRConnect(bool log = false)
         {

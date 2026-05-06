@@ -166,6 +166,16 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         public string? Status { get; set; }
         public string? Message { get; set; }
+        public ApiResponse()
+        {
+        }
+
+        public ApiResponse(string status, string message)
+            : this()
+        {
+            Status = status;
+            Message = message;
+        }
     }
 
 }

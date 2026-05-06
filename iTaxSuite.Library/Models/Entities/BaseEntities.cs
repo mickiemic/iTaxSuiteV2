@@ -287,7 +287,7 @@ namespace iTaxSuite.Library.Models.Entities
             {
                 return minDateTime;
             }
-            else if (Tracker.MinDateTime.HasValue && Tracker.MinDateTime.Value >= minDateTime)
+            else if (Tracker.MinDateTime.HasValue && Tracker.MinDateTime.Value > minDateTime)
             {
                 minDateTime = Tracker.MinDateTime.Value;
             }

@@ -202,6 +202,15 @@ namespace iTaxSuite.Library.Services
                     return _strError;
                 }
 
+                var defAuthResult = await _masterDataSvc.GetDefaultAuthority();
+                if (defAuthResult.IsError)
+                {
+                    _strError = "Invalid TaxAuth Cache Setup";
+                    UI.Error($"{_method_} : {_strError}");
+                    return _strError;
+                }
+                var defTaxAuth = defAuthResult.GetValue();
+
                 Product _newProduct = null;
                 StockItem _newStockItem = null;
                 ProductData _newProductData = null;
@@ -263,8 +272,9 @@ namespace iTaxSuite.Library.Services
 
                     _newProduct = new Product(arItem);
                     _newStockItem = new StockItem(_newProduct, _clientBranch);
-                    _newProductData = new ProductData(_clientBranch, _newStockItem, arItem);
-                    if (!_newProductData.SourceStamp.HasValue || productData.SourceStamp.Value >= _newProductData.SourceStamp.Value)
+                    _newProductData = new ProductData(_clientBranch, _newStockItem, arItem, defTaxAuth);
+                    //if ((!_newProductData.SourceStamp.HasValue || productData.SourceStamp.Value >= _newProductData.SourceStamp.Value)
+                    if (productData.HasEqualValue(_newProductData))
                     {
                         _strError = $"No Updates in Sage for ProductCode {product.ProductCode}";
                         UI.Info($"{_method_} error : {_strError}");

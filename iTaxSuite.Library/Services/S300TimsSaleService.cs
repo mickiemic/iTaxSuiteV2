@@ -197,11 +197,11 @@ namespace iTaxSuite.Library.Services
                     qParams["$skip"] = syncChannel.OffSet.ToString();
                     var invList = await client.ProcessGetReqBasicAsync<OEInvoices>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password,
                         null, qParams);
-                    if (invList == null)
+                    if (invList == null || invList.Invoices.Count == 0)
                     {
                         _strError = "Null OEInvoices response from Sage";
-                        UI.Error($"{_method_} : {_strError}");
-                        return _strError;
+                        UI.Debug($"{_method_} : {_strError}");
+                        return result;
                     }
                     loop = (invList.nextLink != null);
                     syncChannel.IncrOffSet(invList.Invoices.Count);
@@ -493,11 +493,11 @@ namespace iTaxSuite.Library.Services
                     qParams["$skip"] = syncChannel.OffSet.ToString();
                     var crNoteList = await client.ProcessGetReqBasicAsync<OECreditDebitNotes>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password,
                         null, qParams);
-                    if (result == null)
+                    if (crNoteList == null || crNoteList.CreditDebitNotes.Count == 0)
                     {
                         _strError = "Null OECreditDebitNotes response from Sage";
-                        UI.Error($"{_method_} : {_strError}");
-                        return _strError;
+                        UI.Debug($"{_method_} : {_strError}");
+                        return result;
                     }
                     loop = (crNoteList.nextLink != null);
                     syncChannel.IncrOffSet(crNoteList.CreditDebitNotes.Count);
@@ -674,11 +674,11 @@ namespace iTaxSuite.Library.Services
                     //TODO: decide on how many to take at a go
                     var invoiceBatches = await client.ProcessGetReqBasicAsync<ARInvoiceBatches>(_reqUrl, _extSystConfig.Username,
                         _extSystConfig.Password, null, qParams);
-                    if (invoiceBatches == null && !invoiceBatches.InvoiceBatches.Any())
+                    if (invoiceBatches == null || invoiceBatches.InvoiceBatches.Count == 0)
                     {
                         _strError = $"Not Found ARInvoices response from Sage";
-                        UI.Error($"{_method_} error : {_strError}");
-                        return _strError;
+                        UI.Debug($"{_method_} error : {_strError}");
+                        return results;
                     }
                     
                     foreach(var invBatch in invoiceBatches.InvoiceBatches)
@@ -897,7 +897,7 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
         }
-        public async Task<Result<EtimsSalesView, string>> GetConvertOEInvoice(SaleTrxKey saleTrxKey)
+        public async Task<Result<EtimsSalesView, string>> GetConvertOEInvoice(SaleTrxKey saleTrxKey, string srcPayload = null)
         {
             string _method_ = "GetConvertOEInvoice";
             string _strError = string.Empty;
@@ -1170,7 +1170,7 @@ namespace iTaxSuite.Library.Services
 
                 var invoiceBatches = await client.ProcessGetReqBasicAsync<ARInvoiceBatches>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password,
                             null, qParams);
-                if (invoiceBatches == null && !invoiceBatches.InvoiceBatches.Any())
+                if (invoiceBatches == null || invoiceBatches.InvoiceBatches.Count == 0)
                 {
                     _strError = $"Not Found ARInvoices response from Sage for BatchNumber {saleBatchTrxKey.DocNumber}";
                     UI.Error($"{_method_} error : {_strError}");
@@ -1310,7 +1310,7 @@ namespace iTaxSuite.Library.Services
 
                 var invoiceBatches = await client.ProcessGetReqBasicAsync<ARInvoiceBatches>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password,
                             null, qParams);
-                if (invoiceBatches == null && !invoiceBatches.InvoiceBatches.Any())
+                if (invoiceBatches == null || invoiceBatches.InvoiceBatches.Count == 0)
                 {
                     _strError = $"Not Found ARInvoices response from Sage for BatchNumber {saleBatchTrxKey.DocNumber}";
                     UI.Error($"{_method_} error : {_strError}");
@@ -1796,6 +1796,10 @@ namespace iTaxSuite.Library.Services
         {
             throw new NotImplementedException();
         }
-    
+
+        public Task<Result<SalesTransact, string>> ReSyncTaxInvoice(SaleTrxKey saleTrxKey)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

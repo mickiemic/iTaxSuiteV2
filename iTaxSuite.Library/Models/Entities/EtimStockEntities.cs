@@ -398,14 +398,15 @@ namespace iTaxSuite.Library.Models.Entities
         {
         }
 
-        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item)
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item, 
+            S300TaxAuthKey defS300TaxAuth = null)
             : this()
         {
             SourceStamp = item.DateLastMaintained.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
             if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
             {
-                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item);
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item, defS300TaxAuth);
                 RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
             }
             else
@@ -415,14 +416,15 @@ namespace iTaxSuite.Library.Models.Entities
             }
         }
 
-        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item, 
+            S300TaxAuthKey defS300TaxAuth = null)
             : this()
         {
             SourceStamp = item.DateLastMaintained.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
             if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
             {
-                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item);
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item, defS300TaxAuth);
                 RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
             }
             else
@@ -432,14 +434,15 @@ namespace iTaxSuite.Library.Models.Entities
             }
         }
 
-        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account)
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account, 
+            S300TaxAuthKey defS300TaxAuth = null)
             : this()
         {
             SourceStamp = account.DateCreated.Value;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(account);
             if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
             {
-                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, account);
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, account, defS300TaxAuth);
                 RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
             }
             else

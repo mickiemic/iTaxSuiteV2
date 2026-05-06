@@ -2,6 +2,7 @@ using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.WebHook.Models;
 using iTaxSuite.WebHook.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
 try
@@ -49,10 +50,22 @@ try
     .RemoveAllLoggers()
     .AddLogger<HttpLogger>(wrapHandlersPipeline: true);
 
+    _ = builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                               ForwardedHeaders.XForwardedProto |
+                               ForwardedHeaders.XForwardedPrefix;
+        // Important: ngrok is a proxy, you may need to clear known networks
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+
+    });
+
     _ = builder.Services.AddScoped<IDTaxHookService, DTaxHookService>();
 
     var app = builder.Build();
 
+    app.UseForwardedHeaders();
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {

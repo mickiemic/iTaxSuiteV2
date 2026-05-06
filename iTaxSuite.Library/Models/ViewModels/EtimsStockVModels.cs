@@ -251,7 +251,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class SaveItemResp : ETIMSBaseResp
     {
         [Newtonsoft.Json.JsonProperty("data")]
-        public JObject data { get; set; }
+        public JObject Data { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string RawResponse { get; set; }

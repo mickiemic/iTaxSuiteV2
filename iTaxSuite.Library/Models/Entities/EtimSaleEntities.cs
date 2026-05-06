@@ -312,6 +312,14 @@ namespace iTaxSuite.Library.Models.Entities
             }
             return false;
         }
+        public bool IsTaxComplete()
+        {
+            if (!string.IsNullOrWhiteSpace(QRText))
+            {
+                return true;
+            }
+            return false;
+        }
         public EtimsTransact GetSalesTransact(ClientBranch clientBranch)
         {
             /*if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL
@@ -568,7 +576,7 @@ namespace iTaxSuite.Library.Models.Entities
             Package = item.QuantityShipped;
 
             _qtyUnitCode = item.PricingUnit;
-            Quantity = Package * item.PricingUnitConversion;
+            Quantity = item.QuantityShipped;
 
             SupplyPrice = item.UnitCost;
             UnitPrice = (item.PricingUnitPrice != 0) ? item.PricingUnitPrice : item.ExtPriceNetOfDiscIncludeTax;
@@ -623,7 +631,10 @@ namespace iTaxSuite.Library.Models.Entities
             TotalAmount = TaxableAmount + TaxAmount;
 
             DiscountRate = item.DiscountPercent;
-            DiscountAmount = item.DiscountedExtendedAmount;
+            if (DiscountRate > 0)
+            {
+                DiscountAmount = Math.Round(DiscountRate * UnitPrice, 2);
+            }
 
         }
 
@@ -656,9 +667,7 @@ namespace iTaxSuite.Library.Models.Entities
             _qtyUnitCode = _pkgUnitCode;
             Quantity = Package = (item.Quantity == 0) ? 1 : item.Quantity;
 
-            decimal amtValue = item.Price;
-            if (amtValue == 0)
-                amtValue = item.ExtendedAmountWithTIP;
+            decimal amtValue = item.ExtendedAmountWithTIP;
             if (amtValue <= 0)
                 throw new Exception($"Invalid Amount for {item.Description} :: {amtValue}");
 

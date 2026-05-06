@@ -17,6 +17,7 @@ namespace iTaxSuite.Library.Services
         Task<Result<DTaxSaveCNoteResp, string>> CreateDTaxCRNote(DTaxSaveCNoteReq saveCNoteReq);
         Task<Result<DTaxPurchaseResp, string>> GetDTaxPurchases(int pageSize = 0, string before = null, string after = null);
         Task<Result<DTaxNoticeResp, string>> SelectNotices();
+        Task<Result<DTaxSaveSaleResp, string>> GetDTaxOneSale(string saleId);
     }
     public class DigiTaxService : IDigiTaxService
     {
@@ -35,15 +36,14 @@ namespace iTaxSuite.Library.Services
         public async Task<Result<int, string>> GetBranchCount(bool log = false)
         {
             string _method_ = "SelectBranchCount";
-            string _strResponse = string.Empty;
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
                 string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/branches");
                 var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
                 UI.Debug($">> {_method_} : {_reqUrl}");
                var _httpResponse = await client.ProcessGetJsonAsync(_reqUrl, headers);
-                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                string _strResponse = await _httpResponse.Content.ReadAsStringAsync();
                 if (!_httpResponse.IsSuccessStatusCode)
                 {
                     UI.Error($"<< {_method_}: {_strResponse}");
@@ -95,16 +95,15 @@ namespace iTaxSuite.Library.Services
         public async Task<Result<DTaxCreateItemResp, string>> GetDTaxOneProduct(string itemId)
         {
             string _method_ = "GetDTaxOneProduct";
-            string _strResponse = string.Empty;
             DTaxCreateItemResp result = null;
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
                 string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/items/{itemId}");
                 var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
                 UI.Debug($">> {_method_} : {_reqUrl}");
                 var _httpResponse = await client.ProcessGetJsonAsync(_reqUrl, headers);
-                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                string _strResponse = await _httpResponse.Content.ReadAsStringAsync();
                 if (!_httpResponse.IsSuccessStatusCode)
                 {
                     UI.Error($"<< {_method_}: {_strResponse}");
@@ -113,6 +112,7 @@ namespace iTaxSuite.Library.Services
 
                 UI.Info($"<< {_method_}: {_strResponse}");
                 result = JsonConvert.DeserializeObject<DTaxCreateItemResp>(_strResponse);
+                result.RawResponse = _strResponse;
                 return result;
             }
             catch (Exception ex)
@@ -201,7 +201,6 @@ namespace iTaxSuite.Library.Services
         public async Task<Result<DTaxSaveSaleResp, string>> CreateDTaxSale(DTaxSaveSaleReq saveSaleReq)
         {
             string _method_ = "CreateDTaxSale";
-            string _strResponse = string.Empty;
             DTaxSaveSaleResp result = null;
             try
             {
@@ -211,7 +210,7 @@ namespace iTaxSuite.Library.Services
                 string jsonRequest = JsonConvert.SerializeObject(saveSaleReq);
                 UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");
                 var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest, headers);
-                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                string _strResponse = await _httpResponse.Content.ReadAsStringAsync();
                 if (!_httpResponse.IsSuccessStatusCode)
                 {
                     UI.Error($"<< {_method_}: {_strResponse}");
@@ -280,7 +279,7 @@ namespace iTaxSuite.Library.Services
             string _strResponse = string.Empty;
             try
             {
-                var client = _httpClientFactory.CreateClient();
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
                 string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/purchases");
                 var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
                 var qParams = new Dictionary<string, string>();
@@ -301,6 +300,36 @@ namespace iTaxSuite.Library.Services
 
                 UI.Info($"<< {_method_}: {_strResponse}");
                 var result = JsonConvert.DeserializeObject<DTaxPurchaseResp>(_strResponse);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
+        public async Task<Result<DTaxSaveSaleResp, string>> GetDTaxOneSale(string saleId)
+        {
+            string _method_ = "GetDTaxOneSale";
+            DTaxSaveSaleResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/sales/{saleId}");
+                var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
+                UI.Debug($">> {_method_} : {_reqUrl}");
+                var _httpResponse = await client.ProcessGetJsonAsync(_reqUrl, headers);
+                string _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+
+                UI.Info($"<< {_method_}: {_strResponse}");
+                result = JsonConvert.DeserializeObject<DTaxSaveSaleResp>(_strResponse);
+                result.RawResponse = _strResponse;
                 return result;
             }
             catch (Exception ex)

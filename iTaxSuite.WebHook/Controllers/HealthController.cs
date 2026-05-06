@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace iTaxSuite.WebHook.Controllers
 {
     [Tags("Health")]
-    [Route("api/health")]
+    [Route("hook/health")]
     [ApiController]
     public class HealthController : MBaseController
     {
@@ -28,8 +28,12 @@ namespace iTaxSuite.WebHook.Controllers
                 if (log)
                 {
                     string ipAddress = GetClientIpAddress();
-                    UI.Info($"ClientIP: {ipAddress}, Method:{Request.Method}, Path: {Request.Path}");
-                    UI.Info($"<< Status pinged: {responseObject.Status}");
+                    UI.Info($"<< Status pinged ClientIP: {ipAddress}, Method:{Request.Method}, Path: {Request.Path} : {responseObject.Status}");
+
+                    foreach (var header in Request.Headers)
+                    {
+                        UI.Debug("Header: {Key} = {Value}", header.Key, header.Value);
+                    }
                 }
                 return Ok(responseObject);
             }

@@ -31,23 +31,29 @@ namespace iTaxSuite.WebHook.Controllers
                     }
                 }
 
-                var HdrRemoteAddr = Request.Headers["REMOTE_ADDR"].FirstOrDefault();
-                if (!string.IsNullOrWhiteSpace(HdrRemoteAddr))
+                if (string.IsNullOrWhiteSpace(clientAddress))
                 {
-                    if (IPAddress.TryParse(HdrRemoteAddr, out var address) && (address.AddressFamily
-                        is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
+                    var HdrRemoteAddr = Request.Headers["REMOTE_ADDR"].FirstOrDefault();
+                    if (!string.IsNullOrWhiteSpace(HdrRemoteAddr))
                     {
-                        clientAddress = Convert.ToString(address);
+                        if (IPAddress.TryParse(HdrRemoteAddr, out var address) && (address.AddressFamily
+                            is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
+                        {
+                            clientAddress = Convert.ToString(address);
+                        }
                     }
                 }
 
-                var HdrRealIP = Request.Headers["X-Real-IP"].FirstOrDefault();
-                if (!string.IsNullOrWhiteSpace(HdrRealIP))
+                if (string.IsNullOrWhiteSpace(clientAddress))
                 {
-                    if (IPAddress.TryParse(HdrRealIP, out var address) && (address.AddressFamily
-                        is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
+                    var HdrRealIP = Request.Headers["X-Real-IP"].FirstOrDefault();
+                    if (!string.IsNullOrWhiteSpace(HdrRealIP))
                     {
-                        clientAddress = Convert.ToString(address);
+                        if (IPAddress.TryParse(HdrRealIP, out var address) && (address.AddressFamily
+                            is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6))
+                        {
+                            clientAddress = Convert.ToString(address);
+                        }
                     }
                 }
 

@@ -42,7 +42,8 @@ namespace iTaxSuite.Library.Models.ViewModels
             OriginNatCode = "KE";
         }
 
-        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item)
+        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item item, 
+            S300TaxAuthKey defS300TaxAuth)
             : this()
         {
             _offset = stockItem.EtrSeqNumber;
@@ -80,9 +81,15 @@ namespace iTaxSuite.Library.Models.ViewModels
             }
             if (newItemClassCode != ItemClassCode)
                 ItemClassCode = newItemClassCode;
+
+            if (defS300TaxAuth != null && item.ItemTaxAuthorities != null && item.ItemTaxAuthorities.Count > 0)
+            {
+                // todo: implement tax type lookup for IC items
+            }
         }
 
-        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item)
+        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item item, 
+            S300TaxAuthKey defS300TaxAuth)
             : this()
         {
             _offset = stockItem.EtrSeqNumber;
@@ -103,9 +110,20 @@ namespace iTaxSuite.Library.Models.ViewModels
             }
             if (newItemClassCode != ItemClassCode)
                 ItemClassCode = newItemClassCode;
+
+            if (defS300TaxAuth != null && item.ItemTaxClasses != null && item.ItemTaxClasses.Count > 0)
+            {
+                var itemTaxClass = item.ItemTaxClasses.FirstOrDefault(x => x.TaxAuthority == defS300TaxAuth.AuthorityKey);
+                var taxClass = defS300TaxAuth.Classes.FirstOrDefault(x => x.ClassKey == itemTaxClass.TaxClass 
+                    && x.ClassType == "Items" && x.TransactionType == "Sales");
+                var taxRate = defS300TaxAuth.Rates.FirstOrDefault(x => x.BuyerClass == itemTaxClass.TaxClass 
+                    && x.TransactionType == "Sales");
+                TaxTypeCode = ETimsUtils.GetTaxRate(taxClass, taxRate);
+            }
         }
 
-        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account)
+        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account account, 
+            S300TaxAuthKey defS300TaxAuth)
             : this()
         {
             _offset = stockItem.EtrSeqNumber;
@@ -137,6 +155,19 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
             return !string.IsNullOrWhiteSpace(ItemClassCode) && !string.IsNullOrWhiteSpace(PkgUnitCode) 
                 && !string.IsNullOrWhiteSpace(QtyUnitCode) && !string.IsNullOrWhiteSpace(BarCode);
+        }
+        public string GetError()
+        {
+            if (IsValid())
+                return null;
+
+            if (string.IsNullOrWhiteSpace(BarCode))
+                return $"Invalid Item {BarCode}";
+            if (string.IsNullOrWhiteSpace(ItemClassCode))
+                return $"Item {BarCode} is invalid, missing ItemClassCode";
+            if (string.IsNullOrWhiteSpace(PkgUnitCode) || string.IsNullOrWhiteSpace(QtyUnitCode))
+                return $"Item {BarCode} is invalid, missing Unit Codes";
+            return null;
         }
 
     }

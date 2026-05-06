@@ -14,7 +14,7 @@ namespace iTaxSuite.Library.Interfaces
         Task<Result<EtimsSalesView, string>> GetConvertARCRNote(SaleBatchTrxKey saleBatchTrxKey);
         Task<Result<EtimsSalesView, string>> GetConvertARInvoice(SaleBatchTrxKey saleBatchTrxKey);
         Task<Result<EtimsSalesView, string>> GetConvertOECRNote(SaleTrxKey saleTrxKey);
-        Task<Result<EtimsSalesView, string>> GetConvertOEInvoice(SaleTrxKey saleTrxKey);
+        Task<Result<EtimsSalesView, string>> GetConvertOEInvoice(SaleTrxKey saleTrxKey, string srcPayload = null);
         Task<Result<SalesTransact, string>> GetQRImage(int salesTrxId, bool updateMeta = false);
         Task<Result<PagedResult<SalesTransact>, string>> GetSales(SalesFilter filter);
         Task<Result<EtimsTransact, string>> ProcessSaveSale(EtimsTransact transactSale);
@@ -23,5 +23,6 @@ namespace iTaxSuite.Library.Interfaces
         Task<Result<SalesTransact, string>> ReFetchOEInvoice(SaleTrxKey saleTrxKey);
         Task<Result<int, string>> ProcessSaleCallback(SaleCallback saleCallback);
         Task<Result<int, string>> PostReadyTaxTrxs();
+        Task<Result<SalesTransact, string>> ReSyncTaxInvoice(SaleTrxKey saleTrxKey);
     }
 }

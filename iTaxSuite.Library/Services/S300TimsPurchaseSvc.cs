@@ -38,9 +38,7 @@ namespace iTaxSuite.Library.Services
                 var syncChannel = _syncChannelMap[GeneralConst.PO_INVOICE_SYNC];
                 var purchaseSet = await _dbContext.PurchTransact.Select(e => e.Reference).ToHashSetAsync();
 
-                //TODO: remove this hack
-                //DateTime trackerDate = syncChannel.GetMinDate();
-                DateTime trackerDate = new DateTime(2020, 1, 1);
+                var trackerDate = syncChannel.GetMinDate();
                 string lastReqDate = trackerDate.ToString(ETIMSConst.FMT_DATETIME);
 
                 var selectRes = await _etimsService.SelectPurchaseSales(lastReqDate);

@@ -2,9 +2,7 @@
 using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
-using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace iTaxSuite.WebApi.Controllers
 {
@@ -73,6 +71,25 @@ namespace iTaxSuite.WebApi.Controllers
             try
             {
                 var result = await _saleService.ReFetchOEInvoice(saleTrxKey);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+        [HttpPost]
+        [Route("resyncsaleinv")]
+        public async Task<IActionResult> ReSyncSaleInvoice(SaleTrxKey saleTrxKey)
+        {
+            string _method_ = "ReSyncSaleInvoice";
+            try
+            {
+                var result = await _saleService.ReSyncTaxInvoice(saleTrxKey);
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else

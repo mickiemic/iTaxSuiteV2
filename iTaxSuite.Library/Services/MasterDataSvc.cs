@@ -29,6 +29,7 @@ namespace iTaxSuite.Library.Services
         Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, bool useExtID = false);
         Task<Dictionary<string, StockItemKey>> GetCacheStockItems(bool reload = false);
         Task<bool> CacheSaveStockItem(string hashKey, StockItem stockItem);
+        Task<Result<S300TaxAuthKey, string>> GetDefaultAuthority();
     }
     public class MasterDataSvc : IMasterDataSvc
     {
@@ -55,7 +56,7 @@ namespace iTaxSuite.Library.Services
             {
                 // SyncChannels
                 await _baseDb.KeyDeleteAsync(CacheConst.CHANL_HASHKEY);
-                foreach (var chanl in _dbContext.SyncChannels.AsNoTracking())
+                foreach (var chanl in _dbContext.SyncChannels.Where(x => x.IsActive).AsNoTracking())
                 {
                     string _hashKey_ = CacheConst.CHANL_HASHKEY;
                     chanl.InitTracker();
@@ -72,7 +73,7 @@ namespace iTaxSuite.Library.Services
                 if (branch != null)
                 {
                     branch.TaxClient.InitMetaData();
-                    if (!await _baseDb.SetValueAsync<ClientBranch>(CacheConst.CLIENT_BRANCH, branch))
+                    if (!await _baseDb.SetValueAsync(CacheConst.CLIENT_BRANCH, branch))
                     {
                         throw new Exception($"{_method_} failed for branch code:{branch.BranchCode}");
                     }
@@ -783,6 +784,31 @@ namespace iTaxSuite.Library.Services
                 foreach (var authority in authorities)
                 {
                     result.Add(authority.Name);
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                UI.Error($"{_method_} error: {ex.GetBaseException()}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        public async Task<Result<S300TaxAuthKey, string>> GetDefaultAuthority()
+        {
+            string _method_ = "GetDefaultAuthority";
+            S300TaxAuthKey result = null;
+            try
+            {
+                var _clientBranch = await GetBranchAsync();
+                var authorities = await _baseDb.HashGetAllAsync(CacheConst.TAXAUTH_HASHKEY);
+                foreach (var authority in authorities)
+                {
+                    var taxAuthKey = JsonConvert.DeserializeObject<S300TaxAuthKey>(authority.Value);
+                    if (taxAuthKey.Currency == _clientBranch.TaxClient.Currency)
+                    {
+                        result = taxAuthKey;
+                        break;
+                    }
                 }
                 return result;
             }
