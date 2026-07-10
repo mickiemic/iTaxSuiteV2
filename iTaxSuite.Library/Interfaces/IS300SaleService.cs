@@ -24,5 +24,6 @@ namespace iTaxSuite.Library.Interfaces
         Task<Result<int, string>> ProcessSaleCallback(SaleCallback saleCallback);
         Task<Result<int, string>> PostReadyTaxTrxs();
         Task<Result<SalesTransact, string>> ReSyncTaxInvoice(SaleTrxKey saleTrxKey);
+        Task<Result<int, string>> SyncReadyTaxTrxs();
     }
 }

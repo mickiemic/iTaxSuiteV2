@@ -437,7 +437,7 @@ namespace iTaxSuite.Library.Services
                 {
                     salesTrxData.RequestPayload = JsonConvert.SerializeObject(trnsSalesSaveReq, new DecimalFormatConverter());
                     salesTrxData.UpdatedOn = DateTime.Now;
-                    salesTrxData.UpdatedBy = "Sys-Admin";
+                    salesTrxData.UpdatedBy = GeneralConst.APPLICATION_NAME;
                     int affected = await _dbContext.SaveChangesAsync();
                     UI.Info($"{_method_} update {affected} records updated.");
                 }
@@ -1578,13 +1578,13 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.SalesTrxData.Where(e => e.SalesTrxID == saleTransact.SalesTrxID).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.SalesTransact.Where(e => e.SalesTrxID == saleTransact.SalesTrxID)
                                 .ExecuteUpdateAsync(x => x
@@ -1593,7 +1593,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
 
                             await _dbTrans.CommitAsync();
@@ -1637,7 +1637,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         if (saleTrxResp.IsDuplicate && !string.IsNullOrWhiteSpace(saleTransact.SalesTrxData.RequestPayload))
                         {
@@ -1648,7 +1648,7 @@ namespace iTaxSuite.Library.Services
                                     .SetProperty(x => x.ResponsePayload, saleTrxResp.RawResponse)
                                     .SetProperty(x => x.ResponseTime, tStamp)
                                     .SetProperty(x => x.UpdatedOn, tStamp)
-                                    .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                    .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                                 );
                             }
                         }
@@ -1658,7 +1658,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.ResponsePayload, saleTrxResp.RawResponse)
                                 .SetProperty(x => x.ResponseTime, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                         }
                         await _dbContext.SalesTransact.Where(e => e.SalesTrxID == saleTransact.SalesTrxID)
@@ -1676,7 +1676,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
 
                         if (!saleTrxResp.IsSuccess && !saleTrxResp.IsDuplicate)
@@ -1718,13 +1718,13 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
                                 .ExecuteUpdateAsync(x => x
@@ -1733,7 +1733,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
 
                             await _dbTrans.CommitAsync();
@@ -1750,13 +1750,13 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
                             .SetProperty(x => x.ResponsePayload, stockIOSaveResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
                             .ExecuteUpdateAsync(x => x
@@ -1765,7 +1765,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
 
                         await _dbTrans.CommitAsync();
@@ -1798,6 +1798,11 @@ namespace iTaxSuite.Library.Services
         }
 
         public Task<Result<SalesTransact, string>> ReSyncTaxInvoice(SaleTrxKey saleTrxKey)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Result<int, string>> SyncReadyTaxTrxs()
         {
             throw new NotImplementedException();
         }

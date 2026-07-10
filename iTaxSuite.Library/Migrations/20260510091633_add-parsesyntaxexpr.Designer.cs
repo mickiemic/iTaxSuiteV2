@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using iTaxSuite.Library.Models;
 
@@ -11,9 +12,11 @@ using iTaxSuite.Library.Models;
 namespace iTaxSuite.Library.Migrations
 {
     [DbContext(typeof(ETimsDBContext))]
-    partial class ETimsDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260510091633_add-parsesyntaxexpr")]
+    partial class addparsesyntaxexpr
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

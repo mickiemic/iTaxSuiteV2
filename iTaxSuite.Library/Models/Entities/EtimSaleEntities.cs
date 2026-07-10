@@ -1,4 +1,5 @@
-﻿using iTaxSuite.Library.Extensions;
+﻿using iTaxSuite.Library.Constants;
+using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
@@ -161,7 +162,7 @@ namespace iTaxSuite.Library.Models.Entities
             }
             HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
 
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
@@ -234,7 +235,7 @@ namespace iTaxSuite.Library.Models.Entities
             }
             HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
 
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public SalesTransact(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer, 
@@ -297,7 +298,7 @@ namespace iTaxSuite.Library.Models.Entities
             }
             HomeTotTaxAmt = SrcTotTaxAmt * DocExchRate;
 
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public bool IsValid()

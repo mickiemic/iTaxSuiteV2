@@ -205,7 +205,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
-                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/sales");
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/sales-with-items");
                 var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
                 string jsonRequest = JsonConvert.SerializeObject(saveSaleReq);
                 UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");
@@ -243,7 +243,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
-                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/credit-notes");
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/credit-notes-with-barcode");
                 var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
                 string jsonRequest = JsonConvert.SerializeObject(saveCNoteReq);
                 UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");

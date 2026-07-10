@@ -503,13 +503,13 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.ProductData.Where(e => e.ProductCode == stockItem.ProductCode).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.StockItems.Where(e => e.ProductCode == stockItem.ProductCode && e.BranchCode == stockItem.BranchCode)
                                 .ExecuteUpdateAsync(x => x
@@ -518,7 +518,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.Products.Where(e => e.ProductCode == stockItem.ProductCode)
                                 .ExecuteUpdateAsync(x => x
@@ -527,7 +527,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
 
                             await _dbTrans.CommitAsync();
@@ -546,13 +546,13 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.ProductData.Where(e => e.ProductCode == stockItem.ProductCode).ExecuteUpdateAsync(x => x
                             .SetProperty(x => x.ResponsePayload, saveItemResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.StockItems.Where(e => e.ProductCode == stockItem.ProductCode && e.BranchCode == stockItem.BranchCode)
                             .ExecuteUpdateAsync(x => x
@@ -561,7 +561,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.Products.Where(e => e.ProductCode == stockItem.ProductCode)
                             .ExecuteUpdateAsync(x => x
@@ -570,7 +570,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
 
                         await _dbTrans.CommitAsync();
@@ -709,13 +709,13 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
                                 .ExecuteUpdateAsync(x => x
@@ -724,7 +724,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
 
                             await _dbTrans.CommitAsync();
@@ -741,13 +741,13 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.StockMovData.Where(e => e.MovementID == stockMovement.MovementID).ExecuteUpdateAsync(x => x
                             .SetProperty(x => x.ResponsePayload, stockIOSaveResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.StockMovement.Where(e => e.MovementID == stockMovement.MovementID)
                             .ExecuteUpdateAsync(x => x
@@ -756,7 +756,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
 
                         await _dbTrans.CommitAsync();

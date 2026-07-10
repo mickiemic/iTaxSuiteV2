@@ -16,6 +16,7 @@ namespace iTaxSuite.WebApi.Schedules
             _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -37,7 +38,8 @@ namespace iTaxSuite.WebApi.Schedules
         {
             _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
-
+        
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -59,6 +61,8 @@ namespace iTaxSuite.WebApi.Schedules
         {
             _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
+
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
 
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -83,6 +87,7 @@ namespace iTaxSuite.WebApi.Schedules
             _purchaseSvc = purchaseSvc;
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)][DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -114,6 +119,7 @@ namespace iTaxSuite.WebApi.Schedules
             _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -144,6 +150,7 @@ namespace iTaxSuite.WebApi.Schedules
             _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -175,6 +182,7 @@ namespace iTaxSuite.WebApi.Schedules
             _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -268,6 +276,7 @@ namespace iTaxSuite.WebApi.Schedules
             _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -288,4 +297,36 @@ namespace iTaxSuite.WebApi.Schedules
             }
         }
     }
+
+    public class AllTaxTrxsSync
+    {
+        public const string JobId = $"job-{CacheConst.ALL_TAXSYNCTRX_HASHKEY}";
+        private readonly IS300SaleService _saleSvc;
+        public AllTaxTrxsSync(IEnumerable<IS300SaleService> saleSvcs)
+        {
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+        }
+
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var pResult = await _saleSvc.SyncReadyTaxTrxs();
+                if (pResult.IsSuccess)
+                {
+                    var trxCount = pResult.GetValue();
+                    if (trxCount > 0)
+                        UI.Info($"{_method_} SyncReadyTaxTrxs processed count:{trxCount}");
+                }
+                else
+                {
+                    throw new Exception($"{_method_} SyncReadyTaxTrxs error:{pResult.GetError()}");
+                }
+            }
+        }
+    }
+
 }

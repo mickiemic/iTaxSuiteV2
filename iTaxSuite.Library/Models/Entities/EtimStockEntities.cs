@@ -116,7 +116,7 @@ namespace iTaxSuite.Library.Models.Entities
             DocNumber = $"{BranchCode}:{oeInvoice.InvoiceNumber}";
             DocDate = oeInvoice.InvoiceDate.Value;
             Description = oeInvoice.Description;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
         public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitNote oeCRNote)
             : this()
@@ -127,7 +127,7 @@ namespace iTaxSuite.Library.Models.Entities
             DocNumber = $"{BranchCode}:{oeCRNote.CreditDebitNoteNumber}";
             DocDate = oeCRNote.CreditDebitNoteDate.Value;
             Description = oeCRNote.Description;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models.Invoice pInvoice, 
@@ -139,7 +139,7 @@ namespace iTaxSuite.Library.Models.Entities
             BranchCode = clientBranch.BranchCode;
             DocNumber = $"{BranchCode}:{pInvoice.InvoiceNumber}";
             DocDate = pInvoice.InvoiceDate.Value;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public StockMovement(ClientBranch clientBranch, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice)
@@ -151,7 +151,7 @@ namespace iTaxSuite.Library.Models.Entities
             DocNumber = $"{BranchCode}:{arInvoice.DocumentNumber}";
             DocDate = arInvoice.DocumentDate.Value;
             Description = arInvoice.InvoiceDescription;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public StockMovement(ClientBranch clientBranch, StockIORequest stockIORequest)
@@ -162,7 +162,7 @@ namespace iTaxSuite.Library.Models.Entities
             DocNumber = $"{BranchCode}:{stockIORequest.DocNumber}";
             DocDate = stockIORequest.DocDate;
             Description = stockIORequest.Description;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
         }
     }
     public class MovementFilter : APDatedFilter
@@ -359,7 +359,7 @@ namespace iTaxSuite.Library.Models.Entities
             ItemClassCode = product.ItemClassCode;
             RecordStatus = RecordStatus.QUEUEDOUT;
             UpdatedOn = DateTime.Now;
-            UpdatedBy = "Sys-Admin";
+            UpdatedBy = GeneralConst.APPLICATION_NAME;
         }
 
         public bool IsValid()
@@ -483,7 +483,7 @@ namespace iTaxSuite.Library.Models.Entities
                 RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
             }
             UpdatedOn = DateTime.Now;
-            UpdatedBy = "Sys-Admin";
+            UpdatedBy = GeneralConst.APPLICATION_NAME;
         }
 
     }

@@ -1,10 +1,13 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using Dapper;
 using iTaxSuite.CLIApp;
 using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Configs;
+using iTaxSuite.Library.Models.Entities;
+using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +46,7 @@ try
         IDataProtectionProvider protectionProvider = serviceProvider.GetService<IDataProtectionProvider>();
         IDataProtector _dataProtector = protectionProvider.CreateProtector(SecureConst.DATA_PURPOSE);
 
+        ExtSystConfig? _extSystConfig = null;
         try
         {
             var ITaxDBConnection = configuration.GetConnectionString("ITaxDBConnection");
@@ -52,12 +56,21 @@ try
             UI.Debug($"ITaxDBConnection : {ITaxDBConnection} ==> {iTaxDBConnStr}");
             _ = services.AddSingleton(new DatabaseOptions { iTaxDBConnString = iTaxDBConnStr });
             _ = services.AddDbContext<ETimsDBContext>(options => options.UseSqlServer(iTaxDBConnStr), ServiceLifetime.Scoped);
+            using (var connection = new SqlConnection(iTaxDBConnStr))
+            {
+                _extSystConfig = connection.QueryFirst<ExtSystConfig>("select * from [ExtSystConfig]");
+            }
         }
         catch (Exception iex)
         {
             UI.Fatal(iex, $"Fatal Error: Application could not connect to Main SQL DB. Error - {iex.GetBaseException().Message}");
             throw;
         }
+        if (_extSystConfig == null)
+        {
+            throw new Exception("Invalid Sage 300 ERP configuration");
+        }
+        _ = services.AddSingleton(_extSystConfig);
 
         try
         {
@@ -75,6 +88,10 @@ try
             throw;
         }
 
+        _ = services.AddScoped<IMasterDataSvc, MasterDataSvc>();
+        _ = services.AddScoped<IDigiTaxService, DigiTaxService>();
+
+        _ = services.AddSingleton<S300DTaxSaleService>();
         _ = services.AddSingleton<iTaxDriver>();
     })
     .Build();
@@ -85,6 +102,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine("Application Startup failed: " + ex.GetBaseException().ToString());
+    UI.Fatal("Application Startup failed: " + ex.GetBaseException().ToString());
     Environment.Exit(-1);
 }
 Console.ReadLine();

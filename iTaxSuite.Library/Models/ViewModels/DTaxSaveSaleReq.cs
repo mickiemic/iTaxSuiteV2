@@ -142,6 +142,73 @@ namespace iTaxSuite.Library.Models.ViewModels
     }
     public class DTaxSaleItem
     {
+        [Newtonsoft.Json.JsonProperty("item_bar_code")]
+        [System.Text.Json.Serialization.JsonPropertyName("item_bar_code")]
+        public string BarCode { get; set; }
+        [Newtonsoft.Json.JsonProperty("quantity")]
+        [System.Text.Json.Serialization.JsonPropertyName("quantity")]
+        public decimal Quantity { get; set; }
+        [Newtonsoft.Json.JsonProperty("unit_price")]
+        [System.Text.Json.Serialization.JsonPropertyName("unit_price")]
+        public decimal UnitPrice { get; set; }
+        [Newtonsoft.Json.JsonProperty("total_amount")]
+        [System.Text.Json.Serialization.JsonPropertyName("total_amount")]
+        public decimal TotalAmount { get; set; }
+        [Newtonsoft.Json.JsonProperty("package_unit_quantity", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("package_unit_quantity")]
+        public decimal Package { get; set; }
+        [Newtonsoft.Json.JsonProperty("discount_rate", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("discount_rate")]
+        public decimal DiscountRate { get; set; }
+        [Newtonsoft.Json.JsonProperty("discount_amount", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("discount_amount")]
+        public decimal DiscountAmount { get; set; }
+        [Newtonsoft.Json.JsonProperty("item_description", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("item_description")]
+        public string ItemDescription { get; set; }
+        [Newtonsoft.Json.JsonProperty("is_stockable", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("is_stockable")]
+        public bool IsStockable { get; set; }
+        [Newtonsoft.Json.JsonProperty("item_class_code")]
+        [System.Text.Json.Serialization.JsonPropertyName("item_class_code")]
+        public string ItemClassCode { get; set; }
+        [Newtonsoft.Json.JsonProperty("item_name")]
+        [System.Text.Json.Serialization.JsonPropertyName("item_name")]
+        public string ItemName { get; set; }
+        [Newtonsoft.Json.JsonProperty("item_tax_type_code")]
+        [System.Text.Json.Serialization.JsonPropertyName("item_tax_type_code")]
+        public string ItemTaxTypeCode { get; set; }
+        [Newtonsoft.Json.JsonProperty("taxable_amount", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("taxable_amount")]
+        public decimal TaxableAmount { get; set; }
+        [Newtonsoft.Json.JsonProperty("tax_amount", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("tax_amount")]
+        public decimal TaxAmount { get; set; }
+
+        public DTaxSaleItem()
+        {
+        }
+        public DTaxSaleItem(SalesItem salesItem)
+            : this()
+        {
+            BarCode = salesItem.ProductCode;
+            ItemTaxTypeCode = salesItem.TaxTypeCode;
+            ItemClassCode = salesItem.ItemClassCode;
+            IsStockable = salesItem.IsStockable;
+            ItemName = salesItem.Description;
+            ItemDescription = salesItem.Description;
+            Quantity = salesItem.Quantity;
+            Package = salesItem.Package;
+            UnitPrice = salesItem.TotalAmount / salesItem.Quantity;
+            DiscountRate = salesItem.DiscountRate;
+            DiscountAmount = salesItem.DiscountAmount;
+            TaxableAmount = salesItem.TaxableAmount;
+            TaxAmount = salesItem.TaxAmount;
+            TotalAmount = salesItem.TotalAmount;
+        }
+    }
+    /*public class DTaxSaleItem
+    {
         [Newtonsoft.Json.JsonProperty("id")]
         [System.Text.Json.Serialization.JsonPropertyName("id")]
         public string ID { get; set; }
@@ -181,7 +248,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             DiscountAmount = salesItem.DiscountAmount;
             TotalAmount = salesItem.TotalAmount;
         }
-    }
+    }*/
 
     public class DTaxSaveSaleResp : DTaxBaseResp
     {
@@ -252,8 +319,9 @@ namespace iTaxSuite.Library.Models.ViewModels
         public string GetQRText()
         {
             if (string.IsNullOrWhiteSpace(ETimsURL))
-                return null;
-            return ETimsURL;
+                return OfflineURL;
+            else
+                return ETimsURL;
         }
 
     }
@@ -350,7 +418,6 @@ namespace iTaxSuite.Library.Models.ViewModels
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Customer customer) : this()
         {
             TraderInvoiceNo = arCRNote.DocumentNumber;
-            TraderInvoiceNo = arCRNote.ApplytoDocument;
             InvoiceDetails = arCRNote.InvoiceDescription;
             SaleID = origTransact?.ExternalID;
             if (!string.IsNullOrWhiteSpace(clientBranch.TaxClient.BaseCallback))
@@ -459,12 +526,15 @@ namespace iTaxSuite.Library.Models.ViewModels
 
     public class DTaxCNoteItem
     {
-        [Newtonsoft.Json.JsonProperty("id")]
-        [System.Text.Json.Serialization.JsonPropertyName("id")]
-        public string ID { get; set; }
+        [Newtonsoft.Json.JsonProperty("item_bar_code")]
+        [System.Text.Json.Serialization.JsonPropertyName("item_bar_code")]
+        public string BarCode { get; set; }
         [Newtonsoft.Json.JsonProperty("quantity")]
         [System.Text.Json.Serialization.JsonPropertyName("quantity")]
         public decimal Quantity { get; set; }
+        [Newtonsoft.Json.JsonProperty("package_unit_quantity", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("package_unit_quantity")]
+        public decimal Package { get; set; }
         [Newtonsoft.Json.JsonProperty("unit_price")]
         [System.Text.Json.Serialization.JsonPropertyName("unit_price")]
         public decimal UnitPrice { get; set; }
@@ -480,6 +550,12 @@ namespace iTaxSuite.Library.Models.ViewModels
         [Newtonsoft.Json.JsonProperty("item_description", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
         [System.Text.Json.Serialization.JsonPropertyName("item_description")]
         public string ItemDescription { get; set; }
+        [Newtonsoft.Json.JsonProperty("taxable_amount", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("taxable_amount")]
+        public decimal TaxableAmount { get; set; }
+        [Newtonsoft.Json.JsonProperty("tax_amount", DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
+        [System.Text.Json.Serialization.JsonPropertyName("tax_amount")]
+        public decimal TaxAmount { get; set; }
 
         public DTaxCNoteItem()
         {
@@ -488,11 +564,14 @@ namespace iTaxSuite.Library.Models.ViewModels
         public DTaxCNoteItem(SalesItem salesItem)
             : this()
         {
-            ID = salesItem.ExternalID;
+            BarCode = salesItem.ProductCode;
             Quantity = salesItem.Quantity;
+            Package = salesItem.Package;
             UnitPrice = salesItem.TotalAmount / salesItem.Quantity;
             DiscountRate = salesItem.DiscountRate;
             DiscountAmount = salesItem.DiscountAmount;
+            TaxableAmount = salesItem.TaxableAmount;
+            TaxAmount = salesItem.TaxAmount;
             TotalAmount = salesItem.TotalAmount;
             ItemDescription = salesItem.Description;
         }

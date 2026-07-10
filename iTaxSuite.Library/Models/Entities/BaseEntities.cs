@@ -1,4 +1,5 @@
-﻿using iTaxSuite.Library.Models.ViewModels;
+﻿using iTaxSuite.Library.Constants;
+using iTaxSuite.Library.Models.ViewModels;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.Serialization;
@@ -17,10 +18,11 @@ namespace iTaxSuite.Library.Models.Entities
         [StringLength(40)]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
-        public string CreatedBy { get; set; } = "SYS-ADMIN";
+        public string CreatedBy { get; set; } = GeneralConst.APPLICATION_NAME;
 
         [ScaffoldColumn(false)]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public DateTime? UpdatedOn { get; set; }
 
         [ScaffoldColumn(false)]
@@ -264,10 +266,13 @@ namespace iTaxSuite.Library.Models.Entities
         public string DateCol { get; set; }
         [StringLength(256)]
         public string SyncTrackExpr { get; set; }
+        [StringLength(256)]
+        public string ParseSyntaxExpr { get; set; }
         public DateTime? LastTracked { get; set; }
         [NotMapped]     // Dynamic Tracker Object
         public SyncTracker Tracker { get; set; }
-
+        [NotMapped]
+        public ParseSyntax ParseSyntax { get; set; }
         public SyncChannel()
         {
             Tracker = new SyncTracker();
@@ -280,9 +285,16 @@ namespace iTaxSuite.Library.Models.Entities
                 Tracker = Newtonsoft.Json.JsonConvert.DeserializeObject<SyncTracker>(SyncTrackExpr);
             }
         }
+        public void InitParser()
+        {
+            if (!string.IsNullOrWhiteSpace(ParseSyntaxExpr))
+            {
+                ParseSyntax = Newtonsoft.Json.JsonConvert.DeserializeObject<ParseSyntax>(ParseSyntaxExpr);
+            }
+        }
         public DateTime GetMinDate()
         {
-            var minDateTime = new DateTime(2024, 11, 1);
+            var minDateTime = new DateTime(2026, 06, 1);
             if (string.IsNullOrWhiteSpace(DateCol) || Tracker is null || !Tracker.MinDateTime.HasValue)
             {
                 return minDateTime;
@@ -327,11 +339,23 @@ namespace iTaxSuite.Library.Models.Entities
     }
     public class SyncTracker
     {
+        [Newtonsoft.Json.JsonProperty("fieldname")]
+        [System.Text.Json.Serialization.JsonPropertyName("fieldname")]
         public string FieldName { get; set; }
+        [Newtonsoft.Json.JsonProperty("isnumeric")]
+        [System.Text.Json.Serialization.JsonPropertyName("isnumeric")]
         public bool IsNumeric { get; set; }
+        [Newtonsoft.Json.JsonProperty("value")]
+        [System.Text.Json.Serialization.JsonPropertyName("value")]
         public object Value { get; set; }
+        [Newtonsoft.Json.JsonProperty("mindatetime")]
+        [System.Text.Json.Serialization.JsonPropertyName("mindatetime")]
         public DateTime? MinDateTime { get; set; } = new DateTime(2024, 11, 1);
+        [Newtonsoft.Json.JsonProperty("laststamp")]
+        [System.Text.Json.Serialization.JsonPropertyName("laststamp")]
         public DateTime LastStamp { get; set; } = DateTime.Now;
+        [Newtonsoft.Json.JsonProperty("offset")]
+        [System.Text.Json.Serialization.JsonPropertyName("offset")]
         public int OffSet { get; set; }
 
         public SyncTracker() { }
@@ -380,5 +404,10 @@ namespace iTaxSuite.Library.Models.Entities
             return (int)Value;
         }
     }
-
+    public class ParseSyntax
+    {
+        [Newtonsoft.Json.JsonProperty("filter")]
+        [System.Text.Json.Serialization.JsonPropertyName("filter")]
+        public string Filter { get; set; }
+    }
 }

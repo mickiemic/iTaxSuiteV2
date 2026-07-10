@@ -46,7 +46,7 @@ namespace iTaxSuite.WebHook.Controllers
                 {
                     string strError = result.GetError();
                     UI.Error($"{_method_} ID: {itemCallback.CBData.ID}, error:{strError}");
-                    return StatusCode(500, new ApiResponse("Error", strError));
+                    return StatusCode(404, new ApiResponse("Error", strError));
                 }
                 return Ok(callback);
             }
@@ -82,7 +82,7 @@ namespace iTaxSuite.WebHook.Controllers
                 {
                     string strError = result.GetError();
                     UI.Error($"{_method_} ID: {saleCallback.CBData.InvoiceNumber}, error:{strError}");
-                    return StatusCode(500, new ApiResponse("Error", strError));
+                    return StatusCode(404, new ApiResponse("Error", strError));
                 }
                 return Ok(callback);
             }

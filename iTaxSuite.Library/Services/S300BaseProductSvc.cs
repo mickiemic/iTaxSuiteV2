@@ -361,14 +361,14 @@ namespace iTaxSuite.Library.Services
                                     .ExecuteUpdateAsync(x => x
                                     .SetProperty(x => x.ItemClassCode, _newProduct.ItemClassCode)
                                     .SetProperty(x => x.UpdatedOn, tStamp)
-                                    .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                    .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                                 );
                         changes += await _dbContext.ProductData.Where(e => e.ProductCode == product.ProductCode)
                                     .ExecuteUpdateAsync(x => x
                                     .SetProperty(x => x.SourcePayload, product.ProductData.SourcePayload)
                                     .SetProperty(x => x.RequestPayload, product.ProductData.RequestPayload)
                                     .SetProperty(x => x.UpdatedOn, tStamp)
-                                    .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                    .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                                 );
 
 

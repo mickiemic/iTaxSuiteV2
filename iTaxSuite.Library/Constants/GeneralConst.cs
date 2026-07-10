@@ -30,6 +30,7 @@
         public const string PO_INVOICE_SYNC = "po-invoice-sync";
         
         public const string ALL_TAXTRXS_POST = "all-taxtrxs-post";
+        public const string ALL_TAXTRXS_SYNC = "all-taxtrxs-sync";
 
     }
 

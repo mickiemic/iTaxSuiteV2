@@ -60,6 +60,7 @@ namespace iTaxSuite.Library.Services
                 {
                     string _hashKey_ = CacheConst.CHANL_HASHKEY;
                     chanl.InitTracker();
+                    chanl.InitParser();
                     syncChannelMap[chanl.ChannelId] = chanl;
                     if (!_baseDb.SetHashValue(_hashKey_, chanl.ChannelId, chanl))
                     {
@@ -212,7 +213,7 @@ namespace iTaxSuite.Library.Services
                     .SetProperty(c => c.PurchInvoiceSeq, clientBranch.PurchInvoiceSeq)
                     .SetProperty(c => c.SaleInvoiceSeq, clientBranch.SaleInvoiceSeq)
                     .SetProperty(c => c.UpdatedOn, DateTime.Now)
-                    .SetProperty(c => c.UpdatedBy, "SYS-ADMIN")
+                    .SetProperty(c => c.UpdatedBy, GeneralConst.APPLICATION_NAME)
                     );
                 return (_dbChanges > 0);
             }
@@ -237,7 +238,7 @@ namespace iTaxSuite.Library.Services
                     .SetProperty(c => c.PurchInvoiceSeq, clientBranch.PurchInvoiceSeq)
                     .SetProperty(c => c.SaleInvoiceSeq, clientBranch.SaleInvoiceSeq)
                     .SetProperty(c => c.UpdatedOn, DateTime.Now)
-                    .SetProperty(c => c.UpdatedBy, "SYS-ADMIN")
+                    .SetProperty(c => c.UpdatedBy, GeneralConst.APPLICATION_NAME)
                     );
                 return (_dbChanges > 0);
             }

@@ -165,7 +165,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.ResponsePayload, _strError)
                                 .SetProperty(x => x.ResponseTime, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
                             await _dbContext.PurchTransact.Where(e => e.PurchaseID == purchTransact.PurchaseID)
                                 .ExecuteUpdateAsync(x => x
@@ -174,7 +174,7 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.Tries, x => x.Tries + 1)
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
-                                .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                                .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                             );
 
                             await _dbTrans.CommitAsync();
@@ -189,7 +189,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.ResponsePayload, purchaseSaveResp.RawResponse)
                             .SetProperty(x => x.ResponseTime, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbContext.PurchTransact.Where(e => e.PurchaseID == purchTransact.PurchaseID)
                             .ExecuteUpdateAsync(x => x
@@ -198,7 +198,7 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.Tries, x => x.Tries + 1)
                             .SetProperty(x => x.LastTry, tStamp)
                             .SetProperty(x => x.UpdatedOn, tStamp)
-                            .SetProperty(x => x.UpdatedBy, "SYS-ADMIN")
+                            .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
                         await _dbTrans.CommitAsync();
                     }

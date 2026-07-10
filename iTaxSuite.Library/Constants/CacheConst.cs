@@ -26,6 +26,7 @@
         public const string TXSTOCKMVT_HASHKEY = "stock-movement";
 
         public const string ALL_TAXPOSTTRX_HASHKEY = "all-taxposttrx";
+        public const string ALL_TAXSYNCTRX_HASHKEY = "all-taxsynctrx";
     }
 
     public static class MapperConst

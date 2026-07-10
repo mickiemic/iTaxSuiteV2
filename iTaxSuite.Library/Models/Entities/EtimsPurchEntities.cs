@@ -90,7 +90,7 @@ namespace iTaxSuite.Library.Models.Entities
             VendorName = vendor.VendorName;
             Reference = invoice.Reference;
             Location = invoice.ShipToLocation;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
 
             DocSrcCurr = DocHomeCurr = clientBranch.TaxClient.Currency;
             DocExchRate = 1;
@@ -121,7 +121,7 @@ namespace iTaxSuite.Library.Models.Entities
             VendorName = purchaseSale.SupplierName;
             VendorTaxNumber = purchaseSale.SupplierPIN;
             Reference = purchaseSale.Reference;
-            CreatedBy = "Sys-Admin";
+            CreatedBy = GeneralConst.APPLICATION_NAME;
 
             DocSrcCurr = DocHomeCurr = clientBranch.TaxClient.Currency;
             DocExchRate = 1;
