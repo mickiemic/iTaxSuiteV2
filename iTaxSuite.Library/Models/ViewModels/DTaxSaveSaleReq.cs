@@ -197,9 +197,9 @@ namespace iTaxSuite.Library.Models.ViewModels
             IsStockable = salesItem.IsStockable;
             ItemName = salesItem.Description;
             ItemDescription = salesItem.Description;
-            Quantity = salesItem.Quantity;
+            Quantity = (salesItem.Quantity == 0 ? 1 : salesItem.Quantity);
             Package = salesItem.Package;
-            UnitPrice = salesItem.TotalAmount / salesItem.Quantity;
+            UnitPrice = salesItem.TotalAmount / (salesItem.Quantity == 0 ? 1 : salesItem.Quantity);
             DiscountRate = salesItem.DiscountRate;
             DiscountAmount = salesItem.DiscountAmount;
             TaxableAmount = salesItem.TaxableAmount;
@@ -243,7 +243,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             ItemDescription = salesItem.Description;
             Quantity = salesItem.Quantity;
             Package = salesItem.Package;
-            UnitPrice = salesItem.TotalAmount / salesItem.Quantity;
+            UnitPrice = salesItem.Quantity != 0 ? salesItem.TotalAmount / salesItem.Quantity : 0;
             DiscountRate = salesItem.DiscountRate;
             DiscountAmount = salesItem.DiscountAmount;
             TotalAmount = salesItem.TotalAmount;
@@ -567,7 +567,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             BarCode = salesItem.ProductCode;
             Quantity = salesItem.Quantity;
             Package = salesItem.Package;
-            UnitPrice = salesItem.TotalAmount / salesItem.Quantity;
+            UnitPrice = salesItem.Quantity != 0 ? salesItem.TotalAmount / salesItem.Quantity : 0;
             DiscountRate = salesItem.DiscountRate;
             DiscountAmount = salesItem.DiscountAmount;
             TaxableAmount = salesItem.TaxableAmount;

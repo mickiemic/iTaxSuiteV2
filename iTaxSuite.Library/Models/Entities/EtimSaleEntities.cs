@@ -181,6 +181,11 @@ namespace iTaxSuite.Library.Models.Entities
             {
                 DocType = DocumentType.CREDITNOTE;
                 RefInvNumber = invoice.ApplytoDocument;
+                if (string.IsNullOrWhiteSpace(RefInvNumber))
+                {
+                    RecordStatus = RecordStatus.INVALID;
+                    Remark = $"Invalid CreditNote {DocNumber} with no reference invoice number";
+                }
             }
             SourceApp = "AR";
             EtrSeqNumber = clientBranch.SaleInvoiceSeq;
@@ -519,14 +524,14 @@ namespace iTaxSuite.Library.Models.Entities
         public string Description { get; set; }
         [NotMapped]
         public string _pkgUnitCode { get; set; }
-        [Required]
+        //[Required]
         [StringLength(8)]
         public string PkgUnitCode { get; set; }
         [Precision(19, 3)]
         public decimal Package { get; set; }
         [NotMapped]
         public string _qtyUnitCode { get; set; }
-        [Required]
+        //[Required]
         [StringLength(8)]
         public string QtyUnitCode { get; set; }
         [Precision(19, 3)]
@@ -562,7 +567,6 @@ namespace iTaxSuite.Library.Models.Entities
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
             : this()
         {
-            SalesTrxID = salesTransact.SalesTrxID;
             SalesTransact = salesTransact;
             BranchCode = salesTransact.BranchCode;
 
@@ -642,7 +646,6 @@ namespace iTaxSuite.Library.Models.Entities
         public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice, 
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.InvoiceDetail item, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
         {
-            SalesTrxID = salesTransact.SalesTrxID;
             SalesTransact = salesTransact;
             BranchCode = salesTransact.BranchCode;
 
@@ -727,10 +730,10 @@ namespace iTaxSuite.Library.Models.Entities
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
             : this()
         {
-            SalesTrxID = salesTransact.SalesTrxID;
             SalesTransact = salesTransact;
             BranchCode = salesTransact.BranchCode;
 
+            SourceLineNo = item.LineNumber;
             ItemSeqNumber = -1;
             ProductCode = $"IC:{item.Item}";
             Description = item.Description;
@@ -738,7 +741,7 @@ namespace iTaxSuite.Library.Models.Entities
             IsStockable = item.StockItem;
 
             _pkgUnitCode = item.InvoiceUnitOfMeasure;
-            Package = item.QuantityShipped;
+            Package = item.QuantityShipped != 0 ? item.QuantityShipped : 1;
 
             _qtyUnitCode = item.PricingUnit;
             Quantity = Package * item.PricingUnitConversion;
@@ -799,6 +802,7 @@ namespace iTaxSuite.Library.Models.Entities
             DiscountRate = item.DiscountPercent;
             DiscountAmount = item.DiscountedExtendedAmount;
         }
+
     }
 
 }

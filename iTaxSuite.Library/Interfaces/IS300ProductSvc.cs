@@ -20,5 +20,6 @@ namespace iTaxSuite.Library.Interfaces
         Task<Result<Product, string>> ReFetchProduct(ProductKey productKey);
         Task<Result<BranchStockLevel, string>> SaveStockLevel(SaveStockLevel saveStockLevel);
         Task<Result<List<string>, string>> SyncTaxProducts();
+        Task<Result<List<EtimsTransact>, string>> PostPendingProducts();
     }
 }

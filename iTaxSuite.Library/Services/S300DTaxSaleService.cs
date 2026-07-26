@@ -6,7 +6,6 @@ using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Sage.CA.SBS.ERP.Sage300.Common.Models;
 using Scriban;
 using StackExchange.Redis;
 
@@ -16,6 +15,9 @@ namespace iTaxSuite.Library.Services
     {
         private readonly IDigiTaxService _dTaxService;
         private readonly bool FixMultiLine = true;
+
+        private readonly SemaphoreSlim _smFetchOEInvoices = new(1, 1);
+        private readonly SemaphoreSlim _smFetchOECRNotes = new(1, 1);
 
         public S300DTaxSaleService(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, IHttpClientFactory httpClientFactory,
             ExtSystConfig extSystConfig, IMasterDataSvc masterDataSvc, IDigiTaxService dTaxService)
@@ -154,13 +156,16 @@ namespace iTaxSuite.Library.Services
                             _customer = sCustomer.GetValue();
 
                             var arSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, _taxGroup, taxAuthKeys);
-                            var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, true);
+                            var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, false);
                             if (mapResult.IsError)
                             {
                                 _strError = mapResult.GetError();
                                 UI.Error($"{_method_} ARInvoice:[{invoice.BatchNumber}:{invoice.DocumentNumber}] MapSalesInvcAttribs error : {_strError}");
-                                arSaleTrx.RecordStatus = RecordStatus.INVALID;
-                                arSaleTrx.Remark = _strError;
+                                if (arSaleTrx.RecordStatus != RecordStatus.INVALID)
+                                {
+                                    arSaleTrx.RecordStatus = RecordStatus.INVALID;
+                                    arSaleTrx.Remark = _strError;
+                                }
                             }
                             else
                             {
@@ -204,7 +209,7 @@ namespace iTaxSuite.Library.Services
 
                             if (arSaleTrx.RecordStatus == RecordStatus.NONE)
                                 arSaleTrx.RecordStatus = RecordStatus.QUEUEDOUT;
-                            else
+                            else if (arSaleTrx.RecordStatus != RecordStatus.INVALID)
                                 arSaleTrx.RecordStatus = RecordStatus.DEPENDS;
 
                             var salesTrxData = new SalesTrxData(arSaleTrx, dTaxSaveSaleReq, invoice);
@@ -404,7 +409,7 @@ namespace iTaxSuite.Library.Services
                             _customer = sCustomer.GetValue();
 
                             var arSaleTrx = new SalesTransact(_clientBranch, _customer, crNote, _taxGroup, taxAuthKeys);
-                            var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, true);
+                            var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, false);
                             if (mapResult.IsError)
                             {
                                 _strError = mapResult.GetError();
@@ -422,8 +427,11 @@ namespace iTaxSuite.Library.Services
                             {
                                 _strError = $"Invalid/Unprocessed Parent Invoice : {crNote.ApplytoDocument} for ARCRNote:[{crNote.BatchNumber}:{crNote.DocumentNumber}]";
                                 UI.Error($"{_method_} error : {_strError}");
-                                arSaleTrx.RecordStatus = RecordStatus.DEPENDS;
-                                arSaleTrx.Remark = _strError;
+                                if (arSaleTrx.RecordStatus != RecordStatus.INVALID)
+                                {
+                                    arSaleTrx.RecordStatus = RecordStatus.DEPENDS;
+                                    arSaleTrx.Remark = _strError;
+                                }
                             }
 
                             #region Product-Duplicity workaround
@@ -463,7 +471,7 @@ namespace iTaxSuite.Library.Services
 
                             if (arSaleTrx.RecordStatus == RecordStatus.NONE)
                                 arSaleTrx.RecordStatus = RecordStatus.QUEUEDOUT;
-                            else
+                            else if (arSaleTrx.RecordStatus != RecordStatus.INVALID)
                                 arSaleTrx.RecordStatus = RecordStatus.DEPENDS;
 
                             var salesTrxData = new SalesTrxData(arSaleTrx, dTaxSaveCNoteReq, crNote);
@@ -555,6 +563,12 @@ namespace iTaxSuite.Library.Services
             TemplateContext context = null;
             try
             {
+                if (!await _smFetchOEInvoices.WaitAsync(0))
+                {
+                    _strError = "FetchOEInvoices is already running. Please wait for it to complete.";
+                    UI.Warn($"{_method_} : {_strError}");
+                    return _strError;
+                }
                 UI.Debug($">> {_method_}");
                 var syncChannel = _syncChannelMap[GeneralConst.OE_INVOICE_SYNC];
                 var invoiceMap = await _dbContext.SalesTransact.Where(e => e.SourceApp == "OE" && e.DocType == DocumentType.INVOICE)
@@ -563,6 +577,7 @@ namespace iTaxSuite.Library.Services
                 qParams["$filter"] = string.Format("{0} ge {1}Z", syncChannel.DateCol, syncChannel.GetMinDate().Date.ToString("s"));
 
                 var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(180);
                 string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/OE/OEInvoices");
 
                 var gResult = await _masterDataSvc.GetTaxGroups();
@@ -609,7 +624,7 @@ namespace iTaxSuite.Library.Services
 
                     if (!string.IsNullOrWhiteSpace(syncChannel.ParseSyntax?.Filter))
                     {
-                        scribanHelper.Add("list", invList.Invoices);
+                        scribanHelper["list"] = invList.Invoices;
                         int skipped = 0;
                         for (int i = 0; i < invList.Invoices.Count; i++)
                         {
@@ -617,14 +632,14 @@ namespace iTaxSuite.Library.Services
                             bool evalRes = await ScriptHelper.strToBool(currEval, context);
                             if (!evalRes)
                             {
-                                // UI.Info($"{currEval} against [{invList.Invoices[i].OrderNumber}] >> {evalRes}");
+                                UI.Info($"Skipping Invoice {currEval} against [{invList.Invoices[i].OrderNumber}] >> {evalRes}");
                                 invList.Invoices.RemoveAt(i);
                                 skipped++;
                             }
                         }
                         if (skipped > 0)
                         {
-                            UI.Warn($"{_method_} {skipped} invoices against Filter: {syncChannel.ParseSyntax?.Filter}");
+                            UI.Info($"{_method_} skipped {skipped} invoices against Filter: {syncChannel.ParseSyntax?.Filter}. Processing {invList.Invoices.Count-skipped} remaining invoices.");
                         }
                     }
 
@@ -756,7 +771,7 @@ namespace iTaxSuite.Library.Services
                                 await _dbTrans.RollbackAsync();
                                 _dbContext.ChangeTracker.Clear();
                                 _clientBranch.SaleInvoiceSeq = _etrSeqValue;
-                                UI.Error(iex, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
+                                UI.Error(iex, $"{_method_} OEInvoice:{oeSaleTrx.DocNumber} save valid record error : {iex.GetBaseException().Message}");
                                 continue;
                             }
                         }
@@ -777,6 +792,10 @@ namespace iTaxSuite.Library.Services
                 UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
             }
+            finally
+            {
+                _smFetchOEInvoices.Release();
+            }
 
             return results;
         }
@@ -791,7 +810,13 @@ namespace iTaxSuite.Library.Services
             HashSet<string> taxAuthKeys = null;
             try
             {
-                UI.Info($">> {_method_}");
+                if (!await _smFetchOECRNotes.WaitAsync(0))
+                {
+                    _strError = "FetchOECRDRNotes is already running. Please wait for it to complete.";
+                    UI.Warn($"{_method_} : {_strError}");
+                    return _strError;
+                }
+                UI.Debug($">> {_method_}");
                 var syncChannel = _syncChannelMap[GeneralConst.OE_CRDRNOTE_SYNC];
                 var invoiceMap = await _dbContext.SalesTransact.Where(e => e.SourceApp == "OE" && e.DocType == DocumentType.CREDITNOTE)
                     .ToDictionaryAsync(e => e.DocNumber, e => e.DocStamp);
@@ -799,6 +824,7 @@ namespace iTaxSuite.Library.Services
                 qParams["$filter"] = string.Format("{0} ge {1}Z", syncChannel.DateCol, syncChannel.GetMinDate().Date.ToString("s"));
 
                 var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(180);
                 string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/OE/OECreditDebitNotes");
 
                 var gResult = await _masterDataSvc.GetTaxGroups();
@@ -936,13 +962,13 @@ namespace iTaxSuite.Library.Services
                             {
                                 if (_dbContext.SalesTransact.AddIfNotExists(oeSaleTrx, p => p.DocNumber == oeSaleTrx.DocNumber) == null)
                                 {
-                                    UI.Warn($"OEInvoice {oeSaleTrx.DocNumber} Already Exists");
+                                    UI.Warn($"OECRNote {oeSaleTrx.DocNumber} Already Exists");
                                     continue;
                                 }
                                 _dbContext.Attach(_clientBranch);
                                 if (_dbContext.SaveChanges() < 1)
                                 {
-                                    throw new Exception($"OEInvoice {oeSaleTrx.DocNumber} saving to database failed");
+                                    throw new Exception($"OECRNote {oeSaleTrx.DocNumber} saving to database failed");
                                 }
 
                                 _clientBranch.SaleInvoiceSeq = (_etrSeqValue + 1);
@@ -972,7 +998,7 @@ namespace iTaxSuite.Library.Services
                                 await _dbTrans.RollbackAsync();
                                 _dbContext.ChangeTracker.Clear();
                                 _clientBranch.SaleInvoiceSeq = _etrSeqValue;
-                                UI.Error(iex, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
+                                UI.Error(iex, $"{_method_} OECRNote: {oeSaleTrx.DocNumber} save valid record error : {iex.GetBaseException().Message}");
                                 continue;
                             }
                         }
@@ -991,6 +1017,10 @@ namespace iTaxSuite.Library.Services
             {
                 UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
+            }
+            finally
+            {
+                _smFetchOECRNotes.Release();
             }
 
             return results;
@@ -1016,7 +1046,7 @@ namespace iTaxSuite.Library.Services
                 string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/OE/OEInvoices");
 
                 oeSaleTrx = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
-                    .FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
                 if (oeSaleTrx is null)
                 {
                     _strError = $"Invalid or missing OEInvoice {oeSaleTrx.DocNumber} in SalesTransact data";
@@ -1134,7 +1164,7 @@ namespace iTaxSuite.Library.Services
                 }
 
                 saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
-                    .FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
                 if (saleTransact is null)
                 {
                     _strError = $"Invalid or missing SalesTransact {saleTransact.DocNumber} in SalesTransact data";
@@ -1282,7 +1312,7 @@ namespace iTaxSuite.Library.Services
                 #endregion
 
                 var arSaleTrx = new SalesTransact(_clientBranch, _customer, invoice, _taxGroup, taxAuthKeys);
-                var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, true);
+                var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, false);
                 if (mapResult.IsError)
                 {
                     _strError = mapResult.GetError();
@@ -1450,7 +1480,7 @@ namespace iTaxSuite.Library.Services
                 #endregion
 
                 var arSaleTrx = new SalesTransact(_clientBranch, _customer, crNote, _taxGroup, taxAuthKeys);
-                var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, true);
+                var mapResult = await _masterDataSvc.MapSalesInvcAttribs(arSaleTrx, false);
                 if (mapResult.IsError)
                 {
                     _strError = mapResult.GetError();
@@ -1870,7 +1900,7 @@ namespace iTaxSuite.Library.Services
 
                 if (!string.IsNullOrWhiteSpace(syncChannel.ParseSyntax?.Filter))
                 {
-                    scribanHelper.Add("list", invList.Invoices);
+                    scribanHelper["list"] = invList.Invoices;
                     int skipped = 0;
 
                     for (int i = 0; i < invList.Invoices.Count; i++)
@@ -1886,7 +1916,7 @@ namespace iTaxSuite.Library.Services
                     }
                     if (skipped > 0)
                     {
-                        UI.Warn($"{_method_} {skipped} invoices against Filter: {syncChannel.ParseSyntax?.Filter}");
+                        UI.Warn($"{_method_} skipped {skipped} invoices against Filter: {syncChannel.ParseSyntax?.Filter}");
                     }
                 }
                 UI.Info($"{_method_} {invList.Invoices.Count} OEInvoices final to process");
@@ -1911,7 +1941,7 @@ namespace iTaxSuite.Library.Services
                     var xData = await _dbContext.SalesTransact.Include(x => x.SalesTrxData)
                         .Where(x => !string.IsNullOrWhiteSpace(x.SalesTrxData.ResponsePayload)
                             && (x.QRImage == null || x.QRImage.Length == 0)
-                        ).ToListAsync();
+                        ).AsSplitQuery().ToListAsync();
                     foreach (var item in xData)
                     {
                         var etrSalesResp = JsonConvert.DeserializeObject<TrnsSalesSaveResp>(item.SalesTrxData.ResponsePayload);
@@ -1978,7 +2008,7 @@ namespace iTaxSuite.Library.Services
                 }
                 UI.Info($"{_method_} >> {JsonConvert.SerializeObject(saleCallback)}");
                 var saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
-                    .FirstOrDefaultAsync(e => e.DocNumber.Equals(saleCallback.CBData.TraderInvoiceNo));
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber.Equals(saleCallback.CBData.TraderInvoiceNo));
                 if (saleTransact is null)
                 {
                     _strError = $"Invalid DigiTax SalesTransact request for DocNumber: {saleCallback.CBData.TraderInvoiceNo}";
@@ -2037,6 +2067,12 @@ namespace iTaxSuite.Library.Services
                             .SetProperty(x => x.UpdatedOn, tStamp)
                             .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
                         );
+                // Update RefCUNumber for CreditNote if applicable
+                changes += await _dbContext.SalesTransact.Where(e => e.DocType == DocumentType.CREDITNOTE
+                    && e.RefInvNumber == saleTransact.DocNumber && string.IsNullOrWhiteSpace(e.RefCUNumber))
+                    .ExecuteUpdateAsync(x => x
+                    .SetProperty(x => x.RefCUNumber, cuNumber)
+                );
 
                 return changes;
             }
@@ -2065,7 +2101,7 @@ namespace iTaxSuite.Library.Services
 
                 var saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
                     .Where(e => e.BranchCode.Equals(filter.BranchCode) && e.DocNumber.Equals(filter.DocNumber))
-                    .FirstOrDefaultAsync();
+                    .AsSplitQuery().FirstOrDefaultAsync();
                 if (saleTransact is null)
                 {
                     _strError = $"No valid stock item found for Document: {filter.DocNumber}";
@@ -2210,6 +2246,12 @@ namespace iTaxSuite.Library.Services
                                 .SetProperty(x => x.LastTry, tStamp)
                                 .SetProperty(x => x.UpdatedOn, tStamp)
                                 .SetProperty(x => x.UpdatedBy, GeneralConst.APPLICATION_NAME)
+                            );
+                            // Update RefCUNumber for CreditNote if applicable
+                            _dbChanges += await _dbContext.SalesTransact.Where(e => e.DocType == DocumentType.CREDITNOTE 
+                                && e.RefInvNumber == saleTransact.DocNumber && string.IsNullOrWhiteSpace(e.RefCUNumber))
+                                .ExecuteUpdateAsync(x => x
+                                .SetProperty(x => x.RefCUNumber, cuNumber)
                             );
 
                             await _dbTrans.CommitAsync();
@@ -2481,7 +2523,7 @@ namespace iTaxSuite.Library.Services
                         if (_dbChanges > 0)
                         {
                             saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
-                            .FirstOrDefaultAsync(e => e.DocNumber == saleTransact.DocNumber);
+                            .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber == saleTransact.DocNumber);
                         }
                     }
                     catch (Exception iex)
@@ -2506,14 +2548,14 @@ namespace iTaxSuite.Library.Services
             try
             {
                 int counter = 0;
-                UI.Info($"{_method_} starting synchronization");
+                UI.Debug($"{_method_} starting synchronization");
                 var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL };
                 
                 var queueList = await _dbContext.SalesTransact.Include(x => x.SalesTrxData).Where(x => 
                     !completeStatii.Contains(x.RecordStatus) && x.SalesTrxData != null
                     && string.IsNullOrWhiteSpace(x.QRText) && !string.IsNullOrWhiteSpace(x.OfflineURL)
                     && !string.IsNullOrWhiteSpace(x.ExternalID) && EF.Functions.DateDiffSecond(x.LastTry,DateTime.Now) > 60)
-                    .OrderBy(x => x.CreatedOn).Take(10).ToListAsync();
+                    .OrderBy(x => x.CreatedOn).Take(10).AsSplitQuery().ToListAsync();
                 counter = queueList.Count;
                 UI.Debug($"{_method_} resyncing {queueList.Count} transactions");
                 foreach (var item in queueList)

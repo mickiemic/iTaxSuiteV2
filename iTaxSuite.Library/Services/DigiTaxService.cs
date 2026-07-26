@@ -168,7 +168,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
-                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/items");
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/stock/adjust");
                 var headers = new Dictionary<string, string>() { { "x-api-key", _clientBranch.TaxClient.APIKey } };
                 string jsonRequest = JsonConvert.SerializeObject(stockAdjustReq);
                 UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");

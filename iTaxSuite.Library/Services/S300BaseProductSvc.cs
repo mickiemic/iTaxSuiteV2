@@ -78,7 +78,7 @@ namespace iTaxSuite.Library.Services
             PagedResult<StockItem> result = new();
             try
             {
-                var query = _dbContext.StockItems.Include(e => e.Product).AsQueryable();
+                var query = _dbContext.StockItems.Include(e => e.Product).AsSplitQuery().AsQueryable();
                 if (filter != null && filter.RecordGroup != RecordStatusGroup.ALL)
                 {
                     if (filter.RecordGroup == RecordStatusGroup.FAILED)
@@ -186,7 +186,7 @@ namespace iTaxSuite.Library.Services
 
                 var client = _httpClientFactory.CreateClient();
 
-                product = await _dbContext.Products.Include(p => p.ProductData)
+                product = await _dbContext.Products.Include(p => p.ProductData).AsSplitQuery()
                     .FirstOrDefaultAsync(p => p.ProductCode == productKey.ProductCode);
                 if (product is null)
                 {

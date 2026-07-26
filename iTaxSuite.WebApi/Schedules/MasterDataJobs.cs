@@ -63,7 +63,6 @@ namespace iTaxSuite.WebApi.Schedules
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
-
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -73,6 +72,38 @@ namespace iTaxSuite.WebApi.Schedules
                 var products = await _productSvc.FetchGLProducts();
                 if (products != null && products.Count > 0)
                     UI.Info($"{_method_} products to process count:{products.Count}");
+            }
+        }
+    }
+
+    public class AllProductsPost
+    {
+        public const string JobId = $"job-{CacheConst.ALL_PRODUCTSPOST_JOBKEY}";
+        private readonly IS300ProductSvc _productSvc;
+
+        public AllProductsPost(IEnumerable<IS300ProductSvc> productSvcs)
+        {
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+        }
+
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
+        [JobDisplayName(JobId + "-executeasync")]
+        public async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            string _method_ = $"{JobId}:ExecuteAsync";
+            if (!stoppingToken.IsCancellationRequested)
+            {
+                var result = await _productSvc.PostPendingProducts();
+                if (result.IsError)
+                {
+                    UI.Error($"{_method_} PostPendingProducts error:{result.GetError()}");
+                }
+                else
+                {
+                    var postTrxs = result.GetValue();
+                    if (postTrxs.Count > 0)
+                        UI.Info($"{_method_} PostPendingProducts processed count:{postTrxs.Count}");
+                }
             }
         }
     }
@@ -120,6 +151,7 @@ namespace iTaxSuite.WebApi.Schedules
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -151,6 +183,7 @@ namespace iTaxSuite.WebApi.Schedules
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -183,6 +216,7 @@ namespace iTaxSuite.WebApi.Schedules
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -214,6 +248,8 @@ namespace iTaxSuite.WebApi.Schedules
             _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
         }
 
+        [DisableConcurrentExecution(timeoutInSeconds: 30)]
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
         [JobDisplayName(JobId + "-executeasync")]
         public async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -268,7 +304,7 @@ namespace iTaxSuite.WebApi.Schedules
 
     public class AllTaxTrxsPost
     {
-        public const string JobId = $"job-{CacheConst.ALL_TAXPOSTTRX_HASHKEY}";
+        public const string JobId = $"job-{CacheConst.ALL_TAXPOSTTRX_JOBKEY}";
         private readonly IS300SaleService _saleSvc;
 
         public AllTaxTrxsPost(IEnumerable<IS300SaleService> saleSvcs)
@@ -300,7 +336,7 @@ namespace iTaxSuite.WebApi.Schedules
 
     public class AllTaxTrxsSync
     {
-        public const string JobId = $"job-{CacheConst.ALL_TAXSYNCTRX_HASHKEY}";
+        public const string JobId = $"job-{CacheConst.ALL_TAXSYNCTRX_JOBKEY}";
         private readonly IS300SaleService _saleSvc;
         public AllTaxTrxsSync(IEnumerable<IS300SaleService> saleSvcs)
         {

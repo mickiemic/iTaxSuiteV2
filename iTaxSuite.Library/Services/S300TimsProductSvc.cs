@@ -405,7 +405,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product)
-                    .FirstOrDefaultAsync(x => x.BranchCode == _clientBranch.BranchCode
+                    .AsSplitQuery().FirstOrDefaultAsync(x => x.BranchCode == _clientBranch.BranchCode
                     && x.ProductCode == stockIORequest.ProductCode);
                 if (stockItem is null)
                 {
@@ -441,7 +441,7 @@ namespace iTaxSuite.Library.Services
 
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
                     .Where(e => e.BranchCode.Equals(filter.BranchCode) && e.ProductCode.Equals(filter.ProductCode))
-                    .FirstOrDefaultAsync();
+                    .AsSplitQuery().FirstOrDefaultAsync();
                 if (stockItem is null)
                     return $"No valid stock item found for ProductCode: {filter.ProductCode}";
                 //TODO: Check Status before queueing
@@ -479,7 +479,7 @@ namespace iTaxSuite.Library.Services
                 // Get Item Status
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
                     .Where(e => e.BranchCode == _docParts[0] && e.ProductCode == _docParts[1]).OrderBy(e => e.CreatedOn)
-                    .AsNoTracking().FirstOrDefaultAsync();
+                    .AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                 var etimsRequest = stockItem.Product.ProductData.GetEtimsRequest();
 
                 var eTimsResp = await _etimsService.CreateEtimsItem(etimsRequest);
@@ -604,7 +604,7 @@ namespace iTaxSuite.Library.Services
                 // Get Item Status
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
                     .Where(e => e.BranchCode == saveStockLevel.BranchCode && e.ProductCode == saveStockLevel.ProductCode)
-                    .OrderBy(e => e.CreatedOn).AsNoTracking().FirstOrDefaultAsync();
+                    .OrderBy(e => e.CreatedOn).AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                 if (stockItem is null)
                 {
                     _strError = $"StockItem with BranchCode {saveStockLevel.BranchCode} and ProductCode {saveStockLevel.ProductCode} Not Found";
@@ -685,7 +685,7 @@ namespace iTaxSuite.Library.Services
                 // Get IO Transaction
                 var stockMovement = await _dbContext.StockMovement.Include(e => e.StockMovData)
                     .Where(e => e.BranchCode == _ioParts[0] && e.DocNumber == transactIO.DocNumber).OrderBy(e => e.CreatedOn)
-                    .AsNoTracking().FirstOrDefaultAsync();
+                    .AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                 var etimsReqTwo = stockMovement.StockMovData.GetEtimsRequest();
 
                 var eTimsRespIO = await _etimsService.SaveEtimsStockIO(etimsReqTwo);
@@ -784,6 +784,11 @@ namespace iTaxSuite.Library.Services
         }
 
         public Task<Result<int, string>> ProcessItemCallback(ItemCallback itemCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Result<List<EtimsTransact>, string>> PostPendingProducts()
         {
             throw new NotImplementedException();
         }

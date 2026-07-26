@@ -100,7 +100,7 @@ namespace iTaxSuite.Library.Services
                 }
 
                 saleTrx = await _dbContext.SalesTransact.Include(e => e.SalesTrxData).Include(x => x.SalesItems)
-                    .FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
                 if (saleTrx is null)
                 {
                     _strError = $"Invalid or missing SalesTransact {saleTrx.DocNumber} in SalesTransact data";

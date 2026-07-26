@@ -17,6 +17,7 @@
         public const string IC_PRODUCT_HASHKEY = "ic-products";
         public const string AR_PRODUCT_HASHKEY = "ar-products";
         public const string GL_PRODUCT_HASHKEY = "gl-products";
+        public const string ALL_PRODUCTSPOST_JOBKEY = "all-productspost";
 
         public const string TXSALES_OEINV_HASHKEY = "tax-oesalesinv";
         public const string TXSALES_OECNT_HASHKEY = "tax-oesalescnt";
@@ -25,8 +26,8 @@
         public const string TXPURCHASE_HASHKEY = "tax-purchases";
         public const string TXSTOCKMVT_HASHKEY = "stock-movement";
 
-        public const string ALL_TAXPOSTTRX_HASHKEY = "all-taxposttrx";
-        public const string ALL_TAXSYNCTRX_HASHKEY = "all-taxsynctrx";
+        public const string ALL_TAXPOSTTRX_JOBKEY = "all-taxposttrx";
+        public const string ALL_TAXSYNCTRX_JOBKEY = "all-taxsynctrx";
     }
 
     public static class MapperConst

@@ -302,7 +302,8 @@ namespace iTaxSuite.Library.Services
                 }
                 if (reload || itemMap.Count == 0)
                 {
-                    var dbResult = _dbContext.StockItems.Include(s => s.Product).Select(x => new StockItemKey(x)).AsNoTracking().ToList();
+                    var dbResult = _dbContext.StockItems.Include(s => s.Product).Select(x => new StockItemKey(x))
+                        .AsSplitQuery().AsNoTracking().ToList();
                     foreach (var stockItemKey in dbResult)
                     {
                         var _hashKey_ = stockItemKey.ProductCode;
@@ -421,6 +422,11 @@ namespace iTaxSuite.Library.Services
                     salesTransact.SalesItems[i].TaxItemCode = stockItemKey.TaxItemCode;
                     salesTransact.SalesItems[i].ExternalID = stockItemKey.ExternalID;
                     salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
+                    if (string.IsNullOrWhiteSpace(salesTransact.SalesItems[i].Description) 
+                        && !string.IsNullOrWhiteSpace(stockItemKey.Description))
+                    {
+                        salesTransact.SalesItems[i].Description = stockItemKey.Description;
+                    }
                     salesTransact.SalesItems[i].PkgUnitCode = stockItemKey.PackageUnit;
                     salesTransact.SalesItems[i].QtyUnitCode = stockItemKey.QuantityUnit;
                     salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
@@ -461,7 +467,7 @@ namespace iTaxSuite.Library.Services
                         _baseDb.KeyDelete(_hashKey_);
                     }
 
-                    foreach (var item in _dbContext.StockItems.Include(e => e.Product).Select(x => new StockItemKey(x)).AsNoTracking())
+                    foreach (var item in _dbContext.StockItems.Include(e => e.Product).Select(x => new StockItemKey(x)).AsSplitQuery().AsNoTracking())
                     {
                         productMap[item.ProductCode] = item;
                         if (!_baseDb.SetHashValue(_hashKey_, item.ProductCode, item))

@@ -137,7 +137,7 @@ namespace iTaxSuite.Library.Services
                 var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL };
                 var _dbTrx =  await _dbContext.PurchTransact.Include(x => x.PurchTrxData)
                     .Where(x => x.PurchaseID == purchTransact.PurchaseID && !completeStatii.Contains(x.RecordStatus))
-                    .OrderBy(e => e.CreatedOn).AsNoTracking().FirstOrDefaultAsync();
+                    .OrderBy(e => e.CreatedOn).AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                 if (_dbTrx == null)
                 {
                     _strError = $"No PurchTransact {purchTransact.CacheKey} available for processing";

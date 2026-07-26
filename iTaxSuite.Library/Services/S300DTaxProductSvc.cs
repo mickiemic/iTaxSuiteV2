@@ -6,6 +6,7 @@ using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using Sage.CA.SBS.ERP.Sage300.Common.Models;
 using StackExchange.Redis;
 
 namespace iTaxSuite.Library.Services
@@ -405,7 +406,7 @@ namespace iTaxSuite.Library.Services
                 var stockItemMap = await _dbContext.StockItems.Include(stock => stock.Product)
                         .ThenInclude(prod => prod.ProductData)
                         .Where(x => !completeStatii.Contains(x.RecordStatus))
-                        .ToDictionaryAsync(x => x.ProductCode, x => x);
+                        .AsSplitQuery().ToDictionaryAsync(x => x.ProductCode, x => x);
                 if (stockItemMap == null || stockItemMap.Count == 0)
                 {
                     return "There are no items to update";
@@ -491,7 +492,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                var stockItem = await _dbContext.StockItems.Include(e => e.Product)
+                var stockItem = await _dbContext.StockItems.Include(e => e.Product).AsSplitQuery()
                     .FirstOrDefaultAsync(x => x.BranchCode == _clientBranch.BranchCode
                     && x.ProductCode == stockIORequest.ProductCode);
                 if (stockItem is null)
@@ -530,9 +531,9 @@ namespace iTaxSuite.Library.Services
                 var _docParts = transact.DocNumber.Split(":");
 
                 // Get Item Status
-                var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
+                var stockItem = await _dbContext.StockItems.Include(e => e.Product).ThenInclude(p => p.ProductData)
                     .Where(e => e.BranchCode == _docParts[0] && e.ProductCode == _docParts[1]).OrderBy(e => e.CreatedOn)
-                    .AsNoTracking().FirstOrDefaultAsync();
+                    .AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                 var dTaxRequest = stockItem.Product.ProductData.GetDTaxRequest();
 
                 var dTaxResp = await _dTaxService.CreateDTaxItem(dTaxRequest);
@@ -660,8 +661,8 @@ namespace iTaxSuite.Library.Services
                 if (string.IsNullOrWhiteSpace(filter.ProductCode) || string.IsNullOrWhiteSpace(filter.BranchCode))
                     return $"Invalid Filter Provided : [{filter.BranchCode}:{filter.ProductCode}]";
 
-                var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
-                    .FirstOrDefaultAsync(e => e.BranchCode.Equals(filter.BranchCode) && e.ProductCode.Equals(filter.ProductCode)
+                var stockItem = await _dbContext.StockItems.Include(e => e.Product).ThenInclude(p => p.ProductData)
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.BranchCode.Equals(filter.BranchCode) && e.ProductCode.Equals(filter.ProductCode)
                     && !completeStatii.Contains(e.RecordStatus));
                 if (stockItem is null)
                     return $"No valid stock item found for ProductCode: {filter.ProductCode}";
@@ -765,6 +766,40 @@ namespace iTaxSuite.Library.Services
             }
         }
 
+        public async Task<Result<List<EtimsTransact>,string>> PostPendingProducts()
+        {
+            string _method_ = "PostPendingProducts";
+            var result = new List<EtimsTransact>();
+            try
+            {
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.DEPENDS };
+                var pendingItems = await _dbContext.StockItems.Include(e => e.Product).ThenInclude(p => p.ProductData)
+                    .AsSplitQuery().Where(e => !completeStatii.Contains(e.RecordStatus) 
+                    && !string.IsNullOrWhiteSpace(e.Product.ProductData.RequestPayload)).ToListAsync();
+                foreach(var stockItem in pendingItems)
+                {
+                    var stockKey = new BranchStockKey()
+                    {
+                        ProductCode = stockItem.ProductCode
+                    };
+                    var processResult = await QueueSaveProduct(stockKey);
+                    if (processResult.IsError)
+                    {
+                        UI.Error($"{_method_} error: {processResult.GetError()}");
+                        continue;
+                    }
+                    result.Add(processResult.GetValue());
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
         public async Task<Result<int,string>> ProcessItemCallback(ItemCallback itemCallback)
         {
             string _method_ = "ProcessItemCallback";
@@ -772,8 +807,8 @@ namespace iTaxSuite.Library.Services
             {
                 int changes = 0;
                 UI.Info($"{_method_} >> {JsonConvert.SerializeObject(itemCallback)}");
-                var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
-                    .FirstOrDefaultAsync(e => e.ExternalID.Equals(itemCallback.CBData.ID));
+                var stockItem = await _dbContext.StockItems.Include(e => e.Product).ThenInclude(p => p.ProductData)
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.ExternalID.Equals(itemCallback.CBData.ID));
                 if (stockItem is null)
                 {
                     return $"Invalid DigiTax CreateItem request for ExternalID: {itemCallback.CBData.ID}";

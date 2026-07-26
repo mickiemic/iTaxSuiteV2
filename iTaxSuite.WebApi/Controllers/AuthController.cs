@@ -55,11 +55,14 @@ namespace iTaxSuite.WebApi.Controllers
                 };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (!result.Succeeded)
+                {
+                    UI.Error($"{_method_} error : {string.Join(", ", result.Errors.Select(e => e.Description))}");
                     return StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse
                     {
                         Status = "Error",
                         Message = "User creation failed! Please check user details and try again."
                     });
+                }
                 if (!await _roleManager.RoleExistsAsync(UserRoles.User))
                     await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
                 if (await _roleManager.RoleExistsAsync(UserRoles.User))

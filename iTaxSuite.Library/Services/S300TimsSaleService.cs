@@ -104,7 +104,7 @@ namespace iTaxSuite.Library.Services
                     var xData = await _dbContext.SalesTransact.Include(x => x.SalesTrxData)
                         .Where(x => !string.IsNullOrWhiteSpace(x.SalesTrxData.ResponsePayload) 
                             && (x.QRImage == null || x.QRImage.Length == 0)
-                        ).ToListAsync();
+                        ).AsSplitQuery().ToListAsync();
                     foreach (var item in xData)
                     {
                         var etrSalesResp = JsonConvert.DeserializeObject<TrnsSalesSaveResp>(item.SalesTrxData.ResponsePayload);
@@ -354,7 +354,7 @@ namespace iTaxSuite.Library.Services
                 string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/OE/OEInvoices");
 
                 oeSaleTrx = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
-                    .FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
                 if (oeSaleTrx is null)
                 {
                     _strError = $"Invalid or missing OEInvoice {oeSaleTrx.DocNumber} in SalesTransact data";
@@ -857,7 +857,7 @@ namespace iTaxSuite.Library.Services
                 }
 
                 saleTrx = await _dbContext.SalesTransact.Include(e => e.SalesTrxData).Include(x => x.SalesItems)
-                    .FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
+                    .AsSplitQuery().FirstOrDefaultAsync(e => e.DocNumber == saleTrxKey.DocNumber);
                 if (saleTrx is null)
                 {
                     _strError = $"Invalid or missing SalesTransact {saleTrx.DocNumber} in SalesTransact data";
@@ -1469,7 +1469,7 @@ namespace iTaxSuite.Library.Services
 
                 var saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
                     .Where(e => e.BranchCode.Equals(filter.BranchCode) && e.DocNumber.Equals(filter.DocNumber))
-                    .FirstOrDefaultAsync();
+                    .AsSplitQuery().FirstOrDefaultAsync();
                 if (saleTransact is null)
                 {
                     _strError = $"No valid stock item found for Document: {filter.DocNumber}";
@@ -1554,7 +1554,7 @@ namespace iTaxSuite.Library.Services
                 // Get Sale Item
                 var saleTransact = await _dbContext.SalesTransact.Include(e => e.SalesTrxData)
                     .Where(e => e.BranchCode == _saleParts[0] && e.DocNumber == _saleParts[1])
-                    .OrderBy(e => e.CreatedOn).AsNoTracking().FirstOrDefaultAsync();
+                    .OrderBy(e => e.CreatedOn).AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                 var etimsReqOne = saleTransact.SalesTrxData.GetEtimsRequest();
 
                 var etimsRespSale = await _etimsService.SaveEtimsSale(etimsReqOne);
@@ -1700,7 +1700,7 @@ namespace iTaxSuite.Library.Services
                         // Get IO Transaction
                         var stockMovement = await _dbContext.StockMovement.Include(e => e.StockMovData)
                             .Where(e => e.BranchCode == _ioParts[0] && e.DocNumber == transactSale.DocNumber).OrderBy(e => e.CreatedOn)
-                            .AsNoTracking().FirstOrDefaultAsync();
+                            .AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();
                         var etimsReqTwo = stockMovement.StockMovData.GetEtimsRequest();
 
                         var eTimsRespIO = await _etimsService.SaveEtimsStockIO(etimsReqTwo);
