@@ -102,6 +102,13 @@ namespace iTaxSuite.WebApi.Services
                             RecurringJob.AddOrUpdate<AllTaxTrxsSync>(AllTaxTrxsSync.JobId,
                             x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
                     }
+                    else if (channel.ChannelId == GeneralConst.ALL_TAXITMS_SYNC)
+                    {
+                        RecurringJob.RemoveIfExists(AllProductsPost.JobId);
+                        if (channel.IsActive)
+                            RecurringJob.AddOrUpdate<AllProductsPost>(AllProductsPost.JobId,
+                            x => x.ExecuteAsync(cancellationToken), channel.TriggerExpr);
+                    }
                 }
             }
             catch (Exception ex)

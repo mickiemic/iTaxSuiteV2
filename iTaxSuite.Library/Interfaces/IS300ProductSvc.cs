@@ -10,6 +10,7 @@ namespace iTaxSuite.Library.Interfaces
         Task<List<Product>> FetchARProducts();
         Task<List<Product>> FetchGLProducts();
         Task<List<Product>> FetchICProducts();
+        Task<Result<HashSet<string>, string>> FetchSpecificProducts(SalesTransact salesTransact, HashSet<string> productList);
         Task<Result<PagedResult<Product>, string>> GetProducts(ProductFilter filter);
         Task<Result<PagedResult<StockItem>, string>> GetStockItems(StockFilter filter);
         Task<Result<PagedResult<StockMovement>, string>> GetStockMovements(MovementFilter filter);

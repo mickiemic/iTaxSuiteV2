@@ -2,6 +2,7 @@
 using iTaxSuite.CLIApp;
 using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Configs;
 using iTaxSuite.Library.Models.Entities;
@@ -89,9 +90,14 @@ try
         }
 
         _ = services.AddScoped<IMasterDataSvc, MasterDataSvc>();
+        _ = services.AddScoped<IEtimsService, EtimsService>();
         _ = services.AddScoped<IDigiTaxService, DigiTaxService>();
 
-        _ = services.AddSingleton<S300DTaxSaleService>();
+        _ = services.AddScoped<IS300ProductSvc, S300TimsProductSvc>();
+        _ = services.AddScoped<IS300ProductSvc, S300DTaxProductSvc>();
+        _ = services.AddScoped<IS300SaleService, S300TimsSaleService>();
+        _ = services.AddScoped<IS300SaleService, S300DTaxSaleService>();
+
         _ = services.AddSingleton<iTaxDriver>();
     })
     .Build();

@@ -64,13 +64,13 @@ namespace iTaxSuite.WebApi.Controllers
         }
 
         [HttpPost]
-        [Route("refetchoesale")]
-        public async Task<IActionResult> ReFetchOESale(SaleTrxKey saleTrxKey)
+        [Route("refetchsaletrx")]
+        public async Task<IActionResult> ReFetchSaleTrx(SaleBatchTrxKey saleBatchTrxKey)
         {
-            string _method_ = "ReFetchOESale";
+            string _method_ = "ReFetchSaleTrx";
             try
             {
-                var result = await _saleService.ReFetchOEInvoice(saleTrxKey);
+                var result = await _saleService.ReFetchInvoice(saleBatchTrxKey);
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else

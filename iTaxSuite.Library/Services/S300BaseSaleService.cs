@@ -44,8 +44,7 @@ namespace iTaxSuite.Library.Services
                         query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
                             f.RecordStatus == RecordStatus.INVALID);
                     else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
+                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK);
                     else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
                         query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
                             f.RecordStatus == RecordStatus.MANUALOUT);
@@ -90,7 +89,7 @@ namespace iTaxSuite.Library.Services
             SalesTransact saleTrx = null;
             try
             {
-                var okStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL };
+                var okStatii = new List<RecordStatus>() { RecordStatus.POST_OK };
 
                 if (saleTrxKey == null || string.IsNullOrWhiteSpace(saleTrxKey.DocNumber))
                 {

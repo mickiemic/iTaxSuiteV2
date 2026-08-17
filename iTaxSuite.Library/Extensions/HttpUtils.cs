@@ -218,7 +218,7 @@ namespace iTaxSuite.Library.Extensions
             {
                 _requestUrl = QueryHelpers.AddQueryString(baseUrl, parameters);
             }
-            HttpRequestMessage _restRequest = new HttpRequestMessage(HttpMethod.Get, _requestUrl);
+            var _restRequest = new HttpRequestMessage(HttpMethod.Get, _requestUrl);
             var _basicToken = Encoding.ASCII.GetBytes($"{userName}:{password}");
             _restRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(_basicToken));
 

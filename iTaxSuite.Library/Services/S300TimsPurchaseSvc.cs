@@ -134,7 +134,7 @@ namespace iTaxSuite.Library.Services
             {
                 UI.Info($">> {_method_} : {JsonConvert.SerializeObject(purchTransact)}");
 
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_FAIL };
                 var _dbTrx =  await _dbContext.PurchTransact.Include(x => x.PurchTrxData)
                     .Where(x => x.PurchaseID == purchTransact.PurchaseID && !completeStatii.Contains(x.RecordStatus))
                     .OrderBy(e => e.CreatedOn).AsSplitQuery().AsNoTracking().FirstOrDefaultAsync();

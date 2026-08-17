@@ -1,5 +1,6 @@
 ﻿using QRCoder;
 using System.Drawing;
+using ZXing;
 
 namespace iTaxSuite.Library.Extensions
 {
@@ -22,6 +23,31 @@ namespace iTaxSuite.Library.Extensions
             catch (Exception ex)
             {
                 UI.Error(ex, $"GenerateQRCode : {ex.GetBaseException().Message}");
+                return null;
+            }
+        }
+
+        public static string DecodeQRCode(byte[] imageBytes)
+        {
+            try
+            {
+                if (imageBytes == null || imageBytes.Length == 0)
+                    throw new ArgumentException($"ImageBytes is null or empty");
+
+                //TODO: work on a cross-platform qr-decoder implementation
+                using (MemoryStream ms = new MemoryStream(imageBytes))
+                {
+                    using (Bitmap bitmap = (Bitmap)Image.FromStream(ms))
+                    {
+                        var reader = new ZXing.Windows.Compatibility.BarcodeReader();
+                        var result = reader.Decode(bitmap);
+                        return result?.Text;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"DecodeQRCode : {ex.GetBaseException().Message}");
                 return null;
             }
         }

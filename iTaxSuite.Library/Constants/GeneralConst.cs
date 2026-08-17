@@ -31,6 +31,7 @@
         
         public const string ALL_TAXTRXS_POST = "all-taxtrxs-post";
         public const string ALL_TAXTRXS_SYNC = "all-taxtrxs-sync";
+        public const string ALL_TAXITMS_SYNC = "all-taxitems-sync";
 
     }
 

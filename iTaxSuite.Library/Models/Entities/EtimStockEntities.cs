@@ -54,8 +54,7 @@ namespace iTaxSuite.Library.Models.Entities
 
         public EtimsTransact GetTransaction(ClientBranch clientBranch)
         {
-            if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL
-                || RecordStatus == RecordStatus.POST_DUPL || !IsValid())
+            if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL || !IsValid())
                 return null;
 
             var etimsTransact = new EtimsTransact()

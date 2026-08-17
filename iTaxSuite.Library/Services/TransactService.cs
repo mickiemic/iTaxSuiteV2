@@ -48,8 +48,7 @@ namespace iTaxSuite.Library.Services
                         query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
                             f.RecordStatus == RecordStatus.INVALID);
                     else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
+                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK);
                     else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
                         query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
                             f.RecordStatus == RecordStatus.MANUALOUT);
@@ -98,7 +97,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL, RecordStatus.DEPENDS };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_FAIL };
 
                 var query = _dbContext.EtimsTransacts.AsQueryable();
                 if (filter != null && filter.RecordGroup != RecordStatusGroup.ALL)
@@ -107,8 +106,7 @@ namespace iTaxSuite.Library.Services
                         query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
                             f.RecordStatus == RecordStatus.INVALID);
                     else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
+                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK);
                     else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
                         query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
                             f.RecordStatus == RecordStatus.MANUALOUT);
@@ -191,7 +189,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL, RecordStatus.DEPENDS };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_FAIL };
                 result = await _dbContext.EtimsTransacts.Where(x => !completeStatii.Contains(x.RecordStatus))
                     .OrderBy(x => x.EtimsTrxID).FirstOrDefaultAsync(x => x.EtimsTrxID == transact.EtimsTrxID);
                 if (result == null)

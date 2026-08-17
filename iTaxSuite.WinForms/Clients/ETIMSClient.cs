@@ -83,8 +83,10 @@ namespace iTaxSuite.WinForms.Clients
                     ICItem = "BX12024",
                     OEInvoice = "INV00003",
                     OECreditNote = "CN000001",
-                    ARInvBatch = "20",
-                    ARInvoice = "IN000110",
+                    //ARInvBatch = "20",
+                    //ARInvoice = "IN000110",
+                    ARInvBatch = "5",
+                    ARInvoice = "IN000055",
                     ARCNBatch = "27",
                     ARCreditNote = "CN000004",
                     POReceipt = ""
@@ -97,6 +99,22 @@ namespace iTaxSuite.WinForms.Clients
                     ICItem = "BK001",
                     OEInvoice = "INV20242476",
                     OECreditNote = "CN20230069",
+                    ARInvBatch = "22",
+                    ARInvoice = "INV2022/179",
+                    ARCreditNote = "",
+                    POReceipt = "VINV2133"
+                };
+            }
+            else if (_vscuConfig.ClientCode == "111079")
+            {
+                _testData = new TestData()
+                {
+                    ICItem = "BK001",
+                    //OEInvoice = "IN000168",
+                    //OEInvoice = "IN000256",
+                    OEInvoice = "IN000221",
+                    //OECreditNote = "CN000001",
+                    OECreditNote = "CN000007",
                     ARInvBatch = "22",
                     ARInvoice = "INV2022/179",
                     ARCreditNote = "",
@@ -162,10 +180,15 @@ namespace iTaxSuite.WinForms.Clients
             var decimalFormat = new DecimalFormatConverter();
             try
             {
+                string strJsonPayload = string.Empty;
                 string strInput = Interaction.InputBox("Enter Invoice Number", "Select OE Invoice", _testData.OEInvoice);
                 if (string.IsNullOrWhiteSpace(strInput))
                 {
-                    MessageBox.Show($"Invalid Request {strInput}", "Select OE Invoice");
+                    strJsonPayload = PromptDialog.ShowMultilineDialog("Enter OE Invoice Payload", "Enter OE Invoice Payload");
+                }
+                if (string.IsNullOrWhiteSpace(strInput) && string.IsNullOrWhiteSpace(strJsonPayload))
+                {
+                    MessageBox.Show($"Invalid Request, either OE Invoice Number or Payload must have data", "Select OE CRNote");
                     return;
                 }
 
@@ -208,15 +231,20 @@ namespace iTaxSuite.WinForms.Clients
             var decimalFormat = new DecimalFormatConverter();
             try
             {
+                string strJsonPayload = string.Empty;
                 string strInput = Interaction.InputBox("Enter OE CRNote Number", "Select OE CRNote", _testData.OECreditNote);
                 if (string.IsNullOrWhiteSpace(strInput))
                 {
-                    MessageBox.Show($"Invalid Request {strInput}", "Select OE CRNote");
+                    strJsonPayload = PromptDialog.ShowMultilineDialog("Enter OE CreditNote Payload", "Enter OE CreditNote Payload");
+                }
+                if (string.IsNullOrWhiteSpace(strInput) && string.IsNullOrWhiteSpace(strJsonPayload))
+                {
+                    MessageBox.Show($"Invalid Request, either OE CreditNote Number or Payload must have data", "Select OE CRNote");
                     return;
                 }
 
                 ShowLoadingScreen(this, $"Loading OE CRNote Number {strInput}");
-                var convertRes = await _saleService.GetConvertOECRNote(new SaleTrxKey { DocNumber = strInput });
+                var convertRes = await _saleService.GetConvertOECRNote(new SaleTrxKey { DocNumber = strInput }, strJsonPayload);
                 HideLoadingScreen();
 
                 EtimsSalesView salesView;
@@ -249,21 +277,31 @@ namespace iTaxSuite.WinForms.Clients
             var decimalFormat = new DecimalFormatConverter();
             try
             {
+                string strJsonPayload = string.Empty;
                 string strBatch = Interaction.InputBox("Enter Batch Number", "Enter AR Batch Number", _testData.ARInvBatch);
+
+                string strInvoice = string.Empty;
                 if (string.IsNullOrWhiteSpace(strBatch))
                 {
-                    MessageBox.Show($"Invalid Request {strBatch}", "Select Item");
-                    return;
+                    strJsonPayload = PromptDialog.ShowMultilineDialog("Enter AR Invoice Payload", "Enter AR Invoice Payload");
                 }
-                string strInvoice = Interaction.InputBox("Enter Invoice Number", "Enter AR Invoice Number", _testData.ARInvoice);
-                if (string.IsNullOrWhiteSpace(strInvoice))
+                else
                 {
-                    strInvoice = string.Empty;
+                    strInvoice = Interaction.InputBox("Enter Invoice Number", "Enter AR Invoice Number", _testData.ARInvoice);
+                    if (string.IsNullOrWhiteSpace(strInvoice))
+                    {
+                        strInvoice = string.Empty;
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(strBatch) && string.IsNullOrWhiteSpace(strJsonPayload))
+                {
+                    MessageBox.Show($"Invalid Request, either Batch or Payload must have data", "Select AR Batch Invoice");
+                    return;
                 }
 
                 UI.Info($"{_method_} running..");
                 ShowLoadingScreen(this, $"Loading AR Batch Number {strBatch}, Invoice: {strInvoice}");
-                var convertRes = await _saleService.GetConvertARInvoice(new SaleBatchTrxKey { BatchNumber = strBatch, DocNumber = strInvoice });
+                var convertRes = await _saleService.GetConvertARInvoice(new SaleBatchTrxKey { BatchNumber = strBatch, DocNumber = strInvoice }, strJsonPayload);
                 HideLoadingScreen();
 
                 EtimsSalesView salesView;
@@ -300,21 +338,32 @@ namespace iTaxSuite.WinForms.Clients
             var decimalFormat = new DecimalFormatConverter();
             try
             {
+                string strJsonPayload = string.Empty;
                 string strBatch = Interaction.InputBox("Enter Batch Number", "Enter AR Batch Number", _testData.ARCNBatch);
+
+                string strInvoice = string.Empty;
                 if (string.IsNullOrWhiteSpace(strBatch))
                 {
-                    MessageBox.Show($"Invalid Request {strBatch}", "Select Item");
-                    return;
+                    strJsonPayload = PromptDialog.ShowMultilineDialog("Enter AR CreditNote Payload", "Enter AR Invoice Payload");
                 }
-                string strInvoice = Interaction.InputBox("Enter Credit Note Number", "Enter AR Credit Note Number", _testData.ARCreditNote);
-                if (string.IsNullOrWhiteSpace(strInvoice))
+                else
                 {
-                    strInvoice = string.Empty;
+                    strInvoice = Interaction.InputBox("Enter Credit Note Number", "Enter AR Credit Note Number", _testData.ARCreditNote);
+                    if (string.IsNullOrWhiteSpace(strInvoice))
+                    {
+                        strInvoice = string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(strBatch) && string.IsNullOrWhiteSpace(strJsonPayload))
+                {
+                    MessageBox.Show($"Invalid Request, either Batch or Payload must have data", "Select AR Batch Invoice");
+                    return;
                 }
 
                 UI.Info($"{_method_} running..");
                 ShowLoadingScreen(this, $"Loading AR Batch Number {strBatch}, Credit Note: {strInvoice}");
-                var convertRes = await _saleService.GetConvertARCRNote(new SaleBatchTrxKey { BatchNumber = strBatch, DocNumber = strInvoice });
+                var convertRes = await _saleService.GetConvertARCRNote(new SaleBatchTrxKey { BatchNumber = strBatch, DocNumber = strInvoice }, strJsonPayload);
                 HideLoadingScreen();
 
                 EtimsSalesView salesView;
@@ -368,7 +417,7 @@ namespace iTaxSuite.WinForms.Clients
                     respEditor.ClearAll();
                     respEditor.setEditorText(etimsRequest);
 
-                    if (stockItem.RecordStatus == RecordStatus.POST_OK || stockItem.RecordStatus == RecordStatus.POST_DUPL)
+                    if (stockItem.RecordStatus == RecordStatus.POST_OK)
                     {
                         if (MessageBox.Show($"{stockItem.Product} Already Registeded Fully Successfully. Do you want to update it?", "Update Item",
                         MessageBoxButtons.YesNo) == DialogResult.No)

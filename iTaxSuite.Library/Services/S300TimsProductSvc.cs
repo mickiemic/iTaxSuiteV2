@@ -600,7 +600,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_FAIL };
                 // Get Item Status
                 var stockItem = await _dbContext.StockItems.Include(e => e.Product).Include(e => e.Product.ProductData)
                     .Where(e => e.BranchCode == saveStockLevel.BranchCode && e.ProductCode == saveStockLevel.ProductCode)
@@ -680,7 +680,7 @@ namespace iTaxSuite.Library.Services
             try
             {
                 var _ioParts = transactIO.DocNumber.Split(":");
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.POST_FAIL };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_FAIL };
 
                 // Get IO Transaction
                 var stockMovement = await _dbContext.StockMovement.Include(e => e.StockMovData)
@@ -792,5 +792,11 @@ namespace iTaxSuite.Library.Services
         {
             throw new NotImplementedException();
         }
+
+        public Task<Result<HashSet<string>, string>> FetchSpecificProducts(SalesTransact salesTransact, HashSet<string> productList)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

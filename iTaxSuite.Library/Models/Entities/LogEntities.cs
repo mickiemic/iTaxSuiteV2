@@ -30,7 +30,7 @@ namespace iTaxSuite.Library.Models.Entities
         public string ReqHeaders { get; set; }
         [StringLength(256)]
         public string QParams { get; set; }
-        [StringLength(4000)]
+        //[StringLength(4000)]
         public string ReqPayload { get; set; }
         [Required]
         public DateTime RequestAt { get; set; } = DateTime.Now;
@@ -42,7 +42,7 @@ namespace iTaxSuite.Library.Models.Entities
         // Response Properties
         [StringLength(2048)]
         public string RespHeaders { get; set; }
-        [StringLength(4000)]
+        //[StringLength(4000)]
         public string RespPayload { get; set; }
         public DateTime? ResponseAt { get; set; }
         [Precision(19, 3)]

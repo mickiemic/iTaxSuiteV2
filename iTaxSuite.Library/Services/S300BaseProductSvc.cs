@@ -44,8 +44,7 @@ namespace iTaxSuite.Library.Services
                         query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
                             f.RecordStatus == RecordStatus.INVALID);
                     else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
+                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK);
                     else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
                         query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
                             f.RecordStatus == RecordStatus.MANUALOUT);
@@ -85,8 +84,7 @@ namespace iTaxSuite.Library.Services
                         query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
                             f.RecordStatus == RecordStatus.INVALID);
                     else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
+                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK);
                     else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
                         query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
                             f.RecordStatus == RecordStatus.MANUALOUT);
@@ -130,8 +128,7 @@ namespace iTaxSuite.Library.Services
                         query = query.Where(f => f.RecordStatus == RecordStatus.POST_FAIL ||
                             f.RecordStatus == RecordStatus.INVALID);
                     else if (filter.RecordGroup == RecordStatusGroup.SUCCESSFUL)
-                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK ||
-                            f.RecordStatus == RecordStatus.POST_DUPL);
+                        query = query.Where(f => f.RecordStatus == RecordStatus.POST_OK);
                     else if (filter.RecordGroup == RecordStatusGroup.QUEUED)
                         query = query.Where(f => f.RecordStatus == RecordStatus.QUEUEDOUT ||
                             f.RecordStatus == RecordStatus.MANUALOUT);
@@ -179,7 +176,7 @@ namespace iTaxSuite.Library.Services
             {
                 if (productKey == null || string.IsNullOrWhiteSpace(productKey.ProductCode))
                 {
-                    _strError = $"Invalid filter for ICItem => {JsonConvert.SerializeObject(productKey)}";
+                    _strError = $"Invalid filter for Items => {JsonConvert.SerializeObject(productKey)}";
                     UI.Error($"{_method_} error : {_strError}");
                     return _strError;
                 }
@@ -386,7 +383,7 @@ namespace iTaxSuite.Library.Services
             catch (Exception ex)
             {
                 UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
-                throw;
+                return ex.GetBaseException().Message;
             }
 
             return product;

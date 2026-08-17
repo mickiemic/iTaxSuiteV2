@@ -85,10 +85,6 @@ namespace iTaxSuite.Library.Models.Entities
         [Display(Name = "POST FAIL")]
         POST_FAIL = 2051,
 
-        [EnumMember(Value = "POST DUPL")]
-        [Display(Name = "POST DUPL")]
-        POST_DUPL = 2011,
-
         [EnumMember(Value = "INVALID")]
         [Display(Name = "INVALID")]
         INVALID = 5001,
@@ -294,7 +290,7 @@ namespace iTaxSuite.Library.Models.Entities
         }
         public DateTime GetMinDate()
         {
-            var minDateTime = new DateTime(2026, 06, 1);
+            var minDateTime = new DateTime(2026, 4, 1);
             if (string.IsNullOrWhiteSpace(DateCol) || Tracker is null || !Tracker.MinDateTime.HasValue)
             {
                 return minDateTime;

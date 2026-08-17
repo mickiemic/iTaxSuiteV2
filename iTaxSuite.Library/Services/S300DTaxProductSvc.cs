@@ -6,7 +6,6 @@ using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Sage.CA.SBS.ERP.Sage300.Common.Models;
 using StackExchange.Redis;
 
 namespace iTaxSuite.Library.Services
@@ -393,7 +392,361 @@ namespace iTaxSuite.Library.Services
 
             return products;
         }
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="productList"></param>
+        /// <returns></returns>
+        public async Task<Result<HashSet<string>, string>> FetchSpecificProducts(SalesTransact salesTransact, HashSet<string> productList)
+        {
+            string _method_ = "FetchSpecificProducts";
+            string _strError = string.Empty;
+            try
+            {
+                if (productList == null || productList.Count == 0)
+                {
+                    _strError = $"Invalid filter for Item => {JsonConvert.SerializeObject(productList)}";
+                    UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                    return _strError;
+                }
+
+                var existing = await _dbContext.Products.Where(x => productList.Contains(x.ProductCode))
+                    .Select(x => x.ProductCode).ToListAsync();
+                if (existing != null && existing.Count > 0)
+                {
+                    int removed = productList.RemoveWhere(x => existing.Contains(x));
+                    UI.Info(salesTransact.DocNumber, $"{_method_} Removed which already exist");
+                }
+
+                if (productList.Count == 0)
+                    return productList;
+
+                var client = _httpClientFactory.CreateClient();
+                var defAuthResult = await _masterDataSvc.GetDefaultAuthority();
+                if (defAuthResult.IsError)
+                {
+                    _strError = "Invalid TaxAuth Cache Setup";
+                    UI.Error(salesTransact.DocNumber, $"{_method_} : {_strError}");
+                    return _strError;
+                }
+                var defTaxAuth = defAuthResult.GetValue();
+
+                foreach (var missing in productList.ToList())
+                {
+                    var parts = missing.Split(":", StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Count() != 2)
+                    {
+                        UI.Error(salesTransact.DocNumber, $"{_method_} ProductCode {missing} could not process");
+                        continue;
+                    }
+
+                    if (parts[0] == "IC")
+                    {
+                        UI.Info(salesTransact.DocNumber, $"{_method_} Fetching {parts[1]} from ICItems");
+                        string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/IC/ICItems");
+                        var qParams = new Dictionary<string, string>();
+                        qParams["$filter"] = $"ItemNumber eq '{parts[1]}'";
+
+                        var result = await client.ProcessGetReqBasicAsync<ICItems>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password, null, qParams);
+                        if (result == null && result.Items.Count == 0)
+                        {
+                            _strError = $"Not Found ICItems response from Sage for ProductCode {missing}";
+                            UI.Error($"{_method_} error : {_strError}");
+                            return _strError;
+                        }
+
+                        var icItem = result.Items.FirstOrDefault(i => i.ItemNumber == parts[1]);
+                        if (icItem == null)
+                        {
+                            _strError = $"Missing ICItem response from Sage for ProductCode {missing}";
+                            UI.Error($"{_method_} error : {_strError}");
+                            return _strError;
+                        }
+
+                        var product = new Product(icItem);
+                        var mapResult = await _masterDataSvc.MapItemAttribs(product._pkgUnitCode, product._qtyUnitCode);
+                        if (mapResult.IsError)
+                        {
+                            _strError = mapResult.GetError();
+                            UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                            product.PackageUnit = product.QuantityUnit = ETIMSConst.NOUNIT_CODE;
+                            product.RecordStatus = RecordStatus.INVALID;
+                        }
+                        else
+                        {
+                            product.UpdateAttributes(mapResult.GetValue());
+                        }
+                        var stockItem = new StockItem(product, _clientBranch);
+                        var productData = new ProductData(_clientBranch, stockItem, icItem, defTaxAuth);
+                        product.ProductData = productData;
+
+                        using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
+                        {
+                            int _etrSeqValue = _clientBranch.ProductSeq;
+                            try
+                            {
+                                if (_dbContext.Products.AddIfNotExists(product, p => p.ProductCode == product.ProductCode) == null)
+                                {
+                                    UI.Warn(salesTransact.DocNumber, $"Product {product.ProductCode} Already Exists");
+                                    continue;
+                                }
+                                if (_dbContext.SaveChanges() < 1)
+                                {
+                                    throw new Exception($"Product {product.ProductCode} saving to database failed");
+                                }
+                                if (_dbContext.StockItems.AddIfNotExists(stockItem, x => x.ProductCode == stockItem.ProductCode
+                                    && x.BranchCode == stockItem.BranchCode) == null)
+                                {
+                                    UI.Warn(salesTransact.DocNumber, $"StockItem {stockItem.CacheKey} Already Exists");
+                                    continue;
+                                }
+
+                                _clientBranch.ProductSeq = (_etrSeqValue + 1);
+                                if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
+                                {
+                                    throw new Exception($"{_method_} - UpdateBranchTrxAsync : Failed Updating ClientBranch Details");
+                                }
+
+                                if (_dbContext.SaveChanges() < 1)
+                                {
+                                    throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
+                                }
+
+                                if (!await _masterDataSvc.CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
+                                {
+                                    throw new Exception($"Product {product.ProductCode} saving to cache failed");
+                                }
+                                await _dbTrans.CommitAsync();
+                                _dbContext.ChangeTracker.Clear();
+
+                                productList.Remove(missing);
+                            }
+                            catch (Exception iex)
+                            {
+                                await _dbTrans.RollbackAsync();
+                                _dbContext.ChangeTracker.Clear();
+                                _clientBranch.ProductSeq = _etrSeqValue;
+                                UI.Error(iex, salesTransact.DocNumber, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
+                                continue;
+                            }
+                        }
+
+                    }
+                    else if (parts[0] == "AR")
+                    {
+                        UI.Info(salesTransact.DocNumber, $"{_method_} Fetching {parts[1]} from ARItems");
+                        string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/AR/ARItems");
+                        var qParams = new Dictionary<string, string>();
+                        qParams["$filter"] = $"ItemNumber eq '{parts[1]}'";
+
+                        var result = await client.ProcessGetReqBasicAsync<ARItems>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password, null, qParams);
+                        if (result == null && result.Items.Count == 0)
+                        {
+                            _strError = $"Not Found ARItems response from Sage for ProductCode {missing}";
+                            UI.Error($"{_method_} error : {_strError}");
+                            continue;
+                        }
+                        var arItem = result.Items.FirstOrDefault(i => i.ItemNumber == parts[1]);
+                        if (arItem == null)
+                        {
+                            _strError = $"Missing ARItem response from Sage for ProductCode {missing}";
+                            UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                            continue;
+                        }
+
+                        var product = new Product(arItem);
+                        var mapResult = await _masterDataSvc.MapItemAttribs(product._pkgUnitCode, product._qtyUnitCode);
+                        if (mapResult.IsError)
+                        {
+                            _strError = mapResult.GetError();
+                            UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                            product.PackageUnit = product.QuantityUnit = ETIMSConst.NOUNIT_CODE;
+                            product.RecordStatus = RecordStatus.INVALID;
+                        }
+                        else
+                        {
+                            product.UpdateAttributes(mapResult.GetValue());
+                        }
+                        var stockItem = new StockItem(product, _clientBranch);
+                        var productData = new ProductData(_clientBranch, stockItem, arItem, defTaxAuth);
+                        product.ProductData = productData;
+
+                        using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
+                        {
+                            int _etrSeqValue = _clientBranch.ProductSeq;
+                            try
+                            {
+                                if (_dbContext.Products.AddIfNotExists(product, p => p.ProductCode == product.ProductCode) == null)
+                                {
+                                    UI.Warn(salesTransact.DocNumber, $"Product {product.ProductCode} Already Exists");
+                                    continue;
+                                }
+                                if (_dbContext.SaveChanges() < 1)
+                                {
+                                    throw new Exception($"Product {product.ProductCode} saving to database failed");
+                                }
+                                if (_dbContext.StockItems.AddIfNotExists(stockItem, x => x.ProductCode == stockItem.ProductCode
+                                    && x.BranchCode == stockItem.BranchCode) == null)
+                                {
+                                    UI.Warn(salesTransact.DocNumber, $"StockItem {stockItem.CacheKey} Already Exists");
+                                    continue;
+                                }
+
+                                _clientBranch.ProductSeq = (_etrSeqValue + 1);
+                                if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
+                                {
+                                    throw new Exception($"{_method_} - UpdateBranchTrxAsync : Failed Updating ClientBranch Details");
+                                }
+
+                                if (_dbContext.SaveChanges() < 1)
+                                {
+                                    throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
+                                }
+
+                                if (!await _masterDataSvc.CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
+                                {
+                                    throw new Exception($"Product {product.ProductCode} saving to cache failed");
+                                }
+                                await _dbTrans.CommitAsync();
+                                _dbContext.ChangeTracker.Clear();
+
+                                productList.Remove(missing);
+                            }
+                            catch (Exception iex)
+                            {
+                                await _dbTrans.RollbackAsync();
+                                _dbContext.ChangeTracker.Clear();
+                                _clientBranch.ProductSeq = _etrSeqValue;
+                                UI.Error(iex, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
+                                continue;
+                            }
+                        }
+
+                    }
+                    else if (parts[0] == "GL")
+                    {
+                        UI.Info($"{_method_} Fetching {parts[1]} from GLAccounts");
+
+                        string _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/GL/GLAccountGroups");
+                        var qParams = new Dictionary<string, string>();
+                        qParams["$filter"] = "GroupCategory eq 'Revenue' or GroupCategory eq 'OtherRevenue'";
+                        var accGroups = await client.ProcessGetReqBasicAsync<GLAccountGroups>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password,
+                            null, qParams);
+                        if (accGroups == null || accGroups.AccountGroups.Count != 2)
+                        {
+                            throw new Exception($"Null/Invalid GLAccountGroups response from Sage, count: {accGroups?.AccountGroups?.Count}");
+                        }
+                        var groupCodes = new HashSet<string>();
+                        accGroups.AccountGroups.ForEach(x => groupCodes.Add(x.AccountGroupCode.ToString()));
+
+                        _reqUrl = string.Format($"{_extSystConfig.ApiAddress}/GL/GLAccounts");
+                        var strFilter = "(AccountGroupCode eq '" + string.Join("' or AccountGroupCode eq '", groupCodes)
+                            + "') and (AccountNumber eq '" + parts[1] + "')";
+                        qParams["$filter"] = strFilter;
+
+                        var result = await client.ProcessGetReqBasicAsync<GLAccounts>(_reqUrl, _extSystConfig.Username, _extSystConfig.Password, null, qParams);
+                        if (result == null && result.Accounts.Count == 0)
+                        {
+                            _strError = $"Not Found GLAccounts response from Sage for ProductCode {missing}";
+                            UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                            return _strError;
+                        }
+
+                        var account = result.Accounts.FirstOrDefault(i => i.AccountNumber == parts[1]);
+                        if (account == null)
+                        {
+                            _strError = $"Missing GLAccount response from Sage for ProductCode {missing}";
+                            UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                            return _strError;
+                        }
+
+                        var product = new Product(account);
+                        var mapResult = await _masterDataSvc.MapItemAttribs(product._pkgUnitCode, product._qtyUnitCode);
+                        if (mapResult.IsError)
+                        {
+                            _strError = mapResult.GetError();
+                            UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                            product.PackageUnit = product.QuantityUnit = ETIMSConst.NOUNIT_CODE;
+                            product.RecordStatus = RecordStatus.INVALID;
+                        }
+                        else
+                        {
+                            product.UpdateAttributes(mapResult.GetValue());
+                        }
+                        var stockItem = new StockItem(product, _clientBranch);
+                        var productData = new ProductData(_clientBranch, stockItem, account, defTaxAuth);
+                        product.ProductData = productData;
+
+                        using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
+                        {
+                            int _etrSeqValue = _clientBranch.ProductSeq;
+                            try
+                            {
+                                if (_dbContext.Products.AddIfNotExists(product, p => p.ProductCode == product.ProductCode) == null)
+                                {
+                                    UI.Warn(salesTransact.DocNumber, $"Product {product.ProductCode} Already Exists");
+                                    continue;
+                                }
+                                if (_dbContext.SaveChanges() < 1)
+                                {
+                                    throw new Exception($"Product {product.ProductCode} saving to database failed");
+                                }
+                                if (_dbContext.StockItems.AddIfNotExists(stockItem, x => x.ProductCode == stockItem.ProductCode
+                                    && x.BranchCode == stockItem.BranchCode) == null)
+                                {
+                                    UI.Warn(salesTransact.DocNumber, $"StockItem {stockItem.CacheKey} Already Exists");
+                                    continue;
+                                }
+
+                                _clientBranch.ProductSeq = (_etrSeqValue + 1);
+                                if (!await _masterDataSvc.UpdateBranchTrxAsync(_clientBranch, _dbContext))
+                                {
+                                    throw new Exception($"{_method_} - UpdateBranchTrxAsync : Failed Updating ClientBranch Details");
+                                }
+
+                                if (_dbContext.SaveChanges() < 1)
+                                {
+                                    throw new Exception($"StockItem {stockItem.CacheKey} saving to database failed");
+                                }
+
+                                if (!await _masterDataSvc.CacheSaveStockItem(GeneralConst.IC_PRODUCT_SYNC, stockItem))
+                                {
+                                    throw new Exception($"Product {product.ProductCode} saving to cache failed");
+                                }
+                                await _dbTrans.CommitAsync();
+                                _dbContext.ChangeTracker.Clear();
+
+                                productList.Remove(missing);
+                            }
+                            catch (Exception iex)
+                            {
+                                await _dbTrans.RollbackAsync();
+                                _dbContext.ChangeTracker.Clear();
+                                _clientBranch.ProductSeq = _etrSeqValue;
+                                UI.Error(iex, salesTransact.DocNumber, $"{_method_} save valid record error : {iex.GetBaseException().Message}");
+                                continue;
+                            }
+                        }
+                    
+                    }
+                    else
+                    {
+                        _strError = $"Invalid Module Code {parts[0]}";
+                        UI.Error(salesTransact.DocNumber, $"{_method_} error : {_strError}");
+                        continue;
+                    }
+                }
+
+                return productList;
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
         public async Task<Result<List<string>, string>> SyncTaxProducts()
         {
             string _method_ = "SyncTaxProducts";
@@ -401,7 +754,7 @@ namespace iTaxSuite.Library.Services
             List<string> result = new();
             try
             {
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK };
                 
                 var stockItemMap = await _dbContext.StockItems.Include(stock => stock.Product)
                         .ThenInclude(prod => prod.ProductData)
@@ -656,7 +1009,7 @@ namespace iTaxSuite.Library.Services
             string _strError = string.Empty;
             try
             {
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.DEPENDS };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.DEPENDS };
 
                 if (string.IsNullOrWhiteSpace(filter.ProductCode) || string.IsNullOrWhiteSpace(filter.BranchCode))
                     return $"Invalid Filter Provided : [{filter.BranchCode}:{filter.ProductCode}]";
@@ -669,7 +1022,7 @@ namespace iTaxSuite.Library.Services
 
                 var dTaxRequest = stockItem.Product.ProductData.GetDTaxRequest();
                 if (!dTaxRequest.IsValid())
-                    return $"Invalid DigiTax CreateItem request for ProductCode: {filter.ProductCode}";
+                    return $"Invalid DigiTax CreateItem request for ProductCode: {filter.ProductCode} >> {dTaxRequest.GetError()}";
 
                 var dTaxResp = await _dTaxService.CreateDTaxItem(dTaxRequest);
                 using (var _dbTrans = await _dbContext.Database.BeginTransactionAsync())
@@ -772,7 +1125,7 @@ namespace iTaxSuite.Library.Services
             var result = new List<EtimsTransact>();
             try
             {
-                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.POST_DUPL, RecordStatus.DEPENDS };
+                var completeStatii = new List<RecordStatus>() { RecordStatus.POST_OK, RecordStatus.DEPENDS };
                 var pendingItems = await _dbContext.StockItems.Include(e => e.Product).ThenInclude(p => p.ProductData)
                     .AsSplitQuery().Where(e => !completeStatii.Contains(e.RecordStatus) 
                     && !string.IsNullOrWhiteSpace(e.Product.ProductData.RequestPayload)).ToListAsync();
@@ -785,7 +1138,7 @@ namespace iTaxSuite.Library.Services
                     var processResult = await QueueSaveProduct(stockKey);
                     if (processResult.IsError)
                     {
-                        UI.Error($"{_method_} error: {processResult.GetError()}");
+                        UI.Error(stockItem.ProductCode, $"{_method_} error: {processResult.GetError()}");
                         continue;
                     }
                     result.Add(processResult.GetValue());

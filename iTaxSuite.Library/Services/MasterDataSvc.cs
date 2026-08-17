@@ -1,5 +1,6 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
+using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
@@ -20,13 +21,12 @@ namespace iTaxSuite.Library.Services
         Task<Result<Dictionary<string, S300TaxGroup>, string>> InitiateTaxSetup();
         Task InitializeCacheData();
         Task<Result<(string PkgUnitCode, string QtyUnitCode), string>> MapItemAttribs(string pkgUnitCode, string qtyUnitCode);
-        Task<Result<TrnsSalesSaveReq, string>> MapSalesInvcAttribs(TrnsSalesSaveReq salesSaveReq);
         Task<bool> SaveSyncChannel(SyncChannel syncChannel);
         Task<bool> UpdateBranchAsync(ClientBranch clientBranch);
         Task<bool> UpdateBranchTrxAsync(ClientBranch clientBranch, ETimsDBContext dbContext);
         Task<bool> SaveSyncTrxChannel(SyncChannel syncChannel, ETimsDBContext dbContext);
         Task<bool> UpdateSyncTrxTracker(SyncChannel syncChannel);
-        Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, bool useExtID = false);
+        Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, IS300ProductSvc productSvc = null, bool useExtID = false);
         Task<Dictionary<string, StockItemKey>> GetCacheStockItems(bool reload = false);
         Task<bool> CacheSaveStockItem(string hashKey, StockItem stockItem);
         Task<Result<S300TaxAuthKey, string>> GetDefaultAuthority();
@@ -40,7 +40,8 @@ namespace iTaxSuite.Library.Services
 
         public Dictionary<string, SyncChannel> syncChannelMap { get; private set; } = new();
 
-        public MasterDataSvc(ETimsDBContext dBContext, IConnectionMultiplexer multiplexer, IHttpClientFactory httpClientFactory, ExtSystConfig extSystConfig)
+        public MasterDataSvc(ETimsDBContext dBContext, IConnectionMultiplexer multiplexer, 
+            IHttpClientFactory httpClientFactory, ExtSystConfig extSystConfig)
         {
             _dbContext = dBContext;
             _baseDb = multiplexer.GetDatabase();
@@ -352,92 +353,116 @@ namespace iTaxSuite.Library.Services
             }
         }
 
-        public async Task<Result<TrnsSalesSaveReq, string>> MapSalesInvcAttribs(TrnsSalesSaveReq salesSaveReq)
+        public async Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, IS300ProductSvc productSvc = null, bool useExtID = false)
         {
             string _method_ = "MapSalesInvcAttribs";
             Dictionary<string, StockItemKey> itemMap = null;
+            HashSet<string> missingItems = new();
+            HashSet<string> missingClasses = new();
+            string _strError = string.Empty;
             try
             {
                 itemMap = await GetProductMap();
-                //Console.WriteLine($"itemMap length:{itemMap.Count}");
                 var invalidSatii = new List<RecordStatus>() { RecordStatus.INVALID, RecordStatus.DEPENDS, RecordStatus.NONE };
 
-                for (int i = 0; i < salesSaveReq.ItemList.Count; i++)
+                missingItems = salesTransact.SalesItems.Where(x => !itemMap.ContainsKey(x.ProductCode)).Select(x => x.ProductCode).ToHashSet();
+                if (missingItems != null && missingItems.Count > 0 && productSvc is not null)
                 {
-                    if (!itemMap.ContainsKey(salesSaveReq.ItemList[i]._icItemNumber))
+                    var fetchResult = await productSvc.FetchSpecificProducts(salesTransact, [.. missingItems]);
+                    if (fetchResult.IsSuccess)
                     {
-                        return $"No Mapping for IC ItemNumber {salesSaveReq.ItemList[i]._icItemNumber}";
+                        if (fetchResult.GetValue().Count != missingItems.Count)
+                        {
+                            itemMap = await GetProductMap();
+                            missingItems = fetchResult.GetValue();
+                        }
+                        foreach (var productCode in missingItems)
+                        {
+                            UI.Error(salesTransact.DocNumber, $"{_method_} refetching Product {productCode} failed");
+                        }
                     }
-                    var stockItemKey = itemMap[salesSaveReq.ItemList[i]._icItemNumber];
-                    if (invalidSatii.Contains(stockItemKey.RecordStatus))
-                    {
-                        UI.Warn($"Invalid Status for IC ItemNumber {salesSaveReq.ItemList[i]._icItemNumber}");
-                        //return $"Invalid Status for IC ItemNumber {salesSaveReq.ItemList[i]._icItemNumber}";
-                        salesSaveReq.RecordStatus = RecordStatus.DEPENDS;
-                    }
-                    salesSaveReq.ItemList[i].ItemSeqNumber = stockItemKey.EtrSeqNumber;
-                    salesSaveReq.ItemList[i].ItemCode = stockItemKey.TaxItemCode;
-                    //salesSaveReq.ItemList[i].ItemTypeCode = stockItemMap.ItemTypeCode.ToString();
-                    salesSaveReq.ItemList[i].PkgUnitCode = stockItemKey.PackageUnit;
-                    salesSaveReq.ItemList[i].QtyUnitCode = stockItemKey.QuantityUnit;
-                    salesSaveReq.ItemList[i].ItemClassCode = stockItemKey.ItemClassCode;
                 }
-
-                return salesSaveReq;
-            }
-            catch (Exception ex)
-            {
-                UI.Error($"{_method_} TraderInvoiceNo:{salesSaveReq.TraderInvoiceNo}, error: {ex.GetBaseException()}");
-                return ex.GetBaseException().Message;
-            }
-        }
-        public async Task<Result<SalesTransact, string>> MapSalesInvcAttribs(SalesTransact salesTransact, bool useExtID = false)
-        {
-            string _method_ = "MapSalesInvcAttribs";
-            Dictionary<string, StockItemKey> itemMap = null;
-            try
-            {
-                itemMap = await GetProductMap();
-                var invalidSatii = new List<RecordStatus>() { RecordStatus.INVALID, RecordStatus.DEPENDS, RecordStatus.NONE };
                 
                 for (int i = 0; i < salesTransact.SalesItems.Count; i++)
                 {
                     var _productCode = salesTransact.SalesItems[i].ProductCode;
                     if (!itemMap.ContainsKey(_productCode))
                     {
-                        return $"No Mapping for ItemNumber {_productCode}";
+                        string error = $"No Mapping for ItemNumber {_productCode}";
+                        UI.Error(salesTransact.DocNumber, $"{_method_} {error}");
+                        missingItems.Add(_productCode);
+                        if (_productCode.StartsWith("GL:"))
+                        {
+                            // Missing GL Product => automatic invalidation of saleTrx
+                            if (string.IsNullOrWhiteSpace(salesTransact.Remark))
+                                salesTransact.Remark = error;
+                            salesTransact.RecordStatus = RecordStatus.INVALID;
+                        }
+                        continue;
                     }
                     var stockItemKey = itemMap[_productCode];
                     if (invalidSatii.Contains(stockItemKey.RecordStatus))
                     {
-                        UI.Warn($"Invalid Status for ItemNumber {_productCode}");
-                        salesTransact.RecordStatus = RecordStatus.DEPENDS;
+                        UI.Warn(salesTransact.DocNumber, $"Invalid Status for ItemNumber {_productCode}");
+                        if (salesTransact.IsValid())
+                            salesTransact.RecordStatus = RecordStatus.DEPENDS;
                     } 
                     else if (useExtID && string.IsNullOrWhiteSpace(stockItemKey.ExternalID))
                     {
-                        UI.Warn($"External Mapping missing for ItemNumber {_productCode}");
-                        salesTransact.RecordStatus = RecordStatus.DEPENDS;
+                        UI.Warn(salesTransact.DocNumber, $"External Mapping missing for ItemNumber {_productCode}");
+                        if (salesTransact.IsValid())
+                            salesTransact.RecordStatus = RecordStatus.DEPENDS;
                     }
                     salesTransact.SalesItems[i].ItemSeqNumber = stockItemKey.EtrSeqNumber;
                     salesTransact.SalesItems[i].TaxItemCode = stockItemKey.TaxItemCode;
                     salesTransact.SalesItems[i].ExternalID = stockItemKey.ExternalID;
-                    salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
-                    if (string.IsNullOrWhiteSpace(salesTransact.SalesItems[i].Description) 
+                    if (!string.IsNullOrWhiteSpace(stockItemKey.ItemClassCode))
+                    {
+                        salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode.Trim();
+                    }
+                    else
+                    {
+                        missingClasses.Add(_productCode);
+                        salesTransact.RecordStatus = RecordStatus.INVALID;
+                    }
+                    if (string.IsNullOrWhiteSpace(salesTransact.SalesItems[i].Description)
                         && !string.IsNullOrWhiteSpace(stockItemKey.Description))
                     {
                         salesTransact.SalesItems[i].Description = stockItemKey.Description;
                     }
                     salesTransact.SalesItems[i].PkgUnitCode = stockItemKey.PackageUnit;
                     salesTransact.SalesItems[i].QtyUnitCode = stockItemKey.QuantityUnit;
-                    salesTransact.SalesItems[i].ItemClassCode = stockItemKey.ItemClassCode;
-                    salesTransact.SalesItems[i].RecordStatus = stockItemKey.RecordStatus;
+                    if (salesTransact.IsValid())
+                        salesTransact.SalesItems[i].RecordStatus = stockItemKey.RecordStatus;
+                }
+
+                if (missingItems.Count > 0)
+                {
+                    string strMissingItems = string.Join(", ", missingItems);
+                    _strError = $"Missing items: {strMissingItems}";
+                }
+                if (missingClasses.Count > 0)
+                {
+                    string strClasses = string.Join(", ", missingClasses);
+                    if (string.IsNullOrWhiteSpace(_strError))
+                        _strError = $"Missing Classes: {strClasses}";
+                    else
+                        _strError = $", Missing Classes: {strClasses}";
+                }
+
+                if (!string.IsNullOrWhiteSpace(_strError))
+                {
+                    salesTransact.RecordStatus = RecordStatus.INVALID;
+                    if (string.IsNullOrWhiteSpace(salesTransact.Remark))
+                        salesTransact.Remark = _strError;
+                    return _strError;
                 }
 
                 return salesTransact;
             }
             catch (Exception ex)
             {
-                UI.Error($"{_method_} SalesTrxID:{salesTransact.SalesTrxID}, error: {ex.GetBaseException()}");
+                UI.Error(salesTransact.DocNumber, $"{_method_} SalesTrxID:{salesTransact.SalesTrxID}, error: {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
             }
         }

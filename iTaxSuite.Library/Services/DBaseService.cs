@@ -25,7 +25,7 @@ namespace iTaxSuite.Library.Services
             string _method_ = "InsertRequestLogAsync";
             try
             {
-                requestLog.ReqPayload = requestLog.ReqPayload.WithMaxLength(4000, true);
+                //requestLog.ReqPayload = requestLog.ReqPayload.WithMaxLength(4000, true);
                 await _dbContext.ApiRequestLog.AddAsync(requestLog);
                 await _dbContext.SaveChangesAsync();
                 return true;
@@ -48,7 +48,7 @@ namespace iTaxSuite.Library.Services
                     .ExecuteUpdateAsync(x => x
                     .SetProperty(x => x.StatusCode, requestLog.StatusCode)
                     .SetProperty(x => x.RespHeaders, requestLog.RespHeaders.WithMaxLength(512, true))
-                    .SetProperty(x => x.RespPayload, requestLog.RespPayload.WithMaxLength(4000, true))
+                    .SetProperty(x => x.RespPayload, requestLog.RespPayload/*.WithMaxLength(4000, true)*/)
                     .SetProperty(x => x.ResponseAt, requestLog.ResponseAt)
                     .SetProperty(x => x.Duration, requestLog.Duration)
                     );
