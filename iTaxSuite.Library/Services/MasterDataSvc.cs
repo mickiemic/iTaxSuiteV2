@@ -30,6 +30,7 @@ namespace iTaxSuite.Library.Services
         Task<Dictionary<string, StockItemKey>> GetCacheStockItems(bool reload = false);
         Task<bool> CacheSaveStockItem(string hashKey, StockItem stockItem);
         Task<Result<S300TaxAuthKey, string>> GetDefaultAuthority();
+        Task<Dictionary<string, StockItemKey>> GetProductMap(bool reload = false);
     }
     public class MasterDataSvc : IMasterDataSvc
     {
@@ -253,7 +254,7 @@ namespace iTaxSuite.Library.Services
         public async Task<Dictionary<string, EntityAttribute>> GetAtttributeMapAsync(bool reload = false)
         {
             string _method_ = "GetAtttributeMapAsync";
-            Dictionary<string, EntityAttribute> attributeMap = new();
+            Dictionary<string, EntityAttribute> attributeMap = new(StringComparer.OrdinalIgnoreCase);
             try
             {
                 if (!reload)
@@ -289,7 +290,7 @@ namespace iTaxSuite.Library.Services
         public async Task<Dictionary<string, StockItemKey>> GetProductMap(bool reload = false)
         {
             string _method_ = "GetProductMap";
-            Dictionary<string, StockItemKey> itemMap = new();
+            Dictionary<string, StockItemKey> itemMap = new(StringComparer.OrdinalIgnoreCase);
             try
             {
                 if (!reload)
@@ -648,7 +649,7 @@ namespace iTaxSuite.Library.Services
         {
             string _method_ = "GetTaxSetup";
             string _strError = null;
-            Dictionary<string, S300TaxGroup> result = new();
+            Dictionary<string, S300TaxGroup> result = new(StringComparer.OrdinalIgnoreCase);
             Dictionary<string, S300TaxAuthority> authorityMap = new();
             try
             {

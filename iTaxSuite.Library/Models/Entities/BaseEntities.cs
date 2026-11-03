@@ -56,7 +56,10 @@ namespace iTaxSuite.Library.Models.Entities
         DIGITAX,
         [EnumMember(Value = "ZFP")]
         [Display(Name = "ZFP")]
-        ZFP
+        ZFP,
+        [EnumMember(Value = "NONE")]
+        [Display(Name = "NONE")]
+        NONE
     }
 
     public enum RecordStatus
@@ -179,7 +182,7 @@ namespace iTaxSuite.Library.Models.Entities
         public virtual ExtSystConfig ExtSystConfig { get; set; }
         [StringLength(512)]
         public string ProcessMeta { get; set; }
-        public TaxDeviceType DeviceType { get; set; } = TaxDeviceType.DIGITAX;
+        public TaxDeviceType DeviceType { get; set; } = TaxDeviceType.NONE;
         [StringLength(128)]
         public string APIKey { get; set; }
         [StringLength(256)]

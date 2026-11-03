@@ -28,39 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            tabControlEtims = new TabControl();
-            tabItems = new TabPage();
-            grpItems = new GroupBox();
-            lytTableItems = new TableLayoutPanel();
-            btnSelectItem = new Button();
-            btnSaveCompose = new Button();
-            btnSelectImports = new Button();
-            btnSaveItem = new Button();
-            tabPurchases = new TabPage();
-            grpPurchases = new GroupBox();
-            tableLayoutPanel3 = new TableLayoutPanel();
-            btnPOInvoice = new Button();
-            btnClearPurch = new Button();
-            btnGetPurch = new Button();
-            tabStock = new TabPage();
-            grpStock = new GroupBox();
-            tableLayoutPanel2 = new TableLayoutPanel();
-            btnClearStock = new Button();
-            tabSales = new TabPage();
-            grpSales = new GroupBox();
-            tableLayoutPanel1 = new TableLayoutPanel();
-            btnGetARCRNote = new Button();
-            btnGetARInvoice = new Button();
-            btnGetOECRNote = new Button();
-            btnGetOEInvoice = new Button();
-            btnClearSales = new Button();
-            tabSetup = new TabPage();
-            grpSetup = new GroupBox();
-            lytTableSetup = new TableLayoutPanel();
-            btnSelectCodes = new Button();
-            btnViewQueue = new Button();
-            btnSetupTaxes = new Button();
-            btnGetNotices = new Button();
             splitContainer1 = new SplitContainer();
             grpRequest = new GroupBox();
             reqEditor = new ScintillaNET.Scintilla();
@@ -69,258 +36,276 @@
             btnSubmitRequest = new Button();
             btnCanceRequest = new Button();
             txtReqAddress = new TextBox();
-            tabControlEtims.SuspendLayout();
-            tabItems.SuspendLayout();
-            grpItems.SuspendLayout();
-            lytTableItems.SuspendLayout();
-            tabPurchases.SuspendLayout();
-            grpPurchases.SuspendLayout();
-            tableLayoutPanel3.SuspendLayout();
-            tabStock.SuspendLayout();
-            grpStock.SuspendLayout();
-            tableLayoutPanel2.SuspendLayout();
-            tabSales.SuspendLayout();
-            grpSales.SuspendLayout();
-            tableLayoutPanel1.SuspendLayout();
-            tabSetup.SuspendLayout();
-            grpSetup.SuspendLayout();
-            lytTableSetup.SuspendLayout();
+            tabMPurchase = new TabPage();
+            tabSetup = new TabPage();
+            grpSetup = new GroupBox();
+            lytTableSetup = new TableLayoutPanel();
+            btnGetNotices = new Button();
+            btnSetupTaxes = new Button();
+            btnViewQueue = new Button();
+            btnSelectCodes = new Button();
+            tabSales = new TabPage();
+            grpSales = new GroupBox();
+            tableLayoutPanel1 = new TableLayoutPanel();
+            btnClearSales = new Button();
+            btnGetOEInvoice = new Button();
+            btnGetOECRNote = new Button();
+            btnGetARInvoice = new Button();
+            btnGetARCRNote = new Button();
+            tabStock = new TabPage();
+            grpStock = new GroupBox();
+            tableLayoutPanel2 = new TableLayoutPanel();
+            btnClearStock = new Button();
+            tabPurchases = new TabPage();
+            grpPurchases = new GroupBox();
+            tableLayoutPanel3 = new TableLayoutPanel();
+            btnGetPurch = new Button();
+            btnClearPurch = new Button();
+            btnPOInvoice = new Button();
+            tabItems = new TabPage();
+            grpItems = new GroupBox();
+            lytTableItems = new TableLayoutPanel();
+            btnSaveItem = new Button();
+            btnSelectImports = new Button();
+            btnSaveCompose = new Button();
+            btnSelectItem = new Button();
+            tabControlEtims = new TabControl();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
             grpRequest.SuspendLayout();
             grpResponse.SuspendLayout();
+            tabSetup.SuspendLayout();
+            grpSetup.SuspendLayout();
+            lytTableSetup.SuspendLayout();
+            tabSales.SuspendLayout();
+            grpSales.SuspendLayout();
+            tableLayoutPanel1.SuspendLayout();
+            tabStock.SuspendLayout();
+            grpStock.SuspendLayout();
+            tableLayoutPanel2.SuspendLayout();
+            tabPurchases.SuspendLayout();
+            grpPurchases.SuspendLayout();
+            tableLayoutPanel3.SuspendLayout();
+            tabItems.SuspendLayout();
+            grpItems.SuspendLayout();
+            lytTableItems.SuspendLayout();
+            tabControlEtims.SuspendLayout();
             SuspendLayout();
             // 
-            // tabControlEtims
+            // splitContainer1
             // 
-            tabControlEtims.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            tabControlEtims.Controls.Add(tabItems);
-            tabControlEtims.Controls.Add(tabPurchases);
-            tabControlEtims.Controls.Add(tabStock);
-            tabControlEtims.Controls.Add(tabSales);
-            tabControlEtims.Controls.Add(tabSetup);
-            tabControlEtims.Location = new Point(12, 11);
-            tabControlEtims.Name = "tabControlEtims";
-            tabControlEtims.SelectedIndex = 0;
-            tabControlEtims.Size = new Size(1400, 132);
-            tabControlEtims.TabIndex = 0;
+            splitContainer1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            splitContainer1.Location = new Point(19, 174);
+            splitContainer1.Margin = new Padding(4);
+            splitContainer1.Name = "splitContainer1";
             // 
-            // tabItems
+            // splitContainer1.Panel1
             // 
-            tabItems.Controls.Add(grpItems);
-            tabItems.Location = new Point(4, 34);
-            tabItems.Name = "tabItems";
-            tabItems.Padding = new Padding(3);
-            tabItems.Size = new Size(1392, 94);
-            tabItems.TabIndex = 0;
-            tabItems.Text = "Manage Item";
-            tabItems.UseVisualStyleBackColor = true;
+            splitContainer1.Panel1.Controls.Add(grpRequest);
             // 
-            // grpItems
+            // splitContainer1.Panel2
             // 
-            grpItems.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            grpItems.Controls.Add(lytTableItems);
-            grpItems.Location = new Point(6, 6);
-            grpItems.Name = "grpItems";
-            grpItems.Size = new Size(1379, 82);
-            grpItems.TabIndex = 0;
-            grpItems.TabStop = false;
-            grpItems.Text = "Item Operations";
+            splitContainer1.Panel2.Controls.Add(grpResponse);
+            splitContainer1.Size = new Size(1675, 946);
+            splitContainer1.SplitterDistance = 827;
+            splitContainer1.SplitterWidth = 5;
+            splitContainer1.TabIndex = 1;
             // 
-            // lytTableItems
+            // grpRequest
             // 
-            lytTableItems.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            lytTableItems.ColumnCount = 5;
-            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableItems.Controls.Add(btnSelectItem, 0, 0);
-            lytTableItems.Controls.Add(btnSaveCompose, 4, 0);
-            lytTableItems.Controls.Add(btnSelectImports, 1, 0);
-            lytTableItems.Controls.Add(btnSaveItem, 3, 0);
-            lytTableItems.Location = new Point(0, 30);
-            lytTableItems.Name = "lytTableItems";
-            lytTableItems.RowCount = 1;
-            lytTableItems.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            lytTableItems.Size = new Size(1373, 46);
-            lytTableItems.TabIndex = 5;
+            grpRequest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            grpRequest.Controls.Add(reqEditor);
+            grpRequest.Location = new Point(0, 4);
+            grpRequest.Margin = new Padding(4);
+            grpRequest.Name = "grpRequest";
+            grpRequest.Padding = new Padding(4);
+            grpRequest.Size = new Size(823, 938);
+            grpRequest.TabIndex = 1;
+            grpRequest.TabStop = false;
+            grpRequest.Text = "Request Data";
             // 
-            // btnSelectItem
+            // reqEditor
             // 
-            btnSelectItem.Anchor = AnchorStyles.Left;
-            btnSelectItem.Location = new Point(8, 6);
-            btnSelectItem.Margin = new Padding(8, 3, 3, 3);
-            btnSelectItem.Name = "btnSelectItem";
-            btnSelectItem.Size = new Size(177, 34);
-            btnSelectItem.TabIndex = 1;
-            btnSelectItem.Text = "Select Item";
-            btnSelectItem.UseVisualStyleBackColor = true;
-            btnSelectItem.Click += btnSelectItem_Click;
+            reqEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            reqEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 212);
+            reqEditor.LexerName = null;
+            reqEditor.Location = new Point(7, 31);
+            reqEditor.Margin = new Padding(2);
+            reqEditor.Name = "reqEditor";
+            reqEditor.ScrollWidth = 86;
+            reqEditor.Size = new Size(809, 900);
+            reqEditor.TabIndex = 0;
             // 
-            // btnSaveCompose
+            // grpResponse
             // 
-            btnSaveCompose.Anchor = AnchorStyles.Right;
-            btnSaveCompose.Location = new Point(1157, 6);
-            btnSaveCompose.Margin = new Padding(3, 3, 8, 3);
-            btnSaveCompose.Name = "btnSaveCompose";
-            btnSaveCompose.Size = new Size(208, 34);
-            btnSaveCompose.TabIndex = 3;
-            btnSaveCompose.Text = "Save Composition";
-            btnSaveCompose.UseVisualStyleBackColor = true;
+            grpResponse.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            grpResponse.Controls.Add(respEditor);
+            grpResponse.Location = new Point(4, 0);
+            grpResponse.Margin = new Padding(4);
+            grpResponse.Name = "grpResponse";
+            grpResponse.Padding = new Padding(4);
+            grpResponse.Size = new Size(828, 946);
+            grpResponse.TabIndex = 1;
+            grpResponse.TabStop = false;
+            grpResponse.Text = "Response Data";
             // 
-            // btnSelectImports
+            // respEditor
             // 
-            btnSelectImports.Anchor = AnchorStyles.None;
-            btnSelectImports.Location = new Point(330, 6);
-            btnSelectImports.Name = "btnSelectImports";
-            btnSelectImports.Size = new Size(162, 34);
-            btnSelectImports.TabIndex = 4;
-            btnSelectImports.Text = "Select Imports";
-            btnSelectImports.UseVisualStyleBackColor = true;
+            respEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            respEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 212);
+            respEditor.LexerName = null;
+            respEditor.Location = new Point(7, 35);
+            respEditor.Margin = new Padding(2);
+            respEditor.Name = "respEditor";
+            respEditor.ReadOnly = true;
+            respEditor.ScrollWidth = 86;
+            respEditor.Size = new Size(814, 900);
+            respEditor.TabIndex = 0;
             // 
-            // btnSaveItem
+            // btnSubmitRequest
             // 
-            btnSaveItem.Anchor = AnchorStyles.None;
-            btnSaveItem.Location = new Point(891, 6);
-            btnSaveItem.Name = "btnSaveItem";
-            btnSaveItem.Size = new Size(136, 34);
-            btnSaveItem.TabIndex = 2;
-            btnSaveItem.Text = "Save Item";
-            btnSaveItem.UseVisualStyleBackColor = true;
-            btnSaveItem.Click += btnSaveItem_Click;
+            btnSubmitRequest.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnSubmitRequest.Location = new Point(1482, 1127);
+            btnSubmitRequest.Margin = new Padding(10, 4, 4, 4);
+            btnSubmitRequest.Name = "btnSubmitRequest";
+            btnSubmitRequest.Size = new Size(212, 41);
+            btnSubmitRequest.TabIndex = 9;
+            btnSubmitRequest.Text = "Submit Request";
+            btnSubmitRequest.UseVisualStyleBackColor = true;
             // 
-            // tabPurchases
+            // btnCanceRequest
             // 
-            tabPurchases.Controls.Add(grpPurchases);
-            tabPurchases.Location = new Point(4, 34);
-            tabPurchases.Name = "tabPurchases";
-            tabPurchases.Padding = new Padding(3);
-            tabPurchases.Size = new Size(1392, 94);
-            tabPurchases.TabIndex = 1;
-            tabPurchases.Text = "Manage Purchases";
-            tabPurchases.UseVisualStyleBackColor = true;
+            btnCanceRequest.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnCanceRequest.Location = new Point(14, 1127);
+            btnCanceRequest.Margin = new Padding(10, 4, 4, 4);
+            btnCanceRequest.Name = "btnCanceRequest";
+            btnCanceRequest.Size = new Size(212, 41);
+            btnCanceRequest.TabIndex = 10;
+            btnCanceRequest.Text = "Cancel && Reset";
+            btnCanceRequest.UseVisualStyleBackColor = true;
             // 
-            // grpPurchases
+            // txtReqAddress
             // 
-            grpPurchases.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            grpPurchases.Controls.Add(tableLayoutPanel3);
-            grpPurchases.Location = new Point(3, 3);
-            grpPurchases.Name = "grpPurchases";
-            grpPurchases.Size = new Size(1386, 88);
-            grpPurchases.TabIndex = 0;
-            grpPurchases.TabStop = false;
-            grpPurchases.Text = "Manage Purchases";
+            txtReqAddress.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            txtReqAddress.Location = new Point(246, 1127);
+            txtReqAddress.Margin = new Padding(4);
+            txtReqAddress.Name = "txtReqAddress";
+            txtReqAddress.Size = new Size(1188, 35);
+            txtReqAddress.TabIndex = 11;
             // 
-            // tableLayoutPanel3
+            // tabMPurchase
             // 
-            tableLayoutPanel3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            tableLayoutPanel3.ColumnCount = 5;
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel3.Controls.Add(btnPOInvoice, 0, 0);
-            tableLayoutPanel3.Controls.Add(btnClearPurch, 2, 0);
-            tableLayoutPanel3.Controls.Add(btnGetPurch, 4, 0);
-            tableLayoutPanel3.Location = new Point(6, 30);
-            tableLayoutPanel3.Name = "tableLayoutPanel3";
-            tableLayoutPanel3.RowCount = 1;
-            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Size = new Size(1376, 58);
-            tableLayoutPanel3.TabIndex = 3;
+            tabMPurchase.Location = new Point(4, 39);
+            tabMPurchase.Name = "tabMPurchase";
+            tabMPurchase.Size = new Size(1672, 115);
+            tabMPurchase.TabIndex = 5;
+            tabMPurchase.Text = "Map Purchase";
+            tabMPurchase.UseVisualStyleBackColor = true;
             // 
-            // btnPOInvoice
+            // tabSetup
             // 
-            btnPOInvoice.Anchor = AnchorStyles.Left;
-            btnPOInvoice.Location = new Point(8, 12);
-            btnPOInvoice.Margin = new Padding(8, 3, 3, 3);
-            btnPOInvoice.Name = "btnPOInvoice";
-            btnPOInvoice.Size = new Size(177, 34);
-            btnPOInvoice.TabIndex = 8;
-            btnPOInvoice.Text = "Select PO Invoice";
-            btnPOInvoice.UseVisualStyleBackColor = true;
+            tabSetup.Controls.Add(grpSetup);
+            tabSetup.Location = new Point(4, 39);
+            tabSetup.Margin = new Padding(4);
+            tabSetup.Name = "tabSetup";
+            tabSetup.Size = new Size(1672, 115);
+            tabSetup.TabIndex = 4;
+            tabSetup.Text = "Basic Setup";
+            tabSetup.UseVisualStyleBackColor = true;
             // 
-            // btnClearPurch
+            // grpSetup
             // 
-            btnClearPurch.Anchor = AnchorStyles.None;
-            btnClearPurch.Location = new Point(631, 12);
-            btnClearPurch.Name = "btnClearPurch";
-            btnClearPurch.Size = new Size(112, 34);
-            btnClearPurch.TabIndex = 7;
-            btnClearPurch.Text = "Clear";
-            btnClearPurch.UseVisualStyleBackColor = true;
-            btnClearPurch.Click += btnClearPurch_Click;
+            grpSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            grpSetup.Controls.Add(lytTableSetup);
+            grpSetup.Location = new Point(7, 4);
+            grpSetup.Margin = new Padding(4);
+            grpSetup.Name = "grpSetup";
+            grpSetup.Padding = new Padding(4);
+            grpSetup.Size = new Size(1655, 106);
+            grpSetup.TabIndex = 0;
+            grpSetup.TabStop = false;
+            grpSetup.Text = "Basic Setup";
             // 
-            // btnGetPurch
+            // lytTableSetup
             // 
-            btnGetPurch.Anchor = AnchorStyles.Right;
-            btnGetPurch.Location = new Point(1184, 12);
-            btnGetPurch.Name = "btnGetPurch";
-            btnGetPurch.Padding = new Padding(0, 0, 10, 0);
-            btnGetPurch.Size = new Size(189, 34);
-            btnGetPurch.TabIndex = 9;
-            btnGetPurch.Text = "Select Purchases";
-            btnGetPurch.UseVisualStyleBackColor = true;
-            btnGetPurch.Click += btnGetPurch_Click;
+            lytTableSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            lytTableSetup.ColumnCount = 5;
+            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableSetup.Controls.Add(btnSelectCodes, 0, 0);
+            lytTableSetup.Controls.Add(btnViewQueue, 2, 0);
+            lytTableSetup.Controls.Add(btnSetupTaxes, 4, 0);
+            lytTableSetup.Controls.Add(btnGetNotices, 3, 0);
+            lytTableSetup.Location = new Point(7, 36);
+            lytTableSetup.Margin = new Padding(4);
+            lytTableSetup.Name = "lytTableSetup";
+            lytTableSetup.RowCount = 1;
+            lytTableSetup.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            lytTableSetup.RowStyles.Add(new RowStyle(SizeType.Absolute, 62F));
+            lytTableSetup.Size = new Size(1640, 62);
+            lytTableSetup.TabIndex = 0;
             // 
-            // tabStock
+            // btnGetNotices
             // 
-            tabStock.Controls.Add(grpStock);
-            tabStock.Location = new Point(4, 34);
-            tabStock.Name = "tabStock";
-            tabStock.Size = new Size(1392, 94);
-            tabStock.TabIndex = 2;
-            tabStock.Text = "Manage Stock";
-            tabStock.UseVisualStyleBackColor = true;
+            btnGetNotices.Anchor = AnchorStyles.None;
+            btnGetNotices.Location = new Point(1030, 10);
+            btnGetNotices.Margin = new Padding(4);
+            btnGetNotices.Name = "btnGetNotices";
+            btnGetNotices.Padding = new Padding(0, 0, 12, 0);
+            btnGetNotices.Size = new Size(236, 41);
+            btnGetNotices.TabIndex = 14;
+            btnGetNotices.Text = "Get Notices";
+            btnGetNotices.UseVisualStyleBackColor = true;
+            btnGetNotices.Click += btnGetNotices_Click;
             // 
-            // grpStock
+            // btnSetupTaxes
             // 
-            grpStock.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            grpStock.Controls.Add(tableLayoutPanel2);
-            grpStock.Location = new Point(6, 3);
-            grpStock.Name = "grpStock";
-            grpStock.Size = new Size(1383, 88);
-            grpStock.TabIndex = 0;
-            grpStock.TabStop = false;
-            grpStock.Text = "Manage Stock";
+            btnSetupTaxes.Anchor = AnchorStyles.Right;
+            btnSetupTaxes.Location = new Point(1468, 10);
+            btnSetupTaxes.Margin = new Padding(4);
+            btnSetupTaxes.Name = "btnSetupTaxes";
+            btnSetupTaxes.Padding = new Padding(0, 0, 12, 0);
+            btnSetupTaxes.Size = new Size(168, 41);
+            btnSetupTaxes.TabIndex = 7;
+            btnSetupTaxes.Text = "Setup Taxes";
+            btnSetupTaxes.UseVisualStyleBackColor = true;
+            btnSetupTaxes.Click += btnSetupTaxes_Click;
             // 
-            // tableLayoutPanel2
+            // btnViewQueue
             // 
-            tableLayoutPanel2.ColumnCount = 5;
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            tableLayoutPanel2.Controls.Add(btnClearStock, 2, 0);
-            tableLayoutPanel2.Location = new Point(0, 30);
-            tableLayoutPanel2.Name = "tableLayoutPanel2";
-            tableLayoutPanel2.RowCount = 1;
-            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.Size = new Size(1379, 58);
-            tableLayoutPanel2.TabIndex = 2;
+            btnViewQueue.Anchor = AnchorStyles.None;
+            btnViewQueue.Location = new Point(742, 10);
+            btnViewQueue.Margin = new Padding(4);
+            btnViewQueue.Name = "btnViewQueue";
+            btnViewQueue.Size = new Size(155, 41);
+            btnViewQueue.TabIndex = 6;
+            btnViewQueue.Text = "View Queue";
+            btnViewQueue.UseVisualStyleBackColor = true;
             // 
-            // btnClearStock
+            // btnSelectCodes
             // 
-            btnClearStock.Anchor = AnchorStyles.None;
-            btnClearStock.Location = new Point(631, 12);
-            btnClearStock.Name = "btnClearStock";
-            btnClearStock.Size = new Size(112, 34);
-            btnClearStock.TabIndex = 7;
-            btnClearStock.Text = "Clear";
-            btnClearStock.UseVisualStyleBackColor = true;
+            btnSelectCodes.Anchor = AnchorStyles.Left;
+            btnSelectCodes.Location = new Point(10, 10);
+            btnSelectCodes.Margin = new Padding(10, 4, 4, 4);
+            btnSelectCodes.Name = "btnSelectCodes";
+            btnSelectCodes.Size = new Size(212, 41);
+            btnSelectCodes.TabIndex = 15;
+            btnSelectCodes.Text = "Select Codes";
+            btnSelectCodes.UseVisualStyleBackColor = true;
+            btnSelectCodes.Click += btnSelectCodes_Click;
             // 
             // tabSales
             // 
             tabSales.Controls.Add(grpSales);
-            tabSales.Location = new Point(4, 34);
+            tabSales.Location = new Point(4, 39);
+            tabSales.Margin = new Padding(4);
             tabSales.Name = "tabSales";
-            tabSales.Size = new Size(1392, 94);
+            tabSales.Size = new Size(1672, 115);
             tabSales.TabIndex = 3;
             tabSales.Text = "Manage Sales";
             tabSales.UseVisualStyleBackColor = true;
@@ -329,9 +314,11 @@
             // 
             grpSales.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             grpSales.Controls.Add(tableLayoutPanel1);
-            grpSales.Location = new Point(6, 3);
+            grpSales.Location = new Point(7, 4);
+            grpSales.Margin = new Padding(4);
             grpSales.Name = "grpSales";
-            grpSales.Size = new Size(1383, 88);
+            grpSales.Padding = new Padding(4);
+            grpSales.Size = new Size(1660, 106);
             grpSales.TabIndex = 0;
             grpSales.TabStop = false;
             grpSales.Text = "Manage Sales";
@@ -350,333 +337,399 @@
             tableLayoutPanel1.Controls.Add(btnGetOECRNote, 1, 0);
             tableLayoutPanel1.Controls.Add(btnGetOEInvoice, 0, 0);
             tableLayoutPanel1.Controls.Add(btnClearSales, 2, 0);
-            tableLayoutPanel1.Location = new Point(0, 30);
+            tableLayoutPanel1.Location = new Point(0, 36);
+            tableLayoutPanel1.Margin = new Padding(4);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 1;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.Size = new Size(1377, 52);
+            tableLayoutPanel1.Size = new Size(1652, 62);
             tableLayoutPanel1.TabIndex = 0;
-            // 
-            // btnGetARCRNote
-            // 
-            btnGetARCRNote.Anchor = AnchorStyles.Right;
-            btnGetARCRNote.Location = new Point(1177, 9);
-            btnGetARCRNote.Name = "btnGetARCRNote";
-            btnGetARCRNote.Padding = new Padding(0, 0, 10, 0);
-            btnGetARCRNote.Size = new Size(197, 34);
-            btnGetARCRNote.TabIndex = 14;
-            btnGetARCRNote.Text = "Select AR CRNote";
-            btnGetARCRNote.UseVisualStyleBackColor = true;
-            btnGetARCRNote.Click += btnGetARCRNote_Click;
-            // 
-            // btnGetARInvoice
-            // 
-            btnGetARInvoice.Anchor = AnchorStyles.None;
-            btnGetARInvoice.Location = new Point(864, 9);
-            btnGetARInvoice.Name = "btnGetARInvoice";
-            btnGetARInvoice.Padding = new Padding(0, 0, 10, 0);
-            btnGetARInvoice.Size = new Size(197, 34);
-            btnGetARInvoice.TabIndex = 13;
-            btnGetARInvoice.Text = "Select AR Invoice";
-            btnGetARInvoice.UseVisualStyleBackColor = true;
-            btnGetARInvoice.Click += btnGetARInvoice_Click;
-            // 
-            // btnGetOECRNote
-            // 
-            btnGetOECRNote.Anchor = AnchorStyles.None;
-            btnGetOECRNote.Location = new Point(331, 9);
-            btnGetOECRNote.Name = "btnGetOECRNote";
-            btnGetOECRNote.Size = new Size(162, 34);
-            btnGetOECRNote.TabIndex = 9;
-            btnGetOECRNote.Text = "Select OE CRNote";
-            btnGetOECRNote.UseVisualStyleBackColor = true;
-            btnGetOECRNote.Click += btnGetOECRNote_Click;
-            // 
-            // btnGetOEInvoice
-            // 
-            btnGetOEInvoice.Anchor = AnchorStyles.Left;
-            btnGetOEInvoice.Location = new Point(8, 9);
-            btnGetOEInvoice.Margin = new Padding(8, 3, 3, 3);
-            btnGetOEInvoice.Name = "btnGetOEInvoice";
-            btnGetOEInvoice.Size = new Size(177, 34);
-            btnGetOEInvoice.TabIndex = 8;
-            btnGetOEInvoice.Text = "Select OE Invoice";
-            btnGetOEInvoice.UseVisualStyleBackColor = true;
-            btnGetOEInvoice.Click += btnGetOEInvoice_Click;
             // 
             // btnClearSales
             // 
             btnClearSales.Anchor = AnchorStyles.None;
-            btnClearSales.Location = new Point(631, 9);
+            btnClearSales.Location = new Point(758, 10);
+            btnClearSales.Margin = new Padding(4);
             btnClearSales.Name = "btnClearSales";
-            btnClearSales.Size = new Size(112, 34);
+            btnClearSales.Size = new Size(134, 41);
             btnClearSales.TabIndex = 7;
             btnClearSales.Text = "Clear";
             btnClearSales.UseVisualStyleBackColor = true;
             btnClearSales.Click += btnClearSales_Click;
             // 
-            // tabSetup
+            // btnGetOEInvoice
             // 
-            tabSetup.Controls.Add(grpSetup);
-            tabSetup.Location = new Point(4, 34);
-            tabSetup.Name = "tabSetup";
-            tabSetup.Size = new Size(1392, 94);
-            tabSetup.TabIndex = 4;
-            tabSetup.Text = "Basic Setup";
-            tabSetup.UseVisualStyleBackColor = true;
+            btnGetOEInvoice.Anchor = AnchorStyles.Left;
+            btnGetOEInvoice.Location = new Point(10, 10);
+            btnGetOEInvoice.Margin = new Padding(10, 4, 4, 4);
+            btnGetOEInvoice.Name = "btnGetOEInvoice";
+            btnGetOEInvoice.Size = new Size(212, 41);
+            btnGetOEInvoice.TabIndex = 8;
+            btnGetOEInvoice.Text = "Select OE Invoice";
+            btnGetOEInvoice.UseVisualStyleBackColor = true;
+            btnGetOEInvoice.Click += btnGetOEInvoice_Click;
             // 
-            // grpSetup
+            // btnGetOECRNote
             // 
-            grpSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            grpSetup.Controls.Add(lytTableSetup);
-            grpSetup.Location = new Point(6, 3);
-            grpSetup.Name = "grpSetup";
-            grpSetup.Size = new Size(1379, 88);
-            grpSetup.TabIndex = 0;
-            grpSetup.TabStop = false;
-            grpSetup.Text = "Basic Setup";
+            btnGetOECRNote.Anchor = AnchorStyles.None;
+            btnGetOECRNote.Location = new Point(398, 10);
+            btnGetOECRNote.Margin = new Padding(4);
+            btnGetOECRNote.Name = "btnGetOECRNote";
+            btnGetOECRNote.Size = new Size(194, 41);
+            btnGetOECRNote.TabIndex = 9;
+            btnGetOECRNote.Text = "Select OE CRNote";
+            btnGetOECRNote.UseVisualStyleBackColor = true;
+            btnGetOECRNote.Click += btnGetOECRNote_Click;
             // 
-            // lytTableSetup
+            // btnGetARInvoice
             // 
-            lytTableSetup.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            lytTableSetup.ColumnCount = 5;
-            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableSetup.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
-            lytTableSetup.Controls.Add(btnSelectCodes, 0, 0);
-            lytTableSetup.Controls.Add(btnViewQueue, 2, 0);
-            lytTableSetup.Controls.Add(btnSetupTaxes, 4, 0);
-            lytTableSetup.Controls.Add(btnGetNotices, 3, 0);
-            lytTableSetup.Location = new Point(6, 30);
-            lytTableSetup.Name = "lytTableSetup";
-            lytTableSetup.RowCount = 1;
-            lytTableSetup.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            lytTableSetup.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
-            lytTableSetup.Size = new Size(1367, 52);
-            lytTableSetup.TabIndex = 0;
+            btnGetARInvoice.Anchor = AnchorStyles.None;
+            btnGetARInvoice.Location = new Point(1037, 10);
+            btnGetARInvoice.Margin = new Padding(4);
+            btnGetARInvoice.Name = "btnGetARInvoice";
+            btnGetARInvoice.Padding = new Padding(0, 0, 12, 0);
+            btnGetARInvoice.Size = new Size(236, 41);
+            btnGetARInvoice.TabIndex = 13;
+            btnGetARInvoice.Text = "Select AR Invoice";
+            btnGetARInvoice.UseVisualStyleBackColor = true;
+            btnGetARInvoice.Click += btnGetARInvoice_Click;
             // 
-            // btnSelectCodes
+            // btnGetARCRNote
             // 
-            btnSelectCodes.Anchor = AnchorStyles.Left;
-            btnSelectCodes.Location = new Point(8, 9);
-            btnSelectCodes.Margin = new Padding(8, 3, 3, 3);
-            btnSelectCodes.Name = "btnSelectCodes";
-            btnSelectCodes.Size = new Size(177, 34);
-            btnSelectCodes.TabIndex = 15;
-            btnSelectCodes.Text = "Select Codes";
-            btnSelectCodes.UseVisualStyleBackColor = true;
-            btnSelectCodes.Click += btnSelectCodes_Click;
+            btnGetARCRNote.Anchor = AnchorStyles.Right;
+            btnGetARCRNote.Location = new Point(1412, 10);
+            btnGetARCRNote.Margin = new Padding(4);
+            btnGetARCRNote.Name = "btnGetARCRNote";
+            btnGetARCRNote.Padding = new Padding(0, 0, 12, 0);
+            btnGetARCRNote.Size = new Size(236, 41);
+            btnGetARCRNote.TabIndex = 14;
+            btnGetARCRNote.Text = "Select AR CRNote";
+            btnGetARCRNote.UseVisualStyleBackColor = true;
+            btnGetARCRNote.Click += btnGetARCRNote_Click;
             // 
-            // btnViewQueue
+            // tabStock
             // 
-            btnViewQueue.Anchor = AnchorStyles.None;
-            btnViewQueue.Location = new Point(618, 9);
-            btnViewQueue.Name = "btnViewQueue";
-            btnViewQueue.Size = new Size(129, 34);
-            btnViewQueue.TabIndex = 6;
-            btnViewQueue.Text = "View Queue";
-            btnViewQueue.UseVisualStyleBackColor = true;
+            tabStock.Controls.Add(grpStock);
+            tabStock.Location = new Point(4, 39);
+            tabStock.Margin = new Padding(4);
+            tabStock.Name = "tabStock";
+            tabStock.Size = new Size(1672, 115);
+            tabStock.TabIndex = 2;
+            tabStock.Text = "Manage Stock";
+            tabStock.UseVisualStyleBackColor = true;
             // 
-            // btnSetupTaxes
+            // grpStock
             // 
-            btnSetupTaxes.Anchor = AnchorStyles.Right;
-            btnSetupTaxes.Location = new Point(1224, 9);
-            btnSetupTaxes.Name = "btnSetupTaxes";
-            btnSetupTaxes.Padding = new Padding(0, 0, 10, 0);
-            btnSetupTaxes.Size = new Size(140, 34);
-            btnSetupTaxes.TabIndex = 7;
-            btnSetupTaxes.Text = "Setup Taxes";
-            btnSetupTaxes.UseVisualStyleBackColor = true;
-            btnSetupTaxes.Click += btnSetupTaxes_Click;
+            grpStock.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            grpStock.Controls.Add(tableLayoutPanel2);
+            grpStock.Location = new Point(7, 4);
+            grpStock.Margin = new Padding(4);
+            grpStock.Name = "grpStock";
+            grpStock.Padding = new Padding(4);
+            grpStock.Size = new Size(1660, 106);
+            grpStock.TabIndex = 0;
+            grpStock.TabStop = false;
+            grpStock.Text = "Manage Stock";
             // 
-            // btnGetNotices
+            // tableLayoutPanel2
             // 
-            btnGetNotices.Anchor = AnchorStyles.None;
-            btnGetNotices.Location = new Point(857, 9);
-            btnGetNotices.Name = "btnGetNotices";
-            btnGetNotices.Padding = new Padding(0, 0, 10, 0);
-            btnGetNotices.Size = new Size(197, 34);
-            btnGetNotices.TabIndex = 14;
-            btnGetNotices.Text = "Get Notices";
-            btnGetNotices.UseVisualStyleBackColor = true;
+            tableLayoutPanel2.ColumnCount = 5;
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.Controls.Add(btnClearStock, 2, 0);
+            tableLayoutPanel2.Location = new Point(0, 36);
+            tableLayoutPanel2.Margin = new Padding(4);
+            tableLayoutPanel2.Name = "tableLayoutPanel2";
+            tableLayoutPanel2.RowCount = 1;
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel2.Size = new Size(1655, 70);
+            tableLayoutPanel2.TabIndex = 2;
             // 
-            // splitContainer1
+            // btnClearStock
             // 
-            splitContainer1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            splitContainer1.Location = new Point(16, 145);
-            splitContainer1.Name = "splitContainer1";
+            btnClearStock.Anchor = AnchorStyles.None;
+            btnClearStock.Location = new Point(760, 14);
+            btnClearStock.Margin = new Padding(4);
+            btnClearStock.Name = "btnClearStock";
+            btnClearStock.Size = new Size(134, 41);
+            btnClearStock.TabIndex = 7;
+            btnClearStock.Text = "Clear";
+            btnClearStock.UseVisualStyleBackColor = true;
             // 
-            // splitContainer1.Panel1
+            // tabPurchases
             // 
-            splitContainer1.Panel1.Controls.Add(grpRequest);
+            tabPurchases.Controls.Add(grpPurchases);
+            tabPurchases.Location = new Point(4, 39);
+            tabPurchases.Margin = new Padding(4);
+            tabPurchases.Name = "tabPurchases";
+            tabPurchases.Padding = new Padding(4);
+            tabPurchases.Size = new Size(1672, 115);
+            tabPurchases.TabIndex = 1;
+            tabPurchases.Text = "Manage Purchases";
+            tabPurchases.UseVisualStyleBackColor = true;
             // 
-            // splitContainer1.Panel2
+            // grpPurchases
             // 
-            splitContainer1.Panel2.Controls.Add(grpResponse);
-            splitContainer1.Size = new Size(1396, 788);
-            splitContainer1.SplitterDistance = 690;
-            splitContainer1.TabIndex = 1;
+            grpPurchases.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            grpPurchases.Controls.Add(tableLayoutPanel3);
+            grpPurchases.Location = new Point(4, 4);
+            grpPurchases.Margin = new Padding(4);
+            grpPurchases.Name = "grpPurchases";
+            grpPurchases.Padding = new Padding(4);
+            grpPurchases.Size = new Size(1663, 106);
+            grpPurchases.TabIndex = 0;
+            grpPurchases.TabStop = false;
+            grpPurchases.Text = "Manage Purchases";
             // 
-            // grpRequest
+            // tableLayoutPanel3
             // 
-            grpRequest.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            grpRequest.Controls.Add(reqEditor);
-            grpRequest.Location = new Point(0, 3);
-            grpRequest.Name = "grpRequest";
-            grpRequest.Size = new Size(687, 782);
-            grpRequest.TabIndex = 1;
-            grpRequest.TabStop = false;
-            grpRequest.Text = "Request Data";
+            tableLayoutPanel3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanel3.ColumnCount = 5;
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel3.Controls.Add(btnPOInvoice, 0, 0);
+            tableLayoutPanel3.Controls.Add(btnClearPurch, 2, 0);
+            tableLayoutPanel3.Controls.Add(btnGetPurch, 4, 0);
+            tableLayoutPanel3.Location = new Point(7, 36);
+            tableLayoutPanel3.Margin = new Padding(4);
+            tableLayoutPanel3.Name = "tableLayoutPanel3";
+            tableLayoutPanel3.RowCount = 1;
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel3.Size = new Size(1651, 70);
+            tableLayoutPanel3.TabIndex = 3;
             // 
-            // reqEditor
+            // btnGetPurch
             // 
-            reqEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            reqEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 212);
-            reqEditor.LexerName = null;
-            reqEditor.Location = new Point(6, 26);
-            reqEditor.Margin = new Padding(2);
-            reqEditor.Name = "reqEditor";
-            reqEditor.ScrollWidth = 86;
-            reqEditor.Size = new Size(676, 751);
-            reqEditor.TabIndex = 0;
+            btnGetPurch.Anchor = AnchorStyles.Right;
+            btnGetPurch.Location = new Point(1420, 14);
+            btnGetPurch.Margin = new Padding(4);
+            btnGetPurch.Name = "btnGetPurch";
+            btnGetPurch.Padding = new Padding(0, 0, 12, 0);
+            btnGetPurch.Size = new Size(227, 41);
+            btnGetPurch.TabIndex = 9;
+            btnGetPurch.Text = "Select Purchases";
+            btnGetPurch.UseVisualStyleBackColor = true;
+            btnGetPurch.Click += btnGetPurch_Click;
             // 
-            // grpResponse
+            // btnClearPurch
             // 
-            grpResponse.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            grpResponse.Controls.Add(respEditor);
-            grpResponse.Location = new Point(3, 0);
-            grpResponse.Name = "grpResponse";
-            grpResponse.Size = new Size(690, 788);
-            grpResponse.TabIndex = 1;
-            grpResponse.TabStop = false;
-            grpResponse.Text = "Response Data";
+            btnClearPurch.Anchor = AnchorStyles.None;
+            btnClearPurch.Location = new Point(758, 14);
+            btnClearPurch.Margin = new Padding(4);
+            btnClearPurch.Name = "btnClearPurch";
+            btnClearPurch.Size = new Size(134, 41);
+            btnClearPurch.TabIndex = 7;
+            btnClearPurch.Text = "Clear";
+            btnClearPurch.UseVisualStyleBackColor = true;
+            btnClearPurch.Click += btnClearPurch_Click;
             // 
-            // respEditor
+            // btnPOInvoice
             // 
-            respEditor.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            respEditor.AutocompleteListSelectedBackColor = Color.FromArgb(0, 120, 212);
-            respEditor.LexerName = null;
-            respEditor.Location = new Point(6, 29);
-            respEditor.Margin = new Padding(2);
-            respEditor.Name = "respEditor";
-            respEditor.ReadOnly = true;
-            respEditor.ScrollWidth = 86;
-            respEditor.Size = new Size(679, 751);
-            respEditor.TabIndex = 0;
+            btnPOInvoice.Anchor = AnchorStyles.Left;
+            btnPOInvoice.Location = new Point(10, 14);
+            btnPOInvoice.Margin = new Padding(10, 4, 4, 4);
+            btnPOInvoice.Name = "btnPOInvoice";
+            btnPOInvoice.Size = new Size(212, 41);
+            btnPOInvoice.TabIndex = 8;
+            btnPOInvoice.Text = "Select PO Invoice";
+            btnPOInvoice.UseVisualStyleBackColor = true;
             // 
-            // btnSubmitRequest
+            // tabItems
             // 
-            btnSubmitRequest.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnSubmitRequest.Location = new Point(1235, 939);
-            btnSubmitRequest.Margin = new Padding(8, 3, 3, 3);
-            btnSubmitRequest.Name = "btnSubmitRequest";
-            btnSubmitRequest.Size = new Size(177, 34);
-            btnSubmitRequest.TabIndex = 9;
-            btnSubmitRequest.Text = "Submit Request";
-            btnSubmitRequest.UseVisualStyleBackColor = true;
+            tabItems.Controls.Add(grpItems);
+            tabItems.Location = new Point(4, 39);
+            tabItems.Margin = new Padding(4);
+            tabItems.Name = "tabItems";
+            tabItems.Padding = new Padding(4);
+            tabItems.Size = new Size(1672, 115);
+            tabItems.TabIndex = 0;
+            tabItems.Text = "Manage Item";
+            tabItems.UseVisualStyleBackColor = true;
             // 
-            // btnCanceRequest
+            // grpItems
             // 
-            btnCanceRequest.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnCanceRequest.Location = new Point(12, 939);
-            btnCanceRequest.Margin = new Padding(8, 3, 3, 3);
-            btnCanceRequest.Name = "btnCanceRequest";
-            btnCanceRequest.Size = new Size(177, 34);
-            btnCanceRequest.TabIndex = 10;
-            btnCanceRequest.Text = "Cancel && Reset";
-            btnCanceRequest.UseVisualStyleBackColor = true;
+            grpItems.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            grpItems.Controls.Add(lytTableItems);
+            grpItems.Location = new Point(7, 7);
+            grpItems.Margin = new Padding(4);
+            grpItems.Name = "grpItems";
+            grpItems.Padding = new Padding(4);
+            grpItems.Size = new Size(1655, 98);
+            grpItems.TabIndex = 0;
+            grpItems.TabStop = false;
+            grpItems.Text = "Item Operations";
             // 
-            // txtReqAddress
+            // lytTableItems
             // 
-            txtReqAddress.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            txtReqAddress.Location = new Point(205, 939);
-            txtReqAddress.Name = "txtReqAddress";
-            txtReqAddress.Size = new Size(991, 31);
-            txtReqAddress.TabIndex = 11;
+            lytTableItems.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            lytTableItems.ColumnCount = 5;
+            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableItems.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            lytTableItems.Controls.Add(btnSelectItem, 0, 0);
+            lytTableItems.Controls.Add(btnSaveCompose, 4, 0);
+            lytTableItems.Controls.Add(btnSelectImports, 1, 0);
+            lytTableItems.Controls.Add(btnSaveItem, 3, 0);
+            lytTableItems.Location = new Point(0, 36);
+            lytTableItems.Margin = new Padding(4);
+            lytTableItems.Name = "lytTableItems";
+            lytTableItems.RowCount = 1;
+            lytTableItems.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            lytTableItems.Size = new Size(1648, 55);
+            lytTableItems.TabIndex = 5;
+            // 
+            // btnSaveItem
+            // 
+            btnSaveItem.Anchor = AnchorStyles.None;
+            btnSaveItem.Location = new Point(1070, 7);
+            btnSaveItem.Margin = new Padding(4);
+            btnSaveItem.Name = "btnSaveItem";
+            btnSaveItem.Size = new Size(163, 41);
+            btnSaveItem.TabIndex = 2;
+            btnSaveItem.Text = "Save Item";
+            btnSaveItem.UseVisualStyleBackColor = true;
+            btnSaveItem.Click += btnSaveItem_Click;
+            // 
+            // btnSelectImports
+            // 
+            btnSelectImports.Anchor = AnchorStyles.None;
+            btnSelectImports.Location = new Point(396, 7);
+            btnSelectImports.Margin = new Padding(4);
+            btnSelectImports.Name = "btnSelectImports";
+            btnSelectImports.Size = new Size(194, 41);
+            btnSelectImports.TabIndex = 4;
+            btnSelectImports.Text = "Select Imports";
+            btnSelectImports.UseVisualStyleBackColor = true;
+            // 
+            // btnSaveCompose
+            // 
+            btnSaveCompose.Anchor = AnchorStyles.Right;
+            btnSaveCompose.Location = new Point(1388, 7);
+            btnSaveCompose.Margin = new Padding(4, 4, 10, 4);
+            btnSaveCompose.Name = "btnSaveCompose";
+            btnSaveCompose.Size = new Size(250, 41);
+            btnSaveCompose.TabIndex = 3;
+            btnSaveCompose.Text = "Save Composition";
+            btnSaveCompose.UseVisualStyleBackColor = true;
+            // 
+            // btnSelectItem
+            // 
+            btnSelectItem.Anchor = AnchorStyles.Left;
+            btnSelectItem.Location = new Point(10, 7);
+            btnSelectItem.Margin = new Padding(10, 4, 4, 4);
+            btnSelectItem.Name = "btnSelectItem";
+            btnSelectItem.Size = new Size(212, 41);
+            btnSelectItem.TabIndex = 1;
+            btnSelectItem.Text = "Select Item";
+            btnSelectItem.UseVisualStyleBackColor = true;
+            btnSelectItem.Click += btnSelectItem_Click;
+            // 
+            // tabControlEtims
+            // 
+            tabControlEtims.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tabControlEtims.Controls.Add(tabItems);
+            tabControlEtims.Controls.Add(tabPurchases);
+            tabControlEtims.Controls.Add(tabStock);
+            tabControlEtims.Controls.Add(tabSales);
+            tabControlEtims.Controls.Add(tabSetup);
+            tabControlEtims.Controls.Add(tabMPurchase);
+            tabControlEtims.Location = new Point(14, 13);
+            tabControlEtims.Margin = new Padding(4);
+            tabControlEtims.Name = "tabControlEtims";
+            tabControlEtims.SelectedIndex = 0;
+            tabControlEtims.Size = new Size(1680, 158);
+            tabControlEtims.TabIndex = 0;
             // 
             // ETIMSClient
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1423, 977);
+            ClientSize = new Size(1708, 1172);
             Controls.Add(txtReqAddress);
             Controls.Add(btnCanceRequest);
             Controls.Add(btnSubmitRequest);
             Controls.Add(splitContainer1);
             Controls.Add(tabControlEtims);
             KeyPreview = true;
+            Margin = new Padding(4);
             Name = "ETIMSClient";
             Text = "e-TIMS Client";
-            tabControlEtims.ResumeLayout(false);
-            tabItems.ResumeLayout(false);
-            grpItems.ResumeLayout(false);
-            lytTableItems.ResumeLayout(false);
-            tabPurchases.ResumeLayout(false);
-            grpPurchases.ResumeLayout(false);
-            tableLayoutPanel3.ResumeLayout(false);
-            tabStock.ResumeLayout(false);
-            grpStock.ResumeLayout(false);
-            tableLayoutPanel2.ResumeLayout(false);
-            tabSales.ResumeLayout(false);
-            grpSales.ResumeLayout(false);
-            tableLayoutPanel1.ResumeLayout(false);
-            tabSetup.ResumeLayout(false);
-            grpSetup.ResumeLayout(false);
-            lytTableSetup.ResumeLayout(false);
             splitContainer1.Panel1.ResumeLayout(false);
             splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
             grpRequest.ResumeLayout(false);
             grpResponse.ResumeLayout(false);
+            tabSetup.ResumeLayout(false);
+            grpSetup.ResumeLayout(false);
+            lytTableSetup.ResumeLayout(false);
+            tabSales.ResumeLayout(false);
+            grpSales.ResumeLayout(false);
+            tableLayoutPanel1.ResumeLayout(false);
+            tabStock.ResumeLayout(false);
+            grpStock.ResumeLayout(false);
+            tableLayoutPanel2.ResumeLayout(false);
+            tabPurchases.ResumeLayout(false);
+            grpPurchases.ResumeLayout(false);
+            tableLayoutPanel3.ResumeLayout(false);
+            tabItems.ResumeLayout(false);
+            grpItems.ResumeLayout(false);
+            lytTableItems.ResumeLayout(false);
+            tabControlEtims.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-
-        private TabControl tabControlEtims;
-        private TabPage tabItems;
-        private TabPage tabPurchases;
         private SplitContainer splitContainer1;
         private GroupBox grpRequest;
         private GroupBox grpResponse;
-        private GroupBox grpItems;
-        private Button btnSelectItem;
-        private Button btnSaveCompose;
-        private Button btnSaveItem;
-        private Button btnSelectImports;
-        private TableLayoutPanel lytTableItems;
-        private TabPage tabStock;
-        private TabPage tabSales;
-        private TabPage tabSetup;
-        private GroupBox grpSetup;
-        private TableLayoutPanel lytTableSetup;
-        private Button btnViewQueue;
-        private GroupBox grpSales;
-        private TableLayoutPanel tableLayoutPanel1;
-        private GroupBox grpStock;
-        private GroupBox grpPurchases;
-        private TableLayoutPanel tableLayoutPanel3;
-        private TableLayoutPanel tableLayoutPanel2;
-        private Button btnClearPurch;
-        private Button btnClearStock;
-        private Button btnClearSales;
-        private Button btnGetOEInvoice;
-        private Button btnGetOECRNote;
         private ScintillaNET.Scintilla reqEditor;
         private ScintillaNET.Scintilla respEditor;
-        private Button btnGetARCRNote;
-        private Button btnSetupTaxes;
-        private Button btnPOInvoice;
-        private Button btnGetNotices;
-        private Button btnGetPurch;
         private Button btnSubmitRequest;
         private Button btnCanceRequest;
         private TextBox txtReqAddress;
-        private Button btnGetARInvoice;
+        private TabPage tabMPurchase;
+        private TabPage tabSetup;
+        private GroupBox grpSetup;
+        private TableLayoutPanel lytTableSetup;
         private Button btnSelectCodes;
+        private Button btnViewQueue;
+        private Button btnSetupTaxes;
+        private Button btnGetNotices;
+        private TabPage tabSales;
+        private GroupBox grpSales;
+        private TableLayoutPanel tableLayoutPanel1;
+        private Button btnGetARCRNote;
+        private Button btnGetARInvoice;
+        private Button btnGetOECRNote;
+        private Button btnGetOEInvoice;
+        private Button btnClearSales;
+        private TabPage tabStock;
+        private GroupBox grpStock;
+        private TableLayoutPanel tableLayoutPanel2;
+        private Button btnClearStock;
+        private TabPage tabPurchases;
+        private GroupBox grpPurchases;
+        private TableLayoutPanel tableLayoutPanel3;
+        private Button btnPOInvoice;
+        private Button btnClearPurch;
+        private Button btnGetPurch;
+        private TabPage tabItems;
+        private GroupBox grpItems;
+        private TableLayoutPanel lytTableItems;
+        private Button btnSelectItem;
+        private Button btnSaveCompose;
+        private Button btnSelectImports;
+        private Button btnSaveItem;
+        private TabControl tabControlEtims;
     }
 }

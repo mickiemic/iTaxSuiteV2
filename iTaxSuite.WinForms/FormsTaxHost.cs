@@ -10,22 +10,27 @@ namespace iTaxSuite.WinForms
     {
         private readonly VSCUConfig _vscuConfig;
         private readonly ETIMSClient _eTIMSClient;
+        private readonly VSCUStock _vscuStockClient;
 
         private readonly HashSet<string> _clients;
-        public FormsTaxHost(ETIMSClient eTIMSClient, VSCUConfig vscuConfig)
+        private readonly MApplicationContext _context;
+        public FormsTaxHost(ETIMSClient eTIMSClient, VSCUConfig vscuConfig, VSCUStock vscuStockClient, MApplicationContext context)
         {
             _clients = new HashSet<string>()
             {
-                "ETIMSClient", "ZFPClient", "TevinClient"
+                "ETIMSClient", "ZFPClient", "TevinClient", "VSCUStock"
             };
 
             _eTIMSClient = eTIMSClient;
             _vscuConfig = vscuConfig;
+            _vscuStockClient = vscuStockClient;
 
             Load += FormsTaxHost_Load;
             FormClosing += FormsTaxHost_FormClosing;
 
+            _context = context;
             InitializeComponent();
+
             toolStripStatusClient.Text = _vscuConfig.ClientCode;
             SetStatus("We are loaded...");
         }
@@ -84,6 +89,10 @@ namespace iTaxSuite.WinForms
                 {
                     //LoadTevinClient();
                 }
+                else if (Settings.Default.LastForm.Equals("VSCUStock"))
+                {
+                    LoadVSCUStock();
+                }
             }
         }
 
@@ -126,6 +135,19 @@ namespace iTaxSuite.WinForms
             eTimsProcessRequest.Enabled = true;
         }
 
+        private void LoadVSCUStock()
+        {
+            _vscuStockClient.MdiParent = this;
+            _vscuStockClient.StartPosition = FormStartPosition.CenterParent;
+            _vscuStockClient.WindowState = FormWindowState.Minimized;
+            _vscuStockClient.WindowState = FormWindowState.Maximized;
+            //_vscuStockClient.SetCurrentTab(Settings.Default.ETIMSLastTab);
+            _vscuStockClient.Show();
+
+            eTimsCloseMenuItem.Enabled = true;
+            eTimsProcessRequest.Enabled = true;
+        }
+
         private void zfpLaunchMenuItem_Click(object sender, EventArgs e)
         {
             /*LoadZFPClient();
@@ -151,6 +173,12 @@ namespace iTaxSuite.WinForms
         private void tevinCloseMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void vSCUStockToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadVSCUStock();
+            RefreshMenuItems();
         }
 
     }

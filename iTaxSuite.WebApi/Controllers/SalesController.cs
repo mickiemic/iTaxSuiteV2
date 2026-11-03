@@ -2,6 +2,7 @@
 using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
+using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iTaxSuite.WebApi.Controllers
@@ -11,11 +12,13 @@ namespace iTaxSuite.WebApi.Controllers
     [ApiController]
     public class SalesController : MBaseController
     {
+        private ClientBranch _clientBranch;
         private readonly IS300SaleService _saleService;
 
-        public SalesController(IEnumerable<IS300SaleService> s300SaleServices)
+        public SalesController(IEnumerable<IS300SaleService> s300SaleServices, IMasterDataSvc masterDataSvc)
         {
-            _saleService = s300SaleServices.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _clientBranch = masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
+            _saleService = s300SaleServices.Single(x => x.GetDeviceType() == _clientBranch.TaxClient.DeviceType);
         }
 
         [HttpPost]

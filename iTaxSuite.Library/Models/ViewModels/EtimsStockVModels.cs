@@ -2,6 +2,7 @@
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.Entities;
 using Newtonsoft.Json.Linq;
+using Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
@@ -233,6 +234,10 @@ namespace iTaxSuite.Library.Models.ViewModels
             UpdateItemCode();
         }
 
+        public SaveItemReq(ClientBranch clientBranch, StockItem stockItem, SageX3Item item)
+        {
+        }
+
         public void UpdateItemCode()
         {
             ItemCode = $"{OriginNatCode}{ItemTypeCode}{PkgUnitCode}{QtyUnitCode}{_offset:0000000}";
@@ -249,6 +254,46 @@ namespace iTaxSuite.Library.Models.ViewModels
     }
 
     public class SaveItemResp : ETIMSBaseResp
+    {
+        [Newtonsoft.Json.JsonProperty("data")]
+        public JObject Data { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string RawResponse { get; set; }
+    }
+
+    public class SaveCompositeReq : ETIMSBaseReq
+    {
+
+        [Newtonsoft.Json.JsonProperty("itemCd")]
+        [System.Text.Json.Serialization.JsonPropertyName("itemCd")]
+        public string ItemCode { get; set; }
+        [Newtonsoft.Json.JsonProperty("cpstItemCd")]
+        [System.Text.Json.Serialization.JsonPropertyName("cpstItemCd")]
+        public string CompositeItemCode { get; set; }
+        [Newtonsoft.Json.JsonProperty("cpstQty")]
+        [System.Text.Json.Serialization.JsonPropertyName("cpstQty")]
+        public double CompositeItemQty { get; set; }
+        [Newtonsoft.Json.JsonProperty("regrNm")]
+        public string RegistrantName { get; set; } = ETIMSConst.DEFAULT_USER;
+        [Newtonsoft.Json.JsonProperty("regrId")]
+        public string RegistrantID { get; set; } = ETIMSConst.DEFAULT_USER;
+        public SaveCompositeReq()
+        {
+        }
+        public SaveCompositeReq(ClientBranch clientBranch, StockItem stockItem, Item item)
+            : this()
+        {
+            PIN = clientBranch.TaxClient.TaxNumber;
+            ItemCode = stockItem.TaxItemCode;
+            if (item.ItemUnitsOfMeasure.Count > 0)
+            {
+                CompositeItemCode = $"IC:{item.ItemUnitsOfMeasure[0].ItemNumber}";
+                CompositeItemQty = (double)item.ItemUnitsOfMeasure[0].FACTOR;
+            }
+        }
+    }
+    public class SaveCompositeResp : ETIMSBaseResp
     {
         [Newtonsoft.Json.JsonProperty("data")]
         public JObject Data { get; set; }
@@ -849,6 +894,7 @@ namespace iTaxSuite.Library.Models.ViewModels
             PkgUnitCode = item.PkgUnitCode;
             Quantity = item.Quantity;
             QtyUnitCode = item.QtyUnitCode;
+            UnitPrice = item.UnitPrice;
 
             if (Quantity > 0)
                 ItemTypeCode = "2";     // Finished Product

@@ -117,7 +117,7 @@ namespace iTaxSuite.Library.Models.Entities
             DocStamp = documentDate;
 
             Description = purchaseSale.Remark;
-            VendorNumber = purchaseSale.SupplierPIN;
+            //VendorNumber = purchaseSale.SupplierPIN;
             VendorName = purchaseSale.SupplierName;
             VendorTaxNumber = purchaseSale.SupplierPIN;
             Reference = purchaseSale.Reference;

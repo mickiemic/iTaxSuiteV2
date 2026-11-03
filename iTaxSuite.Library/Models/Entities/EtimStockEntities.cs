@@ -251,12 +251,14 @@ namespace iTaxSuite.Library.Models.Entities
         [StringLength(64)]
         public string ProductCode { get; set; }
         [NotMapped]
-        public string ProdRawCode => string.IsNullOrWhiteSpace(ProductCode) ? null : ProductCode.Split(':').ElementAt(1);
+        public string ProdRawCode => string.IsNullOrWhiteSpace(ProductCode) ? null : ProductCode.Contains(":") ? ProductCode.Split(':').ElementAt(1) : ProductCode;
         [Required]
         [StringLength(3)]
         public string SourceApp { get; set; }
         [Required]
         public bool IsStockable { get; set; }
+        [NotMapped]
+        public bool IsKitting { get; set; }
         [Required]
         [StringLength(128)]
         public string Description { get; set; }
@@ -293,6 +295,7 @@ namespace iTaxSuite.Library.Models.Entities
             Description = item.Description;
             _pkgUnitCode = _qtyUnitCode = item.StockingUnitOfMeasure;
             IsStockable = item.StockItem;
+            IsKitting = item.KittingItem;
 
             // Sort Item Class
             if (item.ItemOptionalFields != null && item.ItemOptionalFields.Count > 0)
@@ -341,6 +344,14 @@ namespace iTaxSuite.Library.Models.Entities
                     ItemClassCode = optTaxClass.Value;
                 }
             }
+        }
+
+        public Product(SageX3Item item)
+            : this()
+        {
+            ProductCode = item.ITMREF;
+            SourceApp = "X3";
+            Description = item.DES1AXX;
         }
 
         public void UpdateAttributes((string PkgUnitCode, string QtyUnitCode) unitCodes)
@@ -393,6 +404,10 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public SaveItemResp SaveItemResp { get; set; }
+        [NotMapped]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public SaveCompositeReq SaveCompositeReq{ get; set; }
         public ProductData()
         {
         }
@@ -410,8 +425,16 @@ namespace iTaxSuite.Library.Models.Entities
             }
             else
             {
-                SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
-                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+                if (item.KittingItem)
+                {
+                    SaveCompositeReq = new SaveCompositeReq(clientBranch, stockItem, item);
+                    RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveCompositeReq, new DecimalFormatConverter());
+                }
+                else
+                {
+                    SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
+                    RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+                }
             }
         }
 
@@ -451,6 +474,23 @@ namespace iTaxSuite.Library.Models.Entities
             }
         }
 
+        public ProductData(ClientBranch clientBranch, StockItem stockItem, SageX3Item item, S300TaxAuthKey defS300TaxAuth = null)
+            : this()
+        {
+            // SourceStamp = item.DateLastMaintained.Value;
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+            if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
+            {
+                CreateItemReq = new DTaxCreateItemReq(clientBranch, stockItem, item, defS300TaxAuth);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(CreateItemReq, new DecimalFormatConverter());
+            }
+            else
+            {
+                SaveItemReq = new SaveItemReq(clientBranch, stockItem, item);
+                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+            }
+        }
+
         public SaveItemReq GetEtimsRequest()
         {
             if (string.IsNullOrWhiteSpace(RequestPayload))
@@ -470,6 +510,7 @@ namespace iTaxSuite.Library.Models.Entities
             SourceStamp = productData.SourceStamp;
             SourcePayload = productData.SourcePayload;
             SaveItemReq = productData.SaveItemReq;
+            SaveCompositeReq = productData.SaveCompositeReq;
             CreateItemReq = productData.CreateItemReq;
             if (clientBranch.TaxClient.DeviceType == TaxDeviceType.DIGITAX)
             {
@@ -479,7 +520,10 @@ namespace iTaxSuite.Library.Models.Entities
             }
             else
             {
-                RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
+                if (SaveCompositeReq != null)
+                    RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveCompositeReq, new DecimalFormatConverter());
+                else
+                    RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(SaveItemReq, new DecimalFormatConverter());
             }
             UpdatedOn = DateTime.Now;
             UpdatedBy = GeneralConst.APPLICATION_NAME;

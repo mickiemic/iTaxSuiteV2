@@ -82,5 +82,17 @@ namespace iTaxSuite.WinForms.Properties {
                 this["ZFPLastTab"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int VSCULastTab {
+            get {
+                return ((int)(this["VSCULastTab"]));
+            }
+            set {
+                this["VSCULastTab"] = value;
+            }
+        }
     }
 }

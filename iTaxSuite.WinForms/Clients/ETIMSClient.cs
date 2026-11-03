@@ -80,7 +80,8 @@ namespace iTaxSuite.WinForms.Clients
             {
                 _testData = new TestData()
                 {
-                    ICItem = "BX12024",
+                    //ICItem = "BX12024",
+                    ICItem = "BX62027",
                     OEInvoice = "INV00003",
                     OECreditNote = "CN000001",
                     //ARInvBatch = "20",
@@ -121,11 +122,24 @@ namespace iTaxSuite.WinForms.Clients
                     POReceipt = "VINV2133"
                 };
             }
+            else if (_vscuConfig.ClientCode == "X3DEMO")
+            {
+                _testData = new TestData()
+                {
+                    ICItem = "ALUMSHEET",
+                    OEInvoice = "AUT-A288979402400001",
+                    OECreditNote = "BHSCN1911BH011000001",
+                    ARInvBatch = "22",
+                    ARInvoice = "INV2022/179",
+                    ARCreditNote = "",
+                    POReceipt = "VINV2133"
+                };
+            }
             else
             {
                 _testData = new TestData();
             }
-            
+
             ShowLoadingScreen(this, "Setting Up Tax Metadata");
             await _masterDataSvc.InitiateTaxSetup();
             await _masterDataSvc.InitializeCacheData();
@@ -568,7 +582,7 @@ namespace iTaxSuite.WinForms.Clients
 
             respEditor.ClearAll();
             respEditor.setEditorText(JsonConvert.SerializeObject(result.GetValue()));*/
-            string strInput = Interaction.InputBox("Enter Product Code", "ReFetch Product", "AR:TPA001");
+            string strInput = Interaction.InputBox("Enter Product Code", "ReFetch Product", _testData.ICItem);
             if (string.IsNullOrWhiteSpace(strInput))
             {
                 MessageBox.Show($"Invalid Request {strInput}", "ReFetch Product");
@@ -576,7 +590,7 @@ namespace iTaxSuite.WinForms.Clients
             }
 
             ShowLoadingScreen(this, $"ReFetching Product {strInput}");
-            var result = await Task.Run(() => _s300ProductSvc.ReFetchProduct(new ProductKey{ ProductCode = strInput }));
+            var result = await Task.Run(() => _s300ProductSvc.ReFetchProduct(new ProductKey { ProductCode = strInput }));
             HideLoadingScreen();
             if (result.IsError)
             {
@@ -667,6 +681,39 @@ namespace iTaxSuite.WinForms.Clients
             {
                 MessageBox.Show($"{result.GetError()}", "Select Notices");
                 return;
+            }
+
+            respEditor.ClearAll();
+            respEditor.setEditorText(JsonConvert.SerializeObject(result.GetValue()));
+        }
+
+        private async void btnGetNotices_Click(object sender, EventArgs e)
+        {
+            string strInput = Interaction.InputBox("Enter Last Request Date", "Select Notices", "20191130000000");
+            if (string.IsNullOrWhiteSpace(strInput))
+            {
+                MessageBox.Show($"Invalid Request {strInput}", "Select Notices");
+                return;
+            }
+
+            ShowLoadingScreen(this, $"Loading Notices Request DT:{strInput}");
+            var result = await Task.Run(() => _etimsService.SelectNotices(strInput));
+            HideLoadingScreen();
+            if (result.IsError)
+            {
+                MessageBox.Show($"{result.GetError()}", "Select Notices");
+                return;
+            }
+            else
+            {
+                var noticeResp = result.GetValue();
+                if (noticeResp.NoticeData.NoticeList.Count > 0)
+                {
+                    foreach(var notice in noticeResp.NoticeData.NoticeList)
+                    {
+                        GenUtil.ShowNotification(notice.Title, notice.Content, notice.DetailURL);
+                    }
+                }
             }
 
             respEditor.ClearAll();

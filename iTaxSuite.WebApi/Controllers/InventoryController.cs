@@ -2,8 +2,8 @@
 using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models.Entities;
 using iTaxSuite.Library.Models.ViewModels;
+using iTaxSuite.Library.Services;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace iTaxSuite.WebApi.Controllers
 {
@@ -14,9 +14,10 @@ namespace iTaxSuite.WebApi.Controllers
     {
         private readonly IS300ProductSvc _productSvc;
 
-        public InventoryController(IEnumerable<IS300ProductSvc> productSvcs)
+        public InventoryController(IEnumerable<IS300ProductSvc> productSvcs, IMasterDataSvc masterDataSvc)
         {
-            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [HttpPost]

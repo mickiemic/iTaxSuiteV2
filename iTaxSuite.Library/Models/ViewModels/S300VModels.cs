@@ -1,6 +1,10 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Models.Entities;
+using Sage.CA.SBS.ERP.Sage300.AP.WebApi.Models;
+using Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models;
+using Sage.CA.SBS.ERP.Sage300.PO.WebApi.Models;
 using System.Net;
+using System.Text;
 
 namespace iTaxSuite.Library.Models.ViewModels
 {
@@ -308,6 +312,11 @@ namespace iTaxSuite.Library.Models.ViewModels
             return string.IsNullOrWhiteSpace(apiError);
         }
     }
+    public class POReceipt : Sage300ERPResp
+    {
+        [Newtonsoft.Json.JsonProperty("DateLastMaintained")]
+        public DateTime LastUpdated { get; set; }
+    }
 
     // OE Models
     public class OEInvoices : Sage300ERPResp
@@ -380,6 +389,70 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [Newtonsoft.Json.JsonProperty("value")]
         public List<Sage.CA.SBS.ERP.Sage300.GL.WebApi.Models.Account> Accounts { get; set; }
+    }
+
+    internal interface IModelTransform
+    {
+        void PrepareRequest();
+    }
+    public class MPOReceipt : IModelTransform
+    {
+        public DateTime? ReceiptDate { get; set; }
+        public string ReceiptNumber { get; set; }
+        public string Vendor { get; set; }
+        public string InvoiceNumber { get; set; }
+        public string Description { get; set; }
+        public string Reference { get; set; }
+        [Newtonsoft.Json.JsonProperty("ShipToLocation")]
+        public string Location { get; set; }
+        [Newtonsoft.Json.JsonProperty("Total")]
+        public decimal TotalAmount { get; set; }
+        public List<MReceiptLine2> ReceiptLine2s { get; set; } = new();
+        public void PrepareRequest()
+        {
+            //
+        }
+        public string GetErrors()
+        {
+            var sb = new StringBuilder();
+            if (string.IsNullOrWhiteSpace(Vendor))
+                sb.AppendLine("Invalid/ Blank Vendor");
+            if (string.IsNullOrWhiteSpace(Location))
+                sb.AppendLine("Invalid/ Blank Location");
+            foreach (var line in ReceiptLine2s)
+            {
+                var lError = line.GetErrors();
+                if (!string.IsNullOrWhiteSpace(lError))
+                {
+                    sb.AppendLine(lError);
+                }
+            }
+
+            return sb.ToString();
+        }
+    }
+    public class MReceiptLine2
+    {
+        public double LineNumber { internal get; set; }
+        public string ItemNumber { get; set; }
+        public string ItemDescription { get; set; }
+        public string Location { get; set; }
+        public string RCPUNIT { get; set; }
+        public double QuantityReceived { get; set; }
+        public decimal UnitCost { get; set; }
+        public decimal TotalTax { get; set; }
+
+        public MReceiptLine2() { }
+        public string GetErrors()
+        {
+            var sb = new StringBuilder();
+            if (string.IsNullOrWhiteSpace(ItemNumber))
+                sb.AppendLine("Invalid/ Blank ItemNumber");
+            if (string.IsNullOrWhiteSpace(RCPUNIT))
+                sb.AppendLine("Invalid/ Blank Receupt UOM");
+
+            return sb.ToString();
+        }
     }
 
 }

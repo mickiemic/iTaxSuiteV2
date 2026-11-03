@@ -151,6 +151,51 @@ namespace iTaxSuite.Library.Models.ViewModels
                 ItemClassCode = newItemClassCode;
         }
 
+        public DTaxCreateItemReq(ClientBranch clientBranch, StockItem stockItem, SageX3Item item, S300TaxAuthKey defS300TaxAuth)
+            : this()
+        {
+            _offset = stockItem.EtrSeqNumber;
+            BarCode = stockItem.ProductCode;
+            /*if (item.StockItem)
+            {
+                ItemTypeCode = "2";
+                StockQuantity = (double)item.QuantityAvailable;
+            }
+            else
+            {
+                ItemTypeCode = "3";
+            }*/
+            ItemName = item.DES1AXX;
+            PkgUnitCode = stockItem.Product.PackageUnit;
+            QtyUnitCode = stockItem.Product.QuantityUnit;
+            TaxTypeCode = "B";
+            ItemClassCode = stockItem.Product.ItemClassCode;
+            if (!string.IsNullOrWhiteSpace(clientBranch.TaxClient.BaseCallback))
+                CallbackURL = $"{clientBranch.TaxClient.BaseCallback}/{clientBranch.TaxClient.ExternalID}/itemsync";
+
+            string newItemClassCode = string.Empty;
+            /*if (item.ItemOptionalFields != null && item.ItemOptionalFields.Count > 0)
+            {
+                var optTaxClass = item.ItemOptionalFields.FirstOrDefault(f => f.OptionalField
+                    .Equals(GeneralConst.OPTFLD_TAXCLASSCODE, StringComparison.InvariantCultureIgnoreCase));
+                if (optTaxClass != null && !string.IsNullOrWhiteSpace(optTaxClass.Value))
+                {
+                    newItemClassCode = optTaxClass.Value;
+                    if (stockItem.Product.ItemClassCode != newItemClassCode)
+                    {
+                        newItemClassCode = stockItem.Product.ItemClassCode;
+                    }
+                }
+            }*/
+            if (newItemClassCode != ItemClassCode)
+                ItemClassCode = newItemClassCode;
+
+            /*if (defS300TaxAuth != null && item.ItemTaxAuthorities != null && item.ItemTaxAuthorities.Count > 0)
+            {
+                // todo: implement tax type lookup for IC items
+            }*/
+        }
+
         public bool IsValid()
         {
             return !string.IsNullOrWhiteSpace(ItemClassCode) && !string.IsNullOrWhiteSpace(PkgUnitCode) 

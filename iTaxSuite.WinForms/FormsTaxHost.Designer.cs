@@ -48,6 +48,7 @@
             statusStrip1 = new StatusStrip();
             toolStripStatusLabel = new ToolStripStatusLabel();
             toolStripStatusClient = new ToolStripStatusLabel();
+            vSCUStockToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
@@ -55,10 +56,11 @@
             // menuStrip1
             // 
             menuStrip1.ImageScalingSize = new Size(24, 24);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { eTimsClientToolStripMenuItem, zFPClientToolStripMenuItem, tevinClientToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { eTimsClientToolStripMenuItem, zFPClientToolStripMenuItem, tevinClientToolStripMenuItem, vSCUStockToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(1514, 33);
+            menuStrip1.Padding = new Padding(7, 2, 0, 2);
+            menuStrip1.Size = new Size(1817, 38);
             menuStrip1.TabIndex = 1;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -66,13 +68,13 @@
             // 
             eTimsClientToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { eTimsLaunchMenuItem, eTimsProcessRequest, eTimsCloseMenuItem });
             eTimsClientToolStripMenuItem.Name = "eTimsClientToolStripMenuItem";
-            eTimsClientToolStripMenuItem.Size = new Size(130, 29);
+            eTimsClientToolStripMenuItem.Size = new Size(152, 34);
             eTimsClientToolStripMenuItem.Text = "E-Tims Client";
             // 
             // eTimsLaunchMenuItem
             // 
             eTimsLaunchMenuItem.Name = "eTimsLaunchMenuItem";
-            eTimsLaunchMenuItem.Size = new Size(242, 34);
+            eTimsLaunchMenuItem.Size = new Size(281, 40);
             eTimsLaunchMenuItem.Text = "Launch";
             eTimsLaunchMenuItem.Click += eTimsLaunchMenuItem_Click;
             // 
@@ -80,14 +82,14 @@
             // 
             eTimsProcessRequest.Enabled = false;
             eTimsProcessRequest.Name = "eTimsProcessRequest";
-            eTimsProcessRequest.Size = new Size(242, 34);
+            eTimsProcessRequest.Size = new Size(281, 40);
             eTimsProcessRequest.Text = "Process Request";
             // 
             // eTimsCloseMenuItem
             // 
             eTimsCloseMenuItem.Enabled = false;
             eTimsCloseMenuItem.Name = "eTimsCloseMenuItem";
-            eTimsCloseMenuItem.Size = new Size(242, 34);
+            eTimsCloseMenuItem.Size = new Size(281, 40);
             eTimsCloseMenuItem.Text = "Close";
             eTimsCloseMenuItem.Click += eTimsCloseMenuItem_Click;
             // 
@@ -95,13 +97,13 @@
             // 
             zFPClientToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { zfpLaunchMenuItem, zfpProcessRequest, zfpCloseMenuItem });
             zFPClientToolStripMenuItem.Name = "zFPClientToolStripMenuItem";
-            zFPClientToolStripMenuItem.Size = new Size(106, 29);
+            zFPClientToolStripMenuItem.Size = new Size(124, 34);
             zFPClientToolStripMenuItem.Text = "ZFP Client";
             // 
             // zfpLaunchMenuItem
             // 
             zfpLaunchMenuItem.Name = "zfpLaunchMenuItem";
-            zfpLaunchMenuItem.Size = new Size(242, 34);
+            zfpLaunchMenuItem.Size = new Size(281, 40);
             zfpLaunchMenuItem.Text = "Launch";
             zfpLaunchMenuItem.Click += zfpLaunchMenuItem_Click;
             // 
@@ -109,14 +111,14 @@
             // 
             zfpProcessRequest.Enabled = false;
             zfpProcessRequest.Name = "zfpProcessRequest";
-            zfpProcessRequest.Size = new Size(242, 34);
+            zfpProcessRequest.Size = new Size(281, 40);
             zfpProcessRequest.Text = "Process Request";
             // 
             // zfpCloseMenuItem
             // 
             zfpCloseMenuItem.Enabled = false;
             zfpCloseMenuItem.Name = "zfpCloseMenuItem";
-            zfpCloseMenuItem.Size = new Size(242, 34);
+            zfpCloseMenuItem.Size = new Size(281, 40);
             zfpCloseMenuItem.Text = "Close";
             zfpCloseMenuItem.Click += zfpCloseMenuItem_Click;
             // 
@@ -124,13 +126,13 @@
             // 
             tevinClientToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { tevinLaunchMenuItem, tevinClearReqMenuItem, tevinClearRespMenuItem, clearAllToolStripMenuItem, tevinProcessRequest, tevinCloseMenuItem });
             tevinClientToolStripMenuItem.Name = "tevinClientToolStripMenuItem";
-            tevinClientToolStripMenuItem.Size = new Size(116, 29);
+            tevinClientToolStripMenuItem.Size = new Size(137, 34);
             tevinClientToolStripMenuItem.Text = "Tevin Client";
             // 
             // tevinLaunchMenuItem
             // 
             tevinLaunchMenuItem.Name = "tevinLaunchMenuItem";
-            tevinLaunchMenuItem.Size = new Size(242, 34);
+            tevinLaunchMenuItem.Size = new Size(281, 40);
             tevinLaunchMenuItem.Text = "Launch";
             tevinLaunchMenuItem.Click += tevinLaunchMenuItem_Click;
             // 
@@ -138,35 +140,35 @@
             // 
             tevinClearReqMenuItem.Enabled = false;
             tevinClearReqMenuItem.Name = "tevinClearReqMenuItem";
-            tevinClearReqMenuItem.Size = new Size(242, 34);
+            tevinClearReqMenuItem.Size = new Size(281, 40);
             tevinClearReqMenuItem.Text = "Clear Request";
             // 
             // tevinClearRespMenuItem
             // 
             tevinClearRespMenuItem.Enabled = false;
             tevinClearRespMenuItem.Name = "tevinClearRespMenuItem";
-            tevinClearRespMenuItem.Size = new Size(242, 34);
+            tevinClearRespMenuItem.Size = new Size(281, 40);
             tevinClearRespMenuItem.Text = "Clear Response";
             // 
             // clearAllToolStripMenuItem
             // 
             clearAllToolStripMenuItem.Enabled = false;
             clearAllToolStripMenuItem.Name = "clearAllToolStripMenuItem";
-            clearAllToolStripMenuItem.Size = new Size(242, 34);
+            clearAllToolStripMenuItem.Size = new Size(281, 40);
             clearAllToolStripMenuItem.Text = "Clear All";
             // 
             // tevinProcessRequest
             // 
             tevinProcessRequest.Enabled = false;
             tevinProcessRequest.Name = "tevinProcessRequest";
-            tevinProcessRequest.Size = new Size(242, 34);
+            tevinProcessRequest.Size = new Size(281, 40);
             tevinProcessRequest.Text = "Process Request";
             // 
             // tevinCloseMenuItem
             // 
             tevinCloseMenuItem.Enabled = false;
             tevinCloseMenuItem.Name = "tevinCloseMenuItem";
-            tevinCloseMenuItem.Size = new Size(242, 34);
+            tevinCloseMenuItem.Size = new Size(281, 40);
             tevinCloseMenuItem.Text = "Close";
             tevinCloseMenuItem.Click += tevinCloseMenuItem_Click;
             // 
@@ -174,17 +176,16 @@
             // 
             statusStrip1.ImageScalingSize = new Size(28, 28);
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel, toolStripStatusClient });
-            statusStrip1.Location = new Point(0, 912);
+            statusStrip1.Location = new Point(0, 1094);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Padding = new Padding(1, 0, 12, 0);
-            statusStrip1.Size = new Size(1514, 32);
+            statusStrip1.Size = new Size(1817, 39);
             statusStrip1.TabIndex = 3;
             statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel
             // 
             toolStripStatusLabel.Name = "toolStripStatusLabel";
-            toolStripStatusLabel.Size = new Size(1393, 25);
+            toolStripStatusLabel.Size = new Size(1674, 30);
             toolStripStatusLabel.Spring = true;
             toolStripStatusLabel.Text = "toolStripStatusLabel";
             toolStripStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -192,19 +193,27 @@
             // toolStripStatusClient
             // 
             toolStripStatusClient.Name = "toolStripStatusClient";
-            toolStripStatusClient.Size = new Size(108, 25);
+            toolStripStatusClient.Size = new Size(128, 30);
             toolStripStatusClient.Text = "Client Name";
+            // 
+            // vSCUStockToolStripMenuItem
+            // 
+            vSCUStockToolStripMenuItem.Name = "vSCUStockToolStripMenuItem";
+            vSCUStockToolStripMenuItem.Size = new Size(137, 34);
+            vSCUStockToolStripMenuItem.Text = "VSCU Stock";
+            vSCUStockToolStripMenuItem.Click += vSCUStockToolStripMenuItem_Click;
             // 
             // FormsTaxHost
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1514, 944);
+            ClientSize = new Size(1817, 1133);
             Controls.Add(statusStrip1);
             Controls.Add(menuStrip1);
             Icon = (Icon)resources.GetObject("$this.Icon");
             IsMdiContainer = true;
             MainMenuStrip = menuStrip1;
+            Margin = new Padding(4, 4, 4, 4);
             Name = "FormsTaxHost";
             Text = "Tax Client";
             menuStrip1.ResumeLayout(false);
@@ -236,5 +245,6 @@
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel toolStripStatusLabel;
         private ToolStripStatusLabel toolStripStatusClient;
+        private ToolStripMenuItem vSCUStockToolStripMenuItem;
     }
 }

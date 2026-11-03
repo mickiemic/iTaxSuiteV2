@@ -1,6 +1,7 @@
 ﻿using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Models.Entities;
+using System.Text;
 
 namespace iTaxSuite.Library.Models.ViewModels
 {
@@ -136,6 +137,23 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         public string GetError()
         {
+            if (ItemList == null || ItemList.Count == 0)
+                return "No items found in the sale request.";
+
+            var sb = new StringBuilder();
+            foreach (var item in ItemList)
+            {
+                if (string.IsNullOrWhiteSpace(item.BarCode))
+                    sb.AppendLine($"Item barcode for item {item.ItemName} is missing.");
+                if (item.Quantity <= 0)
+                    sb.AppendLine($"Item quantity must be greater than zero for item {item.ItemName}.");
+                if (item.UnitPrice < 0)
+                    sb.AppendLine($"Item unit price cannot be negative for item {item.ItemName}.");
+                if (item.TotalAmount < 0)
+                    sb.AppendLine("Item total amount cannot be negative for item {item.ItemName}.");
+            }
+            if (sb.Length > 0)
+                return sb.ToString();
             return null;
         }
 

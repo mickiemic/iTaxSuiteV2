@@ -74,7 +74,12 @@ namespace iTaxSuite.WinForms
                     }
                     if (_extSystConfig == null)
                     {
-                        throw new Exception("Invalid Sage 300 ERP configuration");
+                        throw new Exception("Invalid => null External System configuration");
+                    }
+                    var _compatibleERPs = new List<string> { "Sage300c", "SageX3" };
+                    if (!_compatibleERPs.Contains(_extSystConfig.SystemCode))
+                    {
+                        throw new Exception($"Invalid External System configuration, SystemCode: {_extSystConfig.SystemCode}");
                     }
                     _ = services.AddSingleton(_extSystConfig);
 
@@ -139,7 +144,14 @@ namespace iTaxSuite.WinForms
                     _ = services.AddScoped<IEtimsService, EtimsService>();
                     _ = services.AddScoped<IDigiTaxService, DigiTaxService>();
                     _ = services.AddScoped<IS300ProductSvc, S300TimsProductSvc>();
-                    _ = services.AddScoped<IS300ProductSvc, S300DTaxProductSvc>();
+                    if (_extSystConfig.SystemCode.Equals("SageX3"))
+                    {
+                        _ = services.AddScoped<IS300ProductSvc, SX3DTaxProductSvc>();
+                    }
+                    else
+                    {
+                        _ = services.AddScoped<IS300ProductSvc, S300DTaxProductSvc>();
+                    }
                     _ = services.AddScoped<IS300SaleService, S300TimsSaleService>();
                     _ = services.AddScoped<IS300SaleService, S300DTaxSaleService>();
 
@@ -147,7 +159,10 @@ namespace iTaxSuite.WinForms
                     _ = services.AddTransient<ETIMSClient>();
                     //services.AddTransient<ZFPClient>();
                     //services.AddTransient<TevinClient>();
+                    _ = services.AddTransient<MApplicationContext>();
                     _ = services.AddTransient<FormsTaxHost>();
+
+                    _ = services.AddTransient<VSCUStock>();
                 })
                 .Build();
 
@@ -160,6 +175,7 @@ namespace iTaxSuite.WinForms
                 Application.SetCompatibleTextRenderingDefault(false);
 
                 var app = _host.Services.GetRequiredService<FormsTaxHost>();
+                //var app = _host.Services.GetRequiredService<VSCUTaxHost>();
                 Application.Run(app);
             }
             catch (Exception ex)

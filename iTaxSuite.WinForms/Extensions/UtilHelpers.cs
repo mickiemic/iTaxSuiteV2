@@ -1,11 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -195,6 +192,38 @@ namespace iTaxSuite.WinForms.Extensions
 
             return true;
         }
+
+        public static void ShowNotification(string title, string message, string webUrl, int expiryMin = 0)
+        {
+            var builder = new ToastContentBuilder();
+            
+            if (!string.IsNullOrWhiteSpace(title))
+                builder.AddText(title);
+            builder.AddText(message);
+            builder.AddAppLogoOverride(new Uri("file:///D:/workspace/csharp/iTaxSuiteV2/iTaxSuite.WinForms/Images/tax_icon.ico"));
+            if (!string.IsNullOrWhiteSpace(webUrl))
+            {
+                builder.SetProtocolActivation(new Uri(webUrl));
+            }
+            if (expiryMin != 0)
+            {
+                builder.Show(toast =>
+                {
+                    toast.ExpirationTime = DateTime.Now.AddMinutes(expiryMin);
+                    //toast.SetToastScenario(ToastScenario.Default);
+                    toast.SuppressPopup = false;
+                });
+            }
+            else
+            {
+                builder.Show(toast =>
+                {
+                    toast.SuppressPopup = false;
+                });
+            }
+
+        }
+    
     }
 
 }

@@ -20,6 +20,15 @@ namespace iTaxSuite.Library.Services
         Task<Result<SelectItemResp, string>> SelectItems(string strInput);
         Task<Result<NoticeResp, string>> SelectNotices(string lastReqDt);
         Task<Result<TrnsPurchaseSalesResp, string>> SelectPurchaseSales(string lastReqDt);
+        Task<Result<SelectItemClassResp, string>> SelectItemClass(string strInput);
+        Task<Result<SelectCustomerResp, string>> SelectCustomer(string strInput);
+        Task<Result<SelectBranchResp, string>> SelectBranches(bool log = false);
+        Task<Result<SelectStockItemResp, string>> SelectStockItems(string strInput);
+        Task<Result<SelectImportItemResp, string>> SelectImportItems(string strInput);
+        Task<Result<SaveBranchCustomerResp, string>> SaveBranchCustomer(SaveBranchCustomerReq saveBranchCustomer);
+        Task<Result<SaveBranchUserResp, string>> SaveBranchUser(SaveBranchUserReq saveBranchUser);
+        Task<Result<SaveBranchInsurResp, string>> SaveBranchInsurance(SaveBranchInsurReq saveBranchInsur);
+        Task<Result<SaveCompositeResp, string>> CreateEtimsComposition(SaveCompositeReq saveCompositeReq);
     }
     public class EtimsService : IEtimsService
     {
@@ -37,6 +46,30 @@ namespace iTaxSuite.Library.Services
         }
 
         public async Task<Result<int, string>> GetBranchCount(bool log = false)
+        {
+            string _method_ = "SelectBranchCount";
+            SelectBranchResp result = null;
+            try
+            {
+                var apiRes = await SelectBranches(log);
+                if (!apiRes.IsError)
+                {
+                    UI.Error($"<< {_method_}: {apiRes.GetError()}");
+                    return apiRes.GetError();
+                }
+                else
+                {
+                    result = apiRes.GetValue();
+                    return result.Data.Branches.Count;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        public async Task<Result<SelectBranchResp, string>> SelectBranches(bool log = false)
         {
             string _method_ = "SelectBranchCount";
             string _strResponse = string.Empty;
@@ -60,7 +93,7 @@ namespace iTaxSuite.Library.Services
                     if (log)
                         UI.Info($"<< {_method_}: {_strResponse}");
                     result = JsonConvert.DeserializeObject<SelectBranchResp>(_strResponse);
-                    return result.Data.Branches.Count;
+                    return result;
                 }
             }
             catch (Exception ex)
@@ -107,6 +140,79 @@ namespace iTaxSuite.Library.Services
             }
         }
 
+        public async Task<Result<SelectImportItemResp, string>> SelectImportItems(string strInput)
+        {
+            string _method_ = "SelectImportItems";
+            string _strResponse = string.Empty;
+            SelectImportItemResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/imports/selectImportItems");
+                var requestObj = new SelectImportItemReq
+                {
+                    PIN = _clientBranch.TaxClient.TaxNumber,
+                    LastRequest = strInput
+                };
+                string jsonRequest = JsonConvert.SerializeObject(requestObj);
+                UI.Info($">> {_method_}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SelectImportItemResp>(_strResponse);
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        public async Task<Result<SelectStockItemResp, string>> SelectStockItems(string strInput)
+        {
+            string _method_ = "SelectStockItems";
+            string _strResponse = string.Empty;
+            SelectStockItemResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/stock/selectStockItems");
+                var requestObj = new SelectStockItemReq
+                {
+                    PIN = _clientBranch.TaxClient.TaxNumber,
+                    LastRequest = strInput
+                };
+                string jsonRequest = JsonConvert.SerializeObject(requestObj);
+                UI.Info($">> {_method_}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SelectStockItemResp>(_strResponse);
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
         public async Task<Result<SelectCodeResp, string>> SelectCodes(string strInput)
         {
             string _method_ = "SelectCodes";
@@ -134,6 +240,78 @@ namespace iTaxSuite.Library.Services
                 {
                     UI.Info($"<< {_method_}: {_strResponse}");
                     result = JsonConvert.DeserializeObject<SelectCodeResp>(_strResponse);
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        public async Task<Result<SelectItemClassResp, string>> SelectItemClass(string strInput)
+        {
+            string _method_ = "SelectItemClass";
+            string _strResponse = string.Empty;
+            SelectItemClassResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/itemClass/selectItemsClass");
+                var requestObj = new SelectItemClassReq
+                {
+                    PIN = _clientBranch.TaxClient.TaxNumber,
+                    LastRequest = strInput
+                };
+                string jsonRequest = JsonConvert.SerializeObject(requestObj);
+                UI.Info($">> {_method_}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SelectItemClassResp>(_strResponse);
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+        public async Task<Result<SelectCustomerResp, string>> SelectCustomer(string strInput)
+        {
+            string _method_ = "SelectCustomer";
+            string _strResponse = string.Empty;
+            SelectCustomerResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/customer/selectCustomer");
+                var requestObj = new SelectCustomerReq
+                {
+                    PIN = _clientBranch.TaxClient.TaxNumber,
+                    CustomerPIN = strInput
+                };
+                string jsonRequest = JsonConvert.SerializeObject(requestObj);
+                UI.Info($">> {_method_}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SelectCustomerResp>(_strResponse);
                     return result;
                 }
             }
@@ -297,6 +475,42 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
         }
+        public async Task<Result<SaveCompositeResp, string>> CreateEtimsComposition(SaveCompositeReq saveCompositeReq)
+        {
+            string _method_ = "CreateEtimsComposition";
+            string _strResponse = string.Empty;
+            SaveCompositeResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/items/saveItemComposition");
+                string jsonRequest = JsonConvert.SerializeObject(saveCompositeReq);
+                UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SaveCompositeResp>(_strResponse);
+                    result.RawResponse = _strResponse;
+                    if (!result.IsSuccess)
+                    {
+                        UI.Error($"<< {_method_}: {_strResponse}");
+                    }
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
 
         public async Task<Result<TrnsSalesSaveResp, string>> SaveEtimsSale(TrnsSalesSaveReq saveSaleReq)
         {
@@ -371,6 +585,117 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
 
+        }
+
+        public async Task<Result<SaveBranchCustomerResp, string>> SaveBranchCustomer(SaveBranchCustomerReq saveBranchCustomer)
+        {
+            string _method_ = "SaveBranchCustomer";
+            string _strResponse = string.Empty;
+            SaveBranchCustomerResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/branches/saveBrancheCustomers");
+                string jsonRequest = JsonConvert.SerializeObject(saveBranchCustomer, new DecimalFormatConverter());
+                UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SaveBranchCustomerResp>(_strResponse);
+                    result.RawResponse = _strResponse;
+                    if (!result.IsSuccess)
+                    {
+                        UI.Error($"<< {_method_}: {_strResponse}");
+                    }
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
+        public async Task<Result<SaveBranchUserResp, string>> SaveBranchUser(SaveBranchUserReq saveBranchUser)
+        {
+            string _method_ = "SaveBranchUser";
+            string _strResponse = string.Empty;
+            SaveBranchUserResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/branches/saveBrancheUsers");
+                string jsonRequest = JsonConvert.SerializeObject(saveBranchUser, new DecimalFormatConverter());
+                UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SaveBranchUserResp>(_strResponse);
+                    result.RawResponse = _strResponse;
+                    if (!result.IsSuccess)
+                    {
+                        UI.Error($"<< {_method_}: {_strResponse}");
+                    }
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
+        }
+
+        public async Task<Result<SaveBranchInsurResp, string>> SaveBranchInsurance(SaveBranchInsurReq saveBranchInsur)
+        {
+            string _method_ = "SaveBranchInsurance";
+            string _strResponse = string.Empty;
+            SaveBranchInsurResp result = null;
+            try
+            {
+                var client = _httpClientFactory.CreateClient(GeneralConst.HTTP_CLIENT_UNSAFE);
+                string _reqUrl = string.Format($"{_clientBranch.EtrAddress}/branches/saveBrancheInsurances");
+                string jsonRequest = JsonConvert.SerializeObject(saveBranchInsur, new DecimalFormatConverter());
+                UI.Info($">> {_method_} {_reqUrl}: {jsonRequest}");
+                var _httpResponse = await client.ProcessPostJsonAsync(_reqUrl, jsonRequest);
+                _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                if (!_httpResponse.IsSuccessStatusCode)
+                {
+                    UI.Error($"<< {_method_}: {_strResponse}");
+                    return _strResponse;
+                }
+                else
+                {
+                    UI.Info($"<< {_method_}: {_strResponse}");
+                    result = JsonConvert.DeserializeObject<SaveBranchInsurResp>(_strResponse);
+                    result.RawResponse = _strResponse;
+                    if (!result.IsSuccess)
+                    {
+                        UI.Error($"<< {_method_}: {_strResponse}");
+                    }
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error: {ex.GetBaseException().Message}");
+                return ex.GetBaseException().Message;
+            }
         }
 
         public async Task<Result<TrnsPurchaseSaveResp, string>> SaveEtimsPurchase(TrnsPurchaseSaveReq savePurchaseReq)

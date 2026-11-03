@@ -3,6 +3,7 @@ using iTaxSuite.Library.Constants;
 using iTaxSuite.Library.Extensions;
 using iTaxSuite.Library.Interfaces;
 using iTaxSuite.Library.Models.Entities;
+using iTaxSuite.Library.Services;
 
 namespace iTaxSuite.WebApi.Schedules
 {
@@ -11,9 +12,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.IC_PRODUCT_HASHKEY}";
         private readonly IS300ProductSvc _productSvc;
 
-        public ICProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs)
+        public ICProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs, IMasterDataSvc masterDataSvc)
         {
-            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -34,9 +36,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.AR_PRODUCT_HASHKEY}";
         private readonly IS300ProductSvc _productSvc;
 
-        public ARProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs)
+        public ARProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs, IMasterDataSvc masterDataSvc)
         {
-            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
         
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -57,9 +60,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.GL_PRODUCT_HASHKEY}";
         private readonly IS300ProductSvc _productSvc;
 
-        public GLProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs)
+        public GLProductsFetcher(IEnumerable<IS300ProductSvc> productSvcs, IMasterDataSvc masterDataSvc)
         {
-            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -81,9 +85,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.ALL_PRODUCTSPOST_JOBKEY}";
         private readonly IS300ProductSvc _productSvc;
 
-        public AllProductsPost(IEnumerable<IS300ProductSvc> productSvcs)
+        public AllProductsPost(IEnumerable<IS300ProductSvc> productSvcs, IMasterDataSvc masterDataSvc)
         {
-            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -145,9 +150,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_OEINV_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public OEInvoiceFetcher(IEnumerable<IS300SaleService> saleSvcs)
+        public OEInvoiceFetcher(IEnumerable<IS300SaleService> saleSvcs, IMasterDataSvc masterDataSvc)
         {
-            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -177,9 +183,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_OECNT_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public OECRNoteFetcher(IEnumerable<IS300SaleService> saleSvcs)
+        public OECRNoteFetcher(IEnumerable<IS300SaleService> saleSvcs, IMasterDataSvc masterDataSvc)
         {
-            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -210,9 +217,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_ARINV_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public ARInvoiceFetcher(IEnumerable<IS300SaleService> saleSvcs)
+        public ARInvoiceFetcher(IEnumerable<IS300SaleService> saleSvcs, IMasterDataSvc masterDataSvc)
         {
-            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -243,9 +251,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.TXSALES_ARCNT_HASHKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public ARCRNoteFetcher(IEnumerable<IS300SaleService> saleSvcs)
+        public ARCRNoteFetcher(IEnumerable<IS300SaleService> saleSvcs, IMasterDataSvc masterDataSvc)
         {
-            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -307,9 +316,10 @@ namespace iTaxSuite.WebApi.Schedules
         public const string JobId = $"job-{CacheConst.ALL_TAXPOSTTRX_JOBKEY}";
         private readonly IS300SaleService _saleSvc;
 
-        public AllTaxTrxsPost(IEnumerable<IS300SaleService> saleSvcs)
+        public AllTaxTrxsPost(IEnumerable<IS300SaleService> saleSvcs, IMasterDataSvc masterDataSvc)
         {
-            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]
@@ -338,9 +348,10 @@ namespace iTaxSuite.WebApi.Schedules
     {
         public const string JobId = $"job-{CacheConst.ALL_TAXSYNCTRX_JOBKEY}";
         private readonly IS300SaleService _saleSvc;
-        public AllTaxTrxsSync(IEnumerable<IS300SaleService> saleSvcs)
+        public AllTaxTrxsSync(IEnumerable<IS300SaleService> saleSvcs, IMasterDataSvc masterDataSvc)
         {
-            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.DIGITAX);
+            _saleSvc = saleSvcs.Single(x => x.GetDeviceType() == masterDataSvc.GetBranchAsync()
+                .GetAwaiter().GetResult().TaxClient.DeviceType);
         }
 
         [DisableConcurrentExecution(timeoutInSeconds: 30)]

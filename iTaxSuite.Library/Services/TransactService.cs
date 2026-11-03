@@ -26,13 +26,13 @@ namespace iTaxSuite.Library.Services
         private readonly Dictionary<string, SyncChannel> _syncChannelMap;
         private readonly ClientBranch _clientBranch = null;
 
-        public TransactService(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, IMasterDataSvc masterDataSvc, IS300ProductSvc productSvc, IS300SaleService saleService)
+        public TransactService(ETimsDBContext dbContext, IConnectionMultiplexer multiplexer, IMasterDataSvc masterDataSvc, IEnumerable<IS300ProductSvc> productSvcs, IEnumerable<IS300SaleService> s300SaleServices)
         {
             _dbContext = dbContext;
             _baseDb = multiplexer.GetDatabase();
             _masterDataSvc = masterDataSvc;
-            _productSvc = productSvc;
-            _saleService = saleService;
+            _productSvc = productSvcs.Single(x => x.GetDeviceType() == TaxDeviceType.VSCU);
+            _saleService = s300SaleServices.Single(x => x.GetDeviceType() == TaxDeviceType.VSCU);
         }
 
         public async Task<Result<PagedResult<EtimsTransact>, string>> GetTransactions(TransactFilter filter)

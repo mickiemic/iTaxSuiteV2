@@ -119,7 +119,7 @@ namespace iTaxSuite.WinForms.Clients
                     /*var productList = new List<string> { "OE:BX12024", "AR:TPA001", "GL:30200" };
                     var stockItems = await _dbContext.StockItems.Include(stock => stock.Product)
                         .ThenInclude(prod => prod.ProductData)
-                        .Where(x => !string.IsNullOrWhiteSpace(x.TaxItemCode) *//*&& x.ProductCode.StartsWith("OE")*//*
+                        .Where(x => !string.IsNullOrWhiteSpace(x.TaxItemCode) *//*&& x.ProductCode.StartsWith("IC")*//*
                          && (productList.Count == 0 || productList.Contains(x.ProductCode)))
                         .ToListAsync();
                     if ((stockItems?.Count ?? 0) == 0)
@@ -130,12 +130,12 @@ namespace iTaxSuite.WinForms.Clients
                     foreach (var stockItem in stockItems)
                     {
                         DTaxCreateItemReq dTaxItem = null;
-                        if (stockItem.Product.SourceApp == "OE")
+                        if (stockItem.Product.SourceApp == "IC")
                         {
                             var icItem = JsonConvert.DeserializeObject<Sage.CA.SBS.ERP.Sage300.IC.WebApi.Models.Item>(stockItem.Product.ProductData.SourcePayload);
                             dTaxItem = new DTaxCreateItemReq(_clientBranch, stockItem, icItem);
                         }
-                        else if (stockItem.Product.SourceApp == "OE")
+                        else if (stockItem.Product.SourceApp == "IC")
                         {
                             var arItem = JsonConvert.DeserializeObject<Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Item>(stockItem.Product.ProductData.SourcePayload);
                             dTaxItem = new DTaxCreateItemReq(_clientBranch, stockItem, arItem);

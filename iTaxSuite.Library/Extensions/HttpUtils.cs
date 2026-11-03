@@ -15,6 +15,13 @@ namespace iTaxSuite.Library.Extensions
 {
     public static class HttpClientExtensions
     {
+        private static bool IsConnectionIssue(HttpRequestException ex)
+        {
+            // Filter specifically for connection-level failures
+            return ex.HttpRequestError is HttpRequestError.ConnectionError
+                                     or HttpRequestError.NameResolutionError
+                                     or HttpRequestError.SecureConnectionError;
+        }
         public static async Task<T> ProcessGetXmlAsync<T>(this HttpClient _httpClient,
             string baseUrl, Dictionary<string, string> headers = null, Dictionary<string, string> parameters = null)
             where T : class
@@ -214,31 +221,47 @@ namespace iTaxSuite.Library.Extensions
             string baseUrl, string userName, string password, Dictionary<string, string> headers = null, Dictionary<string, string> parameters = null)
         {
             string _requestUrl = baseUrl;
-            if (parameters != null && parameters.Any())
+            try
             {
-                _requestUrl = QueryHelpers.AddQueryString(baseUrl, parameters);
-            }
-            var _restRequest = new HttpRequestMessage(HttpMethod.Get, _requestUrl);
-            var _basicToken = Encoding.ASCII.GetBytes($"{userName}:{password}");
-            _restRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(_basicToken));
-
-            if (headers != null && headers.Any())
-            {
-                foreach (var header in headers)
+                if (parameters != null && parameters.Any())
                 {
-                    if ((header.Key.ToLower().Equals("Content-Type".ToLower())) && (_restRequest.Method == HttpMethod.Get))
-                    {
-                        _restRequest.Content = new StringContent("{}", Encoding.UTF8, header.Value);
-                    }
-                    else
-                        _restRequest.Headers.Add(header.Key, header.Value);
+                    _requestUrl = QueryHelpers.AddQueryString(baseUrl, parameters);
                 }
-            }
+                var _restRequest = new HttpRequestMessage(HttpMethod.Get, _requestUrl);
+                var _basicToken = Encoding.ASCII.GetBytes($"{userName}:{password}");
+                _restRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(_basicToken));
 
-            var _httpResponse = await _httpClient.SendAsync(_restRequest);
-            _httpResponse.EnsureSuccessStatusCode();
-            string _strResponse = await _httpResponse.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(_strResponse);
+                if (headers != null && headers.Any())
+                {
+                    foreach (var header in headers)
+                    {
+                        if ((header.Key.ToLower().Equals("Content-Type".ToLower())) && (_restRequest.Method == HttpMethod.Get))
+                        {
+                            _restRequest.Content = new StringContent("{}", Encoding.UTF8, header.Value);
+                        }
+                        else
+                            _restRequest.Headers.Add(header.Key, header.Value);
+                    }
+                }
+
+                var _httpResponse = await _httpClient.SendAsync(_restRequest);
+                _httpResponse.EnsureSuccessStatusCode();
+                string _strResponse = await _httpResponse.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<T>(_strResponse);
+            }
+            catch (HttpRequestException ex) when (IsConnectionIssue(ex))
+            {
+                throw new Exception($"Connection error: Failed to connect to {baseUrl}. Reason: {ex.HttpRequestError}");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"HTTP Status Error: Server responded with code {ex.StatusCode} :: {ex.GetBaseException().Message}");
+            }
+            catch (Exception ex) when (ex is TaskCanceledException or TimeoutException)
+            {
+                // Handle timeouts distinctly from hard connection drops
+                throw new Exception("Timeout error: The request timed out.");
+            }
         }
 
         /// <summary>
