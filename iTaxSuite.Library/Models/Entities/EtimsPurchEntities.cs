@@ -70,6 +70,7 @@ namespace iTaxSuite.Library.Models.Entities
         public string Location { get; set; }
         public PurchTrxData? PurchTrxData { get; set; }
         public virtual ClientBranch ClientBranch { get; set; }
+        public List<PurchaseItem> PurchaseItems { get; set; } = new();
         [NotMapped]
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
@@ -101,7 +102,7 @@ namespace iTaxSuite.Library.Models.Entities
 
         }*/
 
-        public PurchTransact(ClientBranch clientBranch, PurchaseSale purchaseSale)
+        public PurchTransact(ClientBranch clientBranch, EtimPurchaseSale purchaseSale)
             : this()
         {
             BranchCode = clientBranch.BranchCode;
@@ -146,6 +147,9 @@ namespace iTaxSuite.Library.Models.Entities
         [Key]
         [Required]
         public int PurchaseID { get; set; }
+        public DateTime? MappingTime { get; set; }
+        [StringLength(4000)]
+        public string MappingPayload { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public PurchTransact PurchTransact { get; set; }
@@ -169,7 +173,7 @@ namespace iTaxSuite.Library.Models.Entities
             RequestPayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSaveReq, new DecimalFormatConverter());
         }
 
-        public PurchTrxData(PurchTransact purchTransact, TrnsPurchaseSaveReq purchaseSaveReq, PurchaseSale purchaseSale)
+        public PurchTrxData(PurchTransact purchTransact, TrnsPurchaseSaveReq purchaseSaveReq, EtimPurchaseSale purchaseSale)
         {
             SourceStamp = purchTransact.DocStamp;
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(purchaseSale);
@@ -186,6 +190,47 @@ namespace iTaxSuite.Library.Models.Entities
         }
 
     }
+    [Table("PurchaseItem")]
+    public class PurchaseItem : BaseEntity
+    {
+        [Required]
+        public int PurchaseID { get; set; }
+        public int SourceLineNo { get; set; }
+        [Required]
+        [StringLength(64)]
+        public string ProductCode { get; set; }
+        [StringLength(128)]
+        public string ProductNae { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
+        public int ItemSeqNumber { get; set; } = -1;
+        public string TaxTypeCode { get; set; }
+        [StringLength(10)]
+        public string ItemClassCode { get; set; }
+        [StringLength(8)]
+        public string PkgUnitCode { get; set; }
+        [Precision(19, 3)]
+        public decimal Package { get; set; }
+        [StringLength(8)]
+        public string QtyUnitCode { get; set; }
+        [Precision(19, 3)]
+        public decimal Quantity { get; set; }
+        [Precision(19, 3)]
+        public decimal UnitPrice { get; set; }
+        [Precision(19, 3)]
+        public decimal SupplyPrice { get; set; }
+        [Precision(19, 3)]
+        public decimal DiscountAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal DiscountRate { get; set; }
+        [Precision(19, 3)]
+        public decimal TaxableAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal TaxAmount { get; set; }
+        [Precision(19, 3)]
+        public decimal TotalAmount { get; set; }
+        public PurchTransact PurchTransact { get; set; }
+    }
 
     public class PurchaseFilter : APDatedFilter
     {
@@ -193,6 +238,70 @@ namespace iTaxSuite.Library.Models.Entities
         public RecordStatusGroup RecordGroup { get; set; } = RecordStatusGroup.ALL;
         [StringLength(32)]
         public string DocNumber { get; set; }
+    }
+
+    [Table("ImportItem")]
+    public class ImportItem : BaseTransactData
+    {
+        [Required]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ImportID { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
+        [Required]
+        [StringLength(2, MinimumLength = 2)]
+        public string BranchCode { get; set; }
+        [StringLength(64)]
+        public string ProductCode { get; set; }
+        [StringLength(64)]
+        public string ImpItemCode { get; set; }
+        [StringLength(64)]
+        public string ImpItemExternalID { get; set; }
+        [Required]
+        [StringLength(64)]
+        public string TaskCode { get; set; }
+        [Required]
+        [StringLength(64)]
+        public string DeclarationNumber { get; set; }
+        [Required]
+        [NotMinValue]
+        public DateTime DeclarationDate { get; set; }
+        public int ItemSeqNumber { get; set; } = -1;
+        [Required]
+        [StringLength(10)]
+        public string ItemClassCode { get; set; }
+        [StringLength(500)]
+        public string SupplierName { get; set; }
+        [StringLength(500)]
+        public string AgentName { get; set; }
+        [StringLength(17)]
+        public string HSCode { get; set; }
+        [StringLength(8)]
+        public string PkgUnitCode { get; set; }
+        [Precision(19, 3)]
+        public decimal Package { get; set; }
+        [StringLength(8)]
+        public string QtyUnitCode { get; set; }
+        [Precision(19, 3)]
+        public decimal Quantity { get; set; }
+        public double GrossWeight { get; set; }
+        public double NetWeight { get; set; }
+        public string ImpItemStatusCode { get; set; }
+        [StringLength(5)]
+        public string OrigCountryCode { get; set; }
+        [StringLength(5)]
+        public string ExpCountryCode { get; set; }
+        [Precision(19, 3)]
+        public decimal InvForeignCurrencyAmount { get; set; }
+        [Required]
+        [StringLength(3)]
+        public string InvForeignCurrencyCode { get; set; }
+        [Precision(19, 3)]
+        public decimal InvForeignCurrencyExchangeRate { get; set; }
+
+        public override string CacheKey => $"{BranchCode}:{ItemSeqNumber}";
+
+        public virtual ClientBranch ClientBranch { get; set; }
     }
 
 }

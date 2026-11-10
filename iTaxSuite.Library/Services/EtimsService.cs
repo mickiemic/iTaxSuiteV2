@@ -34,7 +34,6 @@ namespace iTaxSuite.Library.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMasterDataSvc _masterDataSvc;
-        private readonly IDatabase _baseDb;
         private readonly ClientBranch _clientBranch = null;
 
         public EtimsService(IHttpClientFactory httpClientFactory, IMasterDataSvc masterDataSvc)

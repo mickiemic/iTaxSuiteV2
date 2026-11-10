@@ -152,6 +152,7 @@ try
     _ = builder.Services.AddScoped<ISchedulerService, SchedulerService>();
     _ = builder.Services.AddScoped<IEtimsService, EtimsService>();
     _ = builder.Services.AddScoped<IDigiTaxService, DigiTaxService>();
+    _ = builder.Services.AddScoped<IS300TimsUtilService, S300TimsUtilService>();
     _ = builder.Services.AddScoped<IS300ProductSvc, S300TimsProductSvc>();
     _ = builder.Services.AddScoped<IS300ProductSvc, S300DTaxProductSvc>();
     _ = builder.Services.AddScoped<IS300PurchaseSvc, S300TimsPurchaseSvc>();

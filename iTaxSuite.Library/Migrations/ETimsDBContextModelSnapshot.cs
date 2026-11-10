@@ -199,8 +199,7 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ReqPayload")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("RequestAt")
                         .HasColumnType("datetime2");
@@ -214,8 +213,7 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("nvarchar(2048)");
 
                     b.Property<string>("RespPayload")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ResponseAt")
                         .HasColumnType("datetime2");
@@ -853,6 +851,342 @@ namespace iTaxSuite.Library.Migrations
                         });
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ImportItem", b =>
+                {
+                    b.Property<int>("ItemSeqNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("AgentName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime>("DeclarationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeclarationNumber")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ExpCountryCode")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<double>("GrossWeight")
+                        .HasColumnType("float");
+
+                    b.Property<string>("HSCode")
+                        .HasMaxLength(17)
+                        .HasColumnType("nvarchar(17)");
+
+                    b.Property<string>("ImpItemCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ImpItemExternalID")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ImpItemStatusCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ImportID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImportID"));
+
+                    b.Property<decimal>("InvForeignCurrencyAmount")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("InvForeignCurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<decimal>("InvForeignCurrencyExchangeRate")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("ItemClassCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("LastTry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("NetWeight")
+                        .HasColumnType("float");
+
+                    b.Property<string>("OrigCountryCode")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<decimal>("Package")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("PkgUnitCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("ProductCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("QtyUnitCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<int>("RecordStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<string>("RequestPayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("RequestTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResponsePayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("ResponseTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SourcePayload")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SourceStamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SupplierName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TaskCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("Tries")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ItemSeqNumber", "BranchCode");
+
+                    b.HasIndex("BranchCode");
+
+                    b.ToTable("ImportItem");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.KitProduct", b =>
+                {
+                    b.Property<string>("KitProdCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("CompProdCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastTry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RecordStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remark")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<int>("Tries")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("KitProdCode", "CompProdCode", "BranchCode");
+
+                    b.HasIndex("KitProdCode", "BranchCode");
+
+                    b.ToTable("KitProduct");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.Notification", b =>
+                {
+                    b.Property<string>("NotificationID")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LinkUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<DateTime>("NotificationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SourcePayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("SourceStamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TargetRoleId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TargetType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("NotificationID", "BranchCode");
+
+                    b.HasIndex("BranchCode");
+
+                    b.ToTable("Notification");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.NotificationReceiver", b =>
+                {
+                    b.Property<string>("NotificationID")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("UserID")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("BranchCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<bool>("IsDismissed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReadDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("NotificationID", "UserID", "BranchCode");
+
+                    b.HasIndex("NotificationID", "BranchCode");
+
+                    b.ToTable("NotificationReceiver");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.Product", b =>
                 {
                     b.Property<string>("ProductCode")
@@ -872,6 +1206,9 @@ namespace iTaxSuite.Library.Migrations
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
+
+                    b.Property<bool>("IsKitting")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsStockable")
                         .HasColumnType("bit");
@@ -1128,6 +1465,13 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
+                    b.Property<string>("MappingPayload")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime?>("MappingTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("RequestPayload")
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
@@ -1158,6 +1502,102 @@ namespace iTaxSuite.Library.Migrations
                     b.HasKey("PurchaseID");
 
                     b.ToTable("PurchTrxData");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.PurchaseItem", b =>
+                {
+                    b.Property<int>("PurchaseID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SourceLineNo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<decimal>("DiscountRate")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("ExternalID")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ItemClassCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("ItemSeqNumber")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Package")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("PkgUnitCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("ProductNae")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("QtyUnitCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<decimal>("SupplyPrice")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("TaxTypeCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TaxableAmount")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(19, 3)
+                        .HasColumnType("decimal(19,3)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PurchaseID", "SourceLineNo");
+
+                    b.ToTable("PurchaseItem");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.S300TaxAuthority", b =>
@@ -1263,7 +1703,6 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("decimal(19,3)");
 
                     b.Property<string>("PkgUnitCode")
-                        .IsRequired()
                         .HasMaxLength(8)
                         .HasColumnType("nvarchar(8)");
 
@@ -1273,7 +1712,6 @@ namespace iTaxSuite.Library.Migrations
                         .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("QtyUnitCode")
-                        .IsRequired()
                         .HasMaxLength(8)
                         .HasColumnType("nvarchar(8)");
 
@@ -1535,6 +1973,10 @@ namespace iTaxSuite.Library.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("ExtraPayload")
+                        .HasMaxLength(800)
+                        .HasColumnType("nvarchar(800)");
 
                     b.Property<string>("RequestPayload")
                         .HasMaxLength(4000)
@@ -1820,6 +2262,114 @@ namespace iTaxSuite.Library.Migrations
                     b.ToTable("SyncChannel");
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SystemCodeItem", b =>
+                {
+                    b.Property<string>("CodeClass")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<string>("CodeName")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserDefinedCode1")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("UserDefinedCode2")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("UserDefinedCode3")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("CodeClass", "Code");
+
+                    b.ToTable("SystemCodeItem");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.TISystemCode", b =>
+                {
+                    b.Property<string>("CodeClass")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("ClassName")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasMaxLength(1)
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserDefinedName1")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("UserDefinedName2")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("UserDefinedName3")
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("CodeClass");
+
+                    b.ToTable("TISystemCode");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.TaxClient", b =>
                 {
                     b.Property<string>("ClientCode")
@@ -2013,6 +2563,50 @@ namespace iTaxSuite.Library.Migrations
                     b.Navigation("ClientBranch");
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ImportItem", b =>
+                {
+                    b.HasOne("iTaxSuite.Library.Models.Entities.ClientBranch", "ClientBranch")
+                        .WithMany()
+                        .HasForeignKey("BranchCode")
+                        .HasPrincipalKey("BranchCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientBranch");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.KitProduct", b =>
+                {
+                    b.HasOne("iTaxSuite.Library.Models.Entities.StockItem", "StockItem")
+                        .WithMany("KitProducts")
+                        .HasForeignKey("KitProdCode", "BranchCode");
+
+                    b.Navigation("StockItem");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.Notification", b =>
+                {
+                    b.HasOne("iTaxSuite.Library.Models.Entities.ClientBranch", "ClientBranch")
+                        .WithMany()
+                        .HasForeignKey("BranchCode")
+                        .HasPrincipalKey("BranchCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClientBranch");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.NotificationReceiver", b =>
+                {
+                    b.HasOne("iTaxSuite.Library.Models.Entities.Notification", "Notification")
+                        .WithMany("NotificationReceivers")
+                        .HasForeignKey("NotificationID", "BranchCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ProductData", b =>
                 {
                     b.HasOne("iTaxSuite.Library.Models.Entities.Product", "Product")
@@ -2042,6 +2636,18 @@ namespace iTaxSuite.Library.Migrations
                         .WithOne("PurchTrxData")
                         .HasForeignKey("iTaxSuite.Library.Models.Entities.PurchTrxData", "PurchaseID")
                         .HasPrincipalKey("iTaxSuite.Library.Models.Entities.PurchTransact", "PurchaseID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchTransact");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.PurchaseItem", b =>
+                {
+                    b.HasOne("iTaxSuite.Library.Models.Entities.PurchTransact", "PurchTransact")
+                        .WithMany("PurchaseItems")
+                        .HasForeignKey("PurchaseID")
+                        .HasPrincipalKey("PurchaseID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2128,6 +2734,17 @@ namespace iTaxSuite.Library.Migrations
                     b.Navigation("ClientBranch");
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SystemCodeItem", b =>
+                {
+                    b.HasOne("iTaxSuite.Library.Models.Entities.TISystemCode", "TISystemCode")
+                        .WithMany("SystemCodeItems")
+                        .HasForeignKey("CodeClass")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TISystemCode");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.TaxClient", b =>
                 {
                     b.HasOne("iTaxSuite.Library.Models.Entities.ExtSystConfig", "ExtSystConfig")
@@ -2139,6 +2756,11 @@ namespace iTaxSuite.Library.Migrations
                     b.Navigation("ExtSystConfig");
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.Notification", b =>
+                {
+                    b.Navigation("NotificationReceivers");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.Product", b =>
                 {
                     b.Navigation("ProductData");
@@ -2147,6 +2769,8 @@ namespace iTaxSuite.Library.Migrations
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.PurchTransact", b =>
                 {
                     b.Navigation("PurchTrxData");
+
+                    b.Navigation("PurchaseItems");
                 });
 
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.SalesTransact", b =>
@@ -2156,9 +2780,19 @@ namespace iTaxSuite.Library.Migrations
                     b.Navigation("SalesTrxData");
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.StockItem", b =>
+                {
+                    b.Navigation("KitProducts");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.StockMovement", b =>
                 {
                     b.Navigation("StockMovData");
+                });
+
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.TISystemCode", b =>
+                {
+                    b.Navigation("SystemCodeItems");
                 });
 #pragma warning restore 612, 618
         }

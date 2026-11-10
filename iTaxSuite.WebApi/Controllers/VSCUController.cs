@@ -11,17 +11,19 @@ namespace iTaxSuite.WebApi.Controllers
     [ApiController]
     public class VSCUController : MBaseController
     {
-        protected ClientBranch _clientBranch = null;
+        private ClientBranch _clientBranch;
         protected readonly IMasterDataSvc _masterDataSvc;
 
         private readonly IEtimsService _etimsService;
+        private readonly IS300TimsUtilService _s300TimsUtilService;
 
-        public VSCUController(IMasterDataSvc masterDataSvc, IEtimsService etimsService)
+        public VSCUController(IMasterDataSvc masterDataSvc, IEtimsService etimsService, IEnumerable<IS300TimsUtilService> s300TimsUtilServices)
         {
             _masterDataSvc = masterDataSvc;
             _etimsService = etimsService;
 
-            _clientBranch = _masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
+            _clientBranch = masterDataSvc.GetBranchAsync().GetAwaiter().GetResult();
+            _s300TimsUtilService = s300TimsUtilServices.Single(x => x.GetDeviceType() == _clientBranch.TaxClient.DeviceType); ;
         }
 
         [HttpGet("getbranches")]

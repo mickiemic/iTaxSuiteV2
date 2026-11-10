@@ -39,7 +39,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         public string prvncNm { get; set; }
         public string dstrtNm { get; set; }
         public string sctrNm { get; set; }
-        public object locDesc { get; set; }
+        public string locDesc { get; set; }
         public string mgrNm { get; set; }
         public string mgrTelNo { get; set; }
         public string mgrEmail { get; set; }
@@ -196,31 +196,68 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [Newtonsoft.Json.JsonProperty("clsList")]
         [System.Text.Json.Serialization.JsonPropertyName("clsList")]
-        public List<ClasssList> EtimsCodes { get; set; } = new();
+        public List<CodeHeader> CodesList { get; set; } = new();
     }
-    public class ClasssList
+    public class CodeHeader
     {
-        public string cdCls { get; set; }
-        public string cdClsNm { get; set; }
-        public string cdClsDesc { get; set; }
-        public string useYn { get; set; }
-        public string userDfnNm1 { get; set; }
-        public string userDfnNm2 { get; set; }
-        public object userDfnNm3 { get; set; }
+        [Newtonsoft.Json.JsonProperty("cdCls")]
+        [System.Text.Json.Serialization.JsonPropertyName("cdCls")]
+        public string CodeClass { get; set; }
+        [Newtonsoft.Json.JsonProperty("cdClsNm")]
+        [System.Text.Json.Serialization.JsonPropertyName("cdClsNm")]
+        public string CodeClassName { get; set; }
+        [Newtonsoft.Json.JsonProperty("cdClsDesc")]
+        [System.Text.Json.Serialization.JsonPropertyName("cdClsDesc")]
+        public string ClassDescription { get; set; }
+        [Newtonsoft.Json.JsonProperty("useYn")]
+        [System.Text.Json.Serialization.JsonPropertyName("useYn")]
+        public string IsActive { get; set; }
+        [Newtonsoft.Json.JsonProperty("userDfnNm1")]
+        [System.Text.Json.Serialization.JsonPropertyName("userDfnNm1")]
+        public string UserDefinedName1 { get; set; }
+        [Newtonsoft.Json.JsonProperty("userDfnNm2")]
+        [System.Text.Json.Serialization.JsonPropertyName("userDfnNm2")]
+        public string UserDefinedName2 { get; set; }
+        [Newtonsoft.Json.JsonProperty("userDfnNm3")]
+        [System.Text.Json.Serialization.JsonPropertyName("userDfnNm3")]
+        public string UserDefinedName3 { get; set; }
         [Newtonsoft.Json.JsonProperty("dtlList")]
         [System.Text.Json.Serialization.JsonPropertyName("dtlList")]
         public List<CodeItem> CodeList { get; set; }
     }
     public class CodeItem
     {
-        public string cd { get; set; }
-        public string cdNm { get; set; }
-        public string cdDesc { get; set; }
-        public string useYn { get; set; }
-        public int srtOrd { get; set; }
-        public string userDfnCd1 { get; set; }
-        public string userDfnCd2 { get; set; }
-        public object userDfnCd3 { get; set; }
+        [Newtonsoft.Json.JsonProperty("cd")]
+        [System.Text.Json.Serialization.JsonPropertyName("cd")]
+        public string Code { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("cdNm")]
+        [System.Text.Json.Serialization.JsonPropertyName("cdNm")]
+        public string CodeName { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("cdDesc")]
+        [System.Text.Json.Serialization.JsonPropertyName("cdDesc")]
+        public string CodeDescription { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("useYn")]
+        [System.Text.Json.Serialization.JsonPropertyName("useYn")]
+        public string IsActive { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("srtOrd")]
+        [System.Text.Json.Serialization.JsonPropertyName("srtOrd")]
+        public int SortOrder { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("userDfnCd1")]
+        [System.Text.Json.Serialization.JsonPropertyName("userDfnCd1")]
+        public string UserDefinedCode1 { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("userDfnCd2")]
+        [System.Text.Json.Serialization.JsonPropertyName("userDfnCd2")]
+        public string UserDefinedCode2 { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("userDfnCd3")]
+        [System.Text.Json.Serialization.JsonPropertyName("userDfnCd3")]
+        public string UserDefinedCode3 { get; set; }
     }
 
     //Item Class List
@@ -244,39 +281,39 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [Newtonsoft.Json.JsonProperty("data")]
         [System.Text.Json.Serialization.JsonPropertyName("data")]
-        public ItemClsWrapper Data { get; set; }
+        public ItemClassWrapper Data { get; set; }
     }
-    public class ItemClsWrapper
+    public class ItemClassWrapper
     {
         [Newtonsoft.Json.JsonProperty("itemClsList")]
         [System.Text.Json.Serialization.JsonPropertyName("itemClsList")]
-        public List<ItemClsCode> itemClsList { get; set; }
+        public List<ItemClassCode> ItemClassList { get; set; }
     }
-    public class ItemClsCode
+    public class ItemClassCode
     {
         [Newtonsoft.Json.JsonProperty("itemClsCd")]
         [System.Text.Json.Serialization.JsonPropertyName("itemClsCd")]
-        public string itemClsCd { get; set; }
+        public string ClassCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("itemClsNm")]
         [System.Text.Json.Serialization.JsonPropertyName("itemClsNm")]
-        public string itemClsNm { get; set; }
+        public string ClassName { get; set; }
 
         [Newtonsoft.Json.JsonProperty("itemClsLvl")]
         [System.Text.Json.Serialization.JsonPropertyName("itemClsLvl")]
-        public int itemClsLvl { get; set; }
+        public int ClassLevel { get; set; }
 
         [Newtonsoft.Json.JsonProperty("taxTyCd")]
         [System.Text.Json.Serialization.JsonPropertyName("taxTyCd")]
-        public string taxTyCd { get; set; }
+        public string TaxTypeCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("mjrTgYn")]
         [System.Text.Json.Serialization.JsonPropertyName("mjrTgYn")]
-        public string mjrTgYn { get; set; }
+        public string IsMajorTarget { get; set; }
 
         [Newtonsoft.Json.JsonProperty("useYn")]
         [System.Text.Json.Serialization.JsonPropertyName("useYn")]
-        public string useYn { get; set; }
+        public string IsActive { get; set; }
     }
 
     // Customer List
@@ -355,19 +392,19 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         [Newtonsoft.Json.JsonProperty("adrs")]
         [System.Text.Json.Serialization.JsonPropertyName("adrs")]
-        public object Adrs { get; set; }
+        public string Adrs { get; set; }
 
         [Newtonsoft.Json.JsonProperty("telNo")]
         [System.Text.Json.Serialization.JsonPropertyName("telNo")]
-        public object TelNo { get; set; }
+        public string TelNo { get; set; }
 
         [Newtonsoft.Json.JsonProperty("email")]
         [System.Text.Json.Serialization.JsonPropertyName("email")]
-        public object Email { get; set; }
+        public string Email { get; set; }
 
         [Newtonsoft.Json.JsonProperty("faxNo")]
         [System.Text.Json.Serialization.JsonPropertyName("faxNo")]
-        public object FaxNo { get; set; }
+        public string FaxNo { get; set; }
 
         [Newtonsoft.Json.JsonProperty("useYn")]
         [System.Text.Json.Serialization.JsonPropertyName("useYn")]
@@ -375,7 +412,7 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         [Newtonsoft.Json.JsonProperty("remark")]
         [System.Text.Json.Serialization.JsonPropertyName("remark")]
-        public object Remark { get; set; }
+        public string Remark { get; set; }
 
         [Newtonsoft.Json.JsonProperty("regrNm")]
         [System.Text.Json.Serialization.JsonPropertyName("regrNm")]
@@ -417,19 +454,19 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         [Newtonsoft.Json.JsonProperty("adrs")]
         [System.Text.Json.Serialization.JsonPropertyName("adrs")]
-        public object Adrs { get; set; }
+        public string Adrs { get; set; }
 
         [Newtonsoft.Json.JsonProperty("cntc")]
         [System.Text.Json.Serialization.JsonPropertyName("cntc")]
-        public object Cntc { get; set; }
+        public string Cntc { get; set; }
 
         [Newtonsoft.Json.JsonProperty("authCd")]
         [System.Text.Json.Serialization.JsonPropertyName("authCd")]
-        public object AuthCd { get; set; }
+        public string AuthCd { get; set; }
 
         [Newtonsoft.Json.JsonProperty("remark")]
         [System.Text.Json.Serialization.JsonPropertyName("remark")]
-        public object Remark { get; set; }
+        public string Remark { get; set; }
 
         [Newtonsoft.Json.JsonProperty("useYn")]
         [System.Text.Json.Serialization.JsonPropertyName("useYn")]
@@ -520,95 +557,95 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [Newtonsoft.Json.JsonProperty("data")]
         [System.Text.Json.Serialization.JsonPropertyName("data")]
-        public ImportItemWrapper data { get; set; }
+        public ImportItemWrapper Data { get; set; }
     }
     public class ImportItemWrapper
     {
         [Newtonsoft.Json.JsonProperty("itemList")]
         [System.Text.Json.Serialization.JsonPropertyName("itemList")]
-        public List<ImportItem> itemList { get; set; }
+        public List<ImportItem> ItemList { get; set; }
     }
     public class ImportItem
     {
         [Newtonsoft.Json.JsonProperty("taskCd")]
         [System.Text.Json.Serialization.JsonPropertyName("taskCd")]
-        public string taskCd { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("dclDe")]
-        [System.Text.Json.Serialization.JsonPropertyName("dclDe")]
-        public string dclDe { get; set; }
-
-        [Newtonsoft.Json.JsonProperty("itemSeq")]
-        [System.Text.Json.Serialization.JsonPropertyName("itemSeq")]
-        public int itemSeq { get; set; }
+        public string TaskCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("dclNo")]
         [System.Text.Json.Serialization.JsonPropertyName("dclNo")]
-        public string dclNo { get; set; }
+        public string DeclarationNumber { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("dclDe")]
+        [System.Text.Json.Serialization.JsonPropertyName("dclDe")]
+        public string DeclarationDate { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("itemSeq")]
+        [System.Text.Json.Serialization.JsonPropertyName("itemSeq")]
+        public int ItemSeq { get; set; }
 
         [Newtonsoft.Json.JsonProperty("hsCd")]
         [System.Text.Json.Serialization.JsonPropertyName("hsCd")]
-        public string hsCd { get; set; }
+        public string HSCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("itemNm")]
         [System.Text.Json.Serialization.JsonPropertyName("itemNm")]
-        public string itemNm { get; set; }
+        public string ItemName { get; set; }
 
         [Newtonsoft.Json.JsonProperty("imptItemsttsCd")]
         [System.Text.Json.Serialization.JsonPropertyName("imptItemsttsCd")]
-        public string imptItemsttsCd { get; set; }
+        public string ImpItemStatusCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("orgnNatCd")]
         [System.Text.Json.Serialization.JsonPropertyName("orgnNatCd")]
-        public string orgnNatCd { get; set; }
+        public string OrigCountryCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("exptNatCd")]
         [System.Text.Json.Serialization.JsonPropertyName("exptNatCd")]
-        public string exptNatCd { get; set; }
+        public string ExpCountryCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("pkg")]
         [System.Text.Json.Serialization.JsonPropertyName("pkg")]
-        public int pkg { get; set; }
+        public int Package { get; set; }
 
         [Newtonsoft.Json.JsonProperty("pkgUnitCd")]
         [System.Text.Json.Serialization.JsonPropertyName("pkgUnitCd")]
-        public string pkgUnitCd { get; set; }
+        public string PkgUnitCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("qty")]
         [System.Text.Json.Serialization.JsonPropertyName("qty")]
-        public int qty { get; set; }
+        public int Quantity { get; set; }
 
         [Newtonsoft.Json.JsonProperty("qtyUnitCd")]
         [System.Text.Json.Serialization.JsonPropertyName("qtyUnitCd")]
-        public string qtyUnitCd { get; set; }
+        public string QtyUnitCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("totWt")]
         [System.Text.Json.Serialization.JsonPropertyName("totWt")]
-        public int totWt { get; set; }
+        public double GrossWeight { get; set; }
 
         [Newtonsoft.Json.JsonProperty("netWt")]
         [System.Text.Json.Serialization.JsonPropertyName("netWt")]
-        public int netWt { get; set; }
+        public double NetWeight { get; set; }
 
         [Newtonsoft.Json.JsonProperty("spplrNm")]
         [System.Text.Json.Serialization.JsonPropertyName("spplrNm")]
-        public string spplrNm { get; set; }
+        public string SupplierName { get; set; }
 
         [Newtonsoft.Json.JsonProperty("agntNm")]
         [System.Text.Json.Serialization.JsonPropertyName("agntNm")]
-        public string agntNm { get; set; }
+        public string AgentName { get; set; }
 
         [Newtonsoft.Json.JsonProperty("invcFcurAmt")]
         [System.Text.Json.Serialization.JsonPropertyName("invcFcurAmt")]
-        public double invcFcurAmt { get; set; }
+        public decimal InvForeignCurrencyAmount { get; set; }
 
         [Newtonsoft.Json.JsonProperty("invcFcurCd")]
         [System.Text.Json.Serialization.JsonPropertyName("invcFcurCd")]
-        public string invcFcurCd { get; set; }
+        public string InvForeignCurrencyCode { get; set; }
 
         [Newtonsoft.Json.JsonProperty("invcFcurExcrt")]
         [System.Text.Json.Serialization.JsonPropertyName("invcFcurExcrt")]
-        public double invcFcurExcrt { get; set; }
+        public decimal InvForeignCurrencyExchangeRate { get; set; }
     }
 
     // Stock Items
@@ -675,7 +712,7 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         [Newtonsoft.Json.JsonProperty("remark")]
         [System.Text.Json.Serialization.JsonPropertyName("remark")]
-        public object remark { get; set; }
+        public string remark { get; set; }
 
         [Newtonsoft.Json.JsonProperty("itemList")]
         [System.Text.Json.Serialization.JsonPropertyName("itemList")]
@@ -721,7 +758,7 @@ namespace iTaxSuite.Library.Models.ViewModels
 
         [Newtonsoft.Json.JsonProperty("itemExprDt")]
         [System.Text.Json.Serialization.JsonPropertyName("itemExprDt")]
-        public object itemExprDt { get; set; }
+        public string itemExprDt { get; set; }
 
         [Newtonsoft.Json.JsonProperty("prc")]
         [System.Text.Json.Serialization.JsonPropertyName("prc")]

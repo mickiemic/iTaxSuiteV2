@@ -88,6 +88,7 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         NONE = 0,
         CREATE_ITEMS = 101,
+        CREATE_KITITEMS = 111,
         SAVE_SALE = 201,
         SAVE_PURCHASE = 301,
         SAVE_STOCKIO = 401,

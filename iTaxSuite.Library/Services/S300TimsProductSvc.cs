@@ -592,7 +592,10 @@ namespace iTaxSuite.Library.Services
                 return ex.GetBaseException().Message;
             }
         }
-
+        public async Task<Result<EtimsTransact, string>> ProcessSaveKitItem(EtimsTransact result)
+        {
+            throw new NotImplementedException();
+        }
         public async Task<Result<BranchStockLevel, string>> SaveStockLevel(SaveStockLevel saveStockLevel)
         {
             string _method_ = "SaveStockLevel";

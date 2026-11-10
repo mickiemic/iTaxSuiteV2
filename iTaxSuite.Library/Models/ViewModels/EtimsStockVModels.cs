@@ -702,7 +702,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
         }
 
-        public TrnsPurchaseSaveReq(ClientBranch clientBranch, PurchaseSale purchaseSale)
+        public TrnsPurchaseSaveReq(ClientBranch clientBranch, EtimPurchaseSale purchaseSale)
             : this()
         {
             PIN = clientBranch.TaxClient.TaxNumber;
@@ -879,7 +879,7 @@ namespace iTaxSuite.Library.Models.ViewModels
         {
         }
 
-        public EtimsPurchaseItem(PurchSaleItem item)
+        public EtimsPurchaseItem(EtimPurchSaleItem item)
             : this()
         {
             SupplierItemCode = item.ItemCode;

@@ -89,6 +89,11 @@ namespace iTaxSuite.Library.Services
             throw new NotImplementedException();
         }
 
+        public Task<Result<EtimsTransact, string>> ProcessSaveKitItem(EtimsTransact result)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<Result<EtimsTransact, string>> ProcessSaveProduct(EtimsTransact transact)
         {
             throw new NotImplementedException();

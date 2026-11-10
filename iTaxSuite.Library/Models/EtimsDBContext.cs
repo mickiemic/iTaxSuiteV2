@@ -89,6 +89,34 @@ namespace iTaxSuite.Library.Models
                 entity.HasKey(e => new { e.VendorNumber, e.BranchCode });
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
             });
+            builder.Entity<Notification>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.NotificationID, e.BranchCode });
+                entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
+                entity.HasMany(e => e.NotificationReceivers).WithOne(e => e.Notification)
+                    .HasForeignKey(e => new { e.NotificationID, e.BranchCode })
+                    .HasPrincipalKey(e => new { e.NotificationID, e.BranchCode })
+                    .IsRequired(true);
+            });
+            builder.Entity<NotificationReceiver>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.NotificationID, e.UserID, e.BranchCode });
+            });
+            builder.Entity<TISystemCode>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasMany(e => e.SystemCodeItems).WithOne(e => e.TISystemCode)
+                    .HasForeignKey(e => e.CodeClass)
+                    .HasPrincipalKey(e => e.CodeClass)
+                    .IsRequired(true);
+            });
+            builder.Entity<SystemCodeItem>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.CodeClass, e.Code });
+            });
 
             builder.Entity<Product>(entity =>
             {
@@ -106,6 +134,15 @@ namespace iTaxSuite.Library.Models
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
                 entity.HasOne(e => e.Product).WithMany().HasForeignKey(e => e.ProductCode).HasPrincipalKey(e => e.ProductCode);
                 //entity.Property(e => e.CacheKey).HasField("_cacheKey").HasComputedColumnSql("[BranchCode] + ':' + [ProductCode]");
+                entity.HasMany(e => e.KitProducts).WithOne(e => e.StockItem)
+                    .HasForeignKey(e => new { e.KitProdCode, e.BranchCode })
+                    .HasPrincipalKey(e => new { e.ProductCode, e.BranchCode })
+                    .IsRequired(false);
+            });
+            builder.Entity<KitProduct>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.KitProdCode, e.CompProdCode, e.BranchCode });
             });
             builder.Entity<StockMovement>(entity =>
             {
@@ -132,8 +169,24 @@ namespace iTaxSuite.Library.Models
                     .HasForeignKey<PurchTrxData>(e => e.PurchaseID)
                     .HasPrincipalKey<PurchTransact>(e => e.PurchaseID).IsRequired(true);
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
+                entity.HasMany(e => e.PurchaseItems).WithOne(e => e.PurchTransact)
+                    .HasForeignKey(e => new { e.PurchaseID })
+                    .HasPrincipalKey(e => new { e.PurchaseID })
+                    .IsRequired(true);
             });
             builder.Entity<PurchTrxData>().Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+            builder.Entity<PurchaseItem>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.PurchaseID, e.SourceLineNo });
+            });
+
+            builder.Entity<ImportItem>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+                entity.HasKey(e => new { e.ItemSeqNumber, e.BranchCode });
+                entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
+            });
 
             builder.Entity<SalesTransact>(entity =>
             {
@@ -170,6 +223,8 @@ namespace iTaxSuite.Library.Models
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
             });
 
+
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -188,6 +243,10 @@ namespace iTaxSuite.Library.Models
         public virtual DbSet<BranchCustomer> BranchCustomers { get; set; }
         public virtual DbSet<BranchUser> BranchUsers { get; set; }
         public virtual DbSet<BranchVendor> BranchVendors { get; set; }
+        public virtual DbSet<Notification> Notifications { get; set; }
+        public virtual DbSet<NotificationReceiver> NotificationReceivers { get; set; }
+        public virtual DbSet<TISystemCode> TISystemCodes { get; set; }
+        public virtual DbSet<SystemCodeItem> SystemCodeItems { get; set; }
 
         // Inventory Models
         public virtual DbSet<StockItem> StockItems { get; set; }
@@ -195,15 +254,19 @@ namespace iTaxSuite.Library.Models
         public virtual DbSet<StockMovData> StockMovData { get; set; }
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<ProductData> ProductData { get; set; }
+        public virtual DbSet<KitProduct> KitProducts { get; set; }
 
         // Purchase Models
         public virtual DbSet<PurchTransact> PurchTransact { get; set; }
         public virtual DbSet<PurchTrxData> PurchTrxData { get; set; }
+        public virtual DbSet<PurchaseItem> PurchaseItems { get; set; }
 
         // Sales Models
         public virtual DbSet<SalesTransact> SalesTransact { get; set; }
         public virtual DbSet<SalesTrxData> SalesTrxData { get; set; }
         public virtual DbSet<SalesItem> SalesItem { get; set; }
+        
+        public virtual DbSet<ImportItem> ImportItems { get; set; }
 
         // Transaction Models
         public virtual DbSet<EtimsTransact> EtimsTransacts { get; set; }

@@ -16,6 +16,7 @@ namespace iTaxSuite.Library.Interfaces
         Task<Result<PagedResult<StockMovement>, string>> GetStockMovements(MovementFilter filter);
         Task<Result<int, string>> ProcessItemCallback(ItemCallback itemCallback);
         Task<Result<EtimsTransact, string>> ProcessSaveProduct(EtimsTransact transact);
+        Task<Result<EtimsTransact, string>> ProcessSaveKitItem(EtimsTransact result);
         Task<Result<EtimsTransact, string>> ProcessSaveStockIO(EtimsTransact transact);
         Task<Result<EtimsTransact, string>> QueueSaveProduct(BranchStockKey filter);
         Task<Result<Product, string>> ReFetchProduct(ProductKey productKey);

@@ -874,7 +874,10 @@ namespace iTaxSuite.Library.Services
         {
             throw new NotImplementedException();
         }
-
+        public Task<Result<EtimsTransact, string>> ProcessSaveKitItem(EtimsTransact result)
+        {
+            throw new NotImplementedException();
+        }
         public async Task<Result<EtimsTransact, string>> ProcessSaveStockIO(EtimsTransact transact)
         {
             string _method_ = "ProcessQueueSaveProduct";

@@ -861,9 +861,9 @@ namespace iTaxSuite.Library.Models.ViewModels
     public class PurchSalesWrapper
     {
         [Newtonsoft.Json.JsonProperty("saleList")]
-        public List<PurchaseSale> PurchSalesList { get; set; }
+        public List<EtimPurchaseSale> PurchSalesList { get; set; }
     }
-    public class PurchaseSale
+    public class EtimPurchaseSale
     {
         [StringLength(11)]
         [Newtonsoft.Json.JsonProperty("spplrTin")]
@@ -950,14 +950,14 @@ namespace iTaxSuite.Library.Models.ViewModels
         public string Remark { get; set; }
         [Newtonsoft.Json.JsonProperty("itemList")]
         [System.Text.Json.Serialization.JsonPropertyName("itemList")]
-        public List<PurchSaleItem> PurchSalesItems { get; set; } = new();
+        public List<EtimPurchSaleItem> PurchSalesItems { get; set; } = new();
         public string Reference => $"{SupplierPIN}:{SupplierBranchID}:{SupplierInvoiceNum}";
         public bool HasItems()
         {
             return PurchSalesItems != null && PurchSalesItems.Count > 0;
         }
     }
-    public class PurchSaleItem
+    public class EtimPurchSaleItem
     {
         [Newtonsoft.Json.JsonProperty("itemSeq")]
         [System.Text.Json.Serialization.JsonPropertyName("itemSeq")]

@@ -34,6 +34,7 @@ namespace iTaxSuite.Library.Models.Entities
         public override string CacheKey => $"{BranchCode}:{ProductCode}";
         public virtual Product Product { get; set; }
         public virtual ClientBranch ClientBranch { get; set; }
+        public List<KitProduct> KitProducts { get; set; } = new();
 
         public StockItem()
         {
@@ -57,20 +58,41 @@ namespace iTaxSuite.Library.Models.Entities
             if (RecordStatus == RecordStatus.POST_OK || RecordStatus == RecordStatus.POST_FAIL || !IsValid())
                 return null;
 
-            var etimsTransact = new EtimsTransact()
+            EtimsTransact etimsTransact;
+            if (Product.IsKitting)
             {
-                BranchCode = BranchCode,
-                ReqType = ETIMSReqType.CREATE_ITEMS,
-                DocNumber = CacheKey,
-                DocStamp = Product?.ProductData?.SourceStamp ?? DateTime.Now,
-                SourceApp = "IC",
-                ReqAddress = $"{clientBranch.EtrAddress}/items/saveItems",
-                ReqKey = CacheKey,
-                ParentKey = null,
-                IsNewRequest = true,
-                NextSeqNumber = -1,
-                RecordStatus = RecordStatus.QUEUEDOUT
-            };
+                etimsTransact = new EtimsTransact()
+                {
+                    BranchCode = BranchCode,
+                    ReqType = ETIMSReqType.CREATE_KITITEMS,
+                    DocNumber = CacheKey,
+                    DocStamp = Product?.ProductData?.SourceStamp ?? DateTime.Now,
+                    SourceApp = "IC",
+                    ReqAddress = $"{clientBranch.EtrAddress}/items/saveItemComposition",
+                    ReqKey = CacheKey,
+                    ParentKey = null,
+                    IsNewRequest = true,
+                    NextSeqNumber = -1,
+                    RecordStatus = RecordStatus.QUEUEDOUT
+                };
+            }
+            else
+            {
+                etimsTransact = new EtimsTransact()
+                {
+                    BranchCode = BranchCode,
+                    ReqType = ETIMSReqType.CREATE_ITEMS,
+                    DocNumber = CacheKey,
+                    DocStamp = Product?.ProductData?.SourceStamp ?? DateTime.Now,
+                    SourceApp = "IC",
+                    ReqAddress = $"{clientBranch.EtrAddress}/items/saveItems",
+                    ReqKey = CacheKey,
+                    ParentKey = null,
+                    IsNewRequest = true,
+                    NextSeqNumber = -1,
+                    RecordStatus = RecordStatus.QUEUEDOUT
+                };
+            }
             return etimsTransact;
         }
 
@@ -257,7 +279,6 @@ namespace iTaxSuite.Library.Models.Entities
         public string SourceApp { get; set; }
         [Required]
         public bool IsStockable { get; set; }
-        [NotMapped]
         public bool IsKitting { get; set; }
         [Required]
         [StringLength(128)]
@@ -528,7 +549,24 @@ namespace iTaxSuite.Library.Models.Entities
             UpdatedOn = DateTime.Now;
             UpdatedBy = GeneralConst.APPLICATION_NAME;
         }
-
+    }
+    [Table("KitProduct")]
+    public class KitProduct : BaseTransact
+    {
+        [Required]
+        [StringLength(64)]
+        public string KitProdCode { get; set; }
+        [Required]
+        [StringLength(2, MinimumLength = 2)]
+        public string BranchCode { get; set; }
+        [Required]
+        [StringLength(64)]
+        public string CompProdCode { get; set; }
+        public bool IsActive { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public StockItem StockItem { get; set; }
+        public override string CacheKey => $"{BranchCode}:{KitProdCode}";
     }
     
 }

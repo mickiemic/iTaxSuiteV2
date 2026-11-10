@@ -401,6 +401,8 @@ namespace iTaxSuite.Library.Models.Entities
         public DateTime? CallbackTime { get; set; }
         [StringLength(4000)]
         public string CallbackPayload { get; set; }
+        [StringLength(800)]
+        public string ExtraPayload { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public SalesTransact SalesTransact { get; set; }
@@ -526,7 +528,6 @@ namespace iTaxSuite.Library.Models.Entities
     }
     public class SalesItem : BaseEntity
     {
-        [Key]
         [Required]
         public int SalesTrxID { get; set; }
         public int SourceLineNo { get; set; }

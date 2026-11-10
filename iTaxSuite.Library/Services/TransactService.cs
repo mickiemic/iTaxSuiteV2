@@ -144,6 +144,17 @@ namespace iTaxSuite.Library.Services
                     }
                     result = pResult.GetValue();
                 }
+                else if (result.ReqType == ETIMSReqType.CREATE_KITITEMS)
+                {
+                    var pResult = await _productSvc.ProcessSaveKitItem(result);
+                    if (pResult.IsError)
+                    {
+                        _strError = pResult.GetError();
+                        UI.Error($"{_method_} for {result.DocNumber} failed, error: {_strError}");
+                        return _strError;
+                    }
+                    result = pResult.GetValue();
+                }
                 else if (result.ReqType == ETIMSReqType.SAVE_SALE)
                 {
                     var pResult = await _saleService.ProcessSaveSale(result);

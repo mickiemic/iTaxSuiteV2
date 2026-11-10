@@ -104,6 +104,13 @@ namespace iTaxSuite.Library.Services
             HashSet<string> taxAuthKeys = null;
             try
             {
+                if (!await _smFetchOEInvoices.WaitAsync(0))
+                {
+                    _strError = "FetchOEInvoices is already running. Please wait for it to complete.";
+                    UI.Warn($"{_method_} : {_strError}");
+                    return _strError;
+                }
+                UI.Debug($">> {_method_}");
                 var syncChannel = _syncChannelMap[GeneralConst.OE_INVOICE_SYNC];
                 var invoiceMap = await _dbContext.SalesTransact.Where(e => e.SourceApp == "OE")
                     .ToDictionaryAsync(e => e.DocNumber, e => e.DocStamp);
@@ -271,6 +278,10 @@ namespace iTaxSuite.Library.Services
                 UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
             }
+            finally
+            {
+                _smFetchOEInvoices.Release();
+            }
 
             return result;
         }
@@ -283,6 +294,13 @@ namespace iTaxSuite.Library.Services
             HashSet<string> taxAuthKeys = null;
             try
             {
+                if (!await _smFetchOECRNotes.WaitAsync(0))
+                {
+                    _strError = "FetchOECRDRNotes is already running. Please wait for it to complete.";
+                    UI.Warn($"{_method_} : {_strError}");
+                    return _strError;
+                }
+                UI.Debug($">> {_method_}");
                 var syncChannel = _syncChannelMap[GeneralConst.OE_INVOICE_SYNC];
                 var invoiceMap = await _dbContext.SalesTransact.Where(e => e.SourceApp == "OE")
                     .ToDictionaryAsync(e => e.DocNumber, e => e.DocStamp);
@@ -449,6 +467,10 @@ namespace iTaxSuite.Library.Services
                 UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
             }
+            finally
+            {
+                _smFetchOECRNotes.Release();
+            }
 
             return result;
         }
@@ -463,6 +485,13 @@ namespace iTaxSuite.Library.Services
             List<EtimsSalesView> results = new();
             try
             {
+                if (!await _smFetchARInvoices.WaitAsync(0))
+                {
+                    _strError = "FetchOEInvoices is already running. Please wait for it to complete.";
+                    UI.Warn($"{_method_} : {_strError}");
+                    return _strError;
+                }
+                UI.Debug($">> {_method_}");
                 var syncChannel = _syncChannelMap[GeneralConst.AR_INVOICE_SYNC];
                 var invoiceMap = await _dbContext.SalesTransact.Where(e => e.SourceApp == "AR")
                     .ToDictionaryAsync(e => e.DocNumber, e => e.DocStamp);
@@ -640,6 +669,10 @@ namespace iTaxSuite.Library.Services
             {
                 UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
                 return ex.GetBaseException().Message;
+            }
+            finally
+            {
+                _smFetchARInvoices.Release();
             }
 
             return results;
@@ -1517,5 +1550,6 @@ namespace iTaxSuite.Library.Services
         {
             throw new NotImplementedException();
         }
+    
     }
 }

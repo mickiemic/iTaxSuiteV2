@@ -1,5 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using iTaxSuite.Library.Constants;
+using iTaxSuite.Library.Models.ViewModels;
+using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 
 namespace iTaxSuite.Library.Models.Entities
 {
@@ -189,6 +193,159 @@ namespace iTaxSuite.Library.Models.Entities
         {
             return new CustomerKey(this);
         }*/
+    }
+
+    [Table("ItemClassCode")]
+    public class ItemClassCode : BaseEntity
+    {
+        [Key]
+        [Required]
+        [StringLength(10)]
+        public string ClassCode { get; set; }
+        [Required]
+        [StringLength(200)]
+        public string ClassName { get; set; }
+        [StringLength(5)]
+        public string TaxTypeCode { get; set; }
+        public int ClassLevel { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsMajorTarget { get; set; }
+        [NotMapped]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string CacheKey => ClassCode;
+    }
+
+    [Table("TISystemCode")]
+    public class TISystemCode : BaseEntity
+    {
+        [Key]
+        [Required]
+        [StringLength(2)]
+        public string CodeClass { get; set; }
+        [StringLength(60)]
+        public string ClassName { get; set; }
+        [StringLength(500)]
+        public string Description { get; set; }
+        [StringLength(1)]
+        public bool IsActive { get; set; }
+        [StringLength(60)]
+        public string UserDefinedName1 { get; set; }
+        [StringLength(60)]
+        public string UserDefinedName2 { get; set; }
+        [StringLength(60)]
+        public string UserDefinedName3 { get; set; }
+        public List<SystemCodeItem> SystemCodeItems { get; set; } = new();
+    }
+    [Table("SystemCodeItem")]
+    public class SystemCodeItem : BaseEntity
+    {
+        [Required]
+        [StringLength(2)]
+        public string CodeClass { get; set; }
+        [StringLength(5)]
+        public string Code { get; set; }
+        [StringLength(60)]
+        public string CodeName { get; set; }
+        [StringLength(500)]
+        public string Description { get; set; }
+        public bool IsActive { get; set; }
+        public int SortOrder { get; set; }
+        [StringLength(20)]
+        public string UserDefinedCode1 { get; set; }
+        [StringLength(20)]
+        public string UserDefinedCode2 { get; set; }
+        [StringLength(20)]
+        public string UserDefinedCode3 { get; set; }
+
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public TISystemCode TISystemCode { get; set; }
+    }
+
+    public enum TargetType { All = 0, Role = 1, SpecificUser = 2 }
+    
+    [Table("Notification")]
+    public class Notification: BaseEntity
+    {
+        [Required]
+        [StringLength(32)]
+        public string NotificationID { get; set; }
+        [Required]
+        [StringLength(2)]
+        public string BranchCode { get; set; }
+        [StringLength(128)]
+        public string ExternalID { get; set; }
+        public TargetType TargetType { get; set; }
+        public string TargetRoleId { get; set; }    // Identity role name(when TargetType = 1)
+        public string TargetUserId { get; set; }    // Identity user Id  (when TargetType=2)
+        [StringLength(256)]
+        public string Title { get; set; }
+        [StringLength(2048)]
+        public string Message { get; set; }
+        [StringLength(512)]
+        public string LinkUrl { get; set; }
+        public LogLevel Level { get; set; } = LogLevel.Information;
+        [Required]
+        public DateTime NotificationDate { get; set; } = DateTime.Now;
+        public DateTime? ExpiresAt { get; set; }
+        public DateTime? SourceStamp { get; set; }
+        [StringLength(4000)]
+        public string SourcePayload { get; set; }
+        public virtual ClientBranch ClientBranch { get; set; }
+        public List<NotificationReceiver> NotificationReceivers { get; set; } = new();
+        public Notification()
+        {
+        }
+        public Notification(NoticeItem notice)
+            : this()
+        {
+            NotificationID = notice.NoticeNumber.ToString();
+            Title = notice.Title;
+            Message = notice.Content;
+            LinkUrl = notice.DetailURL;
+            if (DateTime.TryParseExact(notice.RegistrationDateTime, ETIMSConst.FMT_DATETIME, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+            {
+                NotificationDate = result;
+            }
+            CreatedBy = notice.RegistrantName;
+            SourceStamp = DateTime.Now;
+
+            SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(notice);
+        }
+    }
+    [Table("NotificationReceiver")]
+    public class NotificationReceiver : BaseEntity
+    {
+        [Required]
+        [StringLength(32)]
+        public string NotificationID { get; set; }
+        [Required]
+        [StringLength(2)]
+        public string BranchCode { get; set; }
+        [Required]
+        [StringLength(450)]
+        public string UserID { get; set; }
+        [Required]
+        public bool IsRead { get; set; } = false;
+        [Required]
+        public bool IsDismissed { get; set; } = false;
+        public DateTime? ReadDate { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public Notification Notification { get; set; }
+        public NotificationReceiver()
+        {
+        }
+
+        public NotificationReceiver(Notification notification, string userId, string branchCode)
+            : this()
+        {
+            this.Notification = notification;
+            NotificationID = notification.NotificationID;
+            UserID = userId;
+            BranchCode = branchCode;
+        }
     }
 
 }
