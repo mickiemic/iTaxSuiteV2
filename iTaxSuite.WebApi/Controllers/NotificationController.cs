@@ -93,6 +93,25 @@ namespace iTaxSuite.WebApi.Controllers
             }
         }
 
+        [HttpPatch("readall")]
+        public async Task<IActionResult> MarkAllRead(string userId)
+        {
+            string _method_ = "MarkAllRead";
+            try
+            {
+                var result = await _s300TimsUtilService.MarkAllAsRead(userId);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+
 
         //[HttpGet]
         //public async Task<ActionResult<PagedResult<NotificationDto>>> Get(

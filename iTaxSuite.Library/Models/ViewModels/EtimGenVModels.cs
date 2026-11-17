@@ -287,9 +287,9 @@ namespace iTaxSuite.Library.Models.ViewModels
     {
         [Newtonsoft.Json.JsonProperty("itemClsList")]
         [System.Text.Json.Serialization.JsonPropertyName("itemClsList")]
-        public List<ItemClassCode> ItemClassList { get; set; }
+        public List<EtimItemClassCode> ItemClassList { get; set; }
     }
-    public class ItemClassCode
+    public class EtimItemClassCode
     {
         [Newtonsoft.Json.JsonProperty("itemClsCd")]
         [System.Text.Json.Serialization.JsonPropertyName("itemClsCd")]

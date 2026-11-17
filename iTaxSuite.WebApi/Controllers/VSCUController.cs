@@ -63,6 +63,24 @@ namespace iTaxSuite.WebApi.Controllers
                 return StatusCode(500, ex.GetBaseException().Message);
             }
         }
+        [HttpGet("fetchcodeslist")]
+        public async Task<IActionResult> FetchCodesList(DateTime? lastStamp)
+        {
+            string _method_ = "FetchCodesList";
+            try
+            {
+                var result = await _s300TimsUtilService.FetchAllTISCodes(lastStamp ?? DateTime.Now);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
 
         [HttpGet("getitemlist")]
         public async Task<IActionResult> GetItemList(string strInput = "20191130000000")
@@ -128,6 +146,24 @@ namespace iTaxSuite.WebApi.Controllers
             try
             {
                 var result = await _etimsService.SelectItemClass(strInput);
+                if (result.IsSuccess)
+                    return Ok(result.GetValue());
+                else
+                    return StatusCode(500, result.GetError());
+            }
+            catch (Exception ex)
+            {
+                UI.Error(ex, $"{_method_} error : {ex.GetBaseException()}");
+                return StatusCode(500, ex.GetBaseException().Message);
+            }
+        }
+        [HttpGet("fetchitemclasses")]
+        public async Task<IActionResult> FetchItemClasses(DateTime? lastStamp)
+        {
+            string _method_ = "FetchItemClasses";
+            try
+            {
+                var result = await _s300TimsUtilService.FetchAllItemClasses(lastStamp ?? DateTime.MinValue);
                 if (result.IsSuccess)
                     return Ok(result.GetValue());
                 else

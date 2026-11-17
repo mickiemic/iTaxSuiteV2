@@ -1014,6 +1014,51 @@ namespace iTaxSuite.Library.Migrations
                     b.ToTable("ImportItem");
                 });
 
+            modelBuilder.Entity("iTaxSuite.Library.Models.Entities.ItemClassCode", b =>
+                {
+                    b.Property<string>("ClassCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("ClassLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClassName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsMajorTarget")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TaxTypeCode")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ClassCode");
+
+                    b.ToTable("ItemClassCode");
+                });
+
             modelBuilder.Entity("iTaxSuite.Library.Models.Entities.KitProduct", b =>
                 {
                     b.Property<string>("KitProdCode")

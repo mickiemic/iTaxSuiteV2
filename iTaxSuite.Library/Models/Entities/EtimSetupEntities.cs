@@ -214,6 +214,21 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string CacheKey => ClassCode;
+        public ItemClassCode()
+        {
+        }
+
+        public ItemClassCode(EtimItemClassCode item)
+            : this()
+        {
+            ClassCode = item.ClassCode;
+            //TODO: deal with extra long class names
+            ClassName = (item.ClassName.Length > 200) ? item.ClassName.Substring(0,200) : item.ClassName;
+            TaxTypeCode = item.TaxTypeCode;
+            ClassLevel = item.ClassLevel;
+            IsActive = (item.IsActive == "Y");
+            IsMajorTarget = (item.IsMajorTarget == "Y");
+        }
     }
 
     [Table("TISystemCode")]
@@ -236,6 +251,26 @@ namespace iTaxSuite.Library.Models.Entities
         [StringLength(60)]
         public string UserDefinedName3 { get; set; }
         public List<SystemCodeItem> SystemCodeItems { get; set; } = new();
+        public TISystemCode()
+        {
+        }
+        public TISystemCode(CodeHeader header)
+            : this()
+        {
+            CodeClass = header.CodeClass;
+            ClassName = header.CodeClassName;
+            Description = header.ClassDescription;
+            IsActive = (header.IsActive == "Y");
+            UserDefinedName1 = header.UserDefinedName1;
+            UserDefinedName2 = header.UserDefinedName2;
+            UserDefinedName3 = header.UserDefinedName3;
+
+            foreach(var item in header.CodeList)
+            {
+                var codeItem = new SystemCodeItem(this, item);
+                SystemCodeItems.Add(codeItem);
+            }
+        }
     }
     [Table("SystemCodeItem")]
     public class SystemCodeItem : BaseEntity
@@ -261,6 +296,22 @@ namespace iTaxSuite.Library.Models.Entities
         [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public TISystemCode TISystemCode { get; set; }
+        public SystemCodeItem()
+        {
+        }
+        public SystemCodeItem(TISystemCode systemCode, CodeItem item)
+        {
+            TISystemCode = systemCode;
+            CodeClass = systemCode.CodeClass;
+            Code = item.Code;
+            CodeName = item.CodeName;
+            Description = item.CodeDescription;
+            IsActive = (item.IsActive == "Y");
+            SortOrder = item.SortOrder;
+            UserDefinedCode1 = item.UserDefinedCode1;
+            UserDefinedCode2 = item.UserDefinedCode2;
+            UserDefinedCode3 = item.UserDefinedCode3;
+        }
     }
 
     public enum TargetType { All = 0, Role = 1, SpecificUser = 2 }
@@ -273,10 +324,10 @@ namespace iTaxSuite.Library.Models.Entities
         public string NotificationID { get; set; }
         [Required]
         [StringLength(2)]
-        public string BranchCode { get; set; }
+        public string BranchCode { get; set; } = "00";
         [StringLength(128)]
         public string ExternalID { get; set; }
-        public TargetType TargetType { get; set; }
+        public TargetType TargetType { get; set; } = TargetType.All;
         public string TargetRoleId { get; set; }    // Identity role name(when TargetType = 1)
         public string TargetUserId { get; set; }    // Identity user Id  (when TargetType=2)
         [StringLength(256)]
@@ -310,7 +361,6 @@ namespace iTaxSuite.Library.Models.Entities
             }
             CreatedBy = notice.RegistrantName;
             SourceStamp = DateTime.Now;
-
             SourcePayload = Newtonsoft.Json.JsonConvert.SerializeObject(notice);
         }
     }

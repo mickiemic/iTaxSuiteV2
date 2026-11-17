@@ -117,6 +117,10 @@ namespace iTaxSuite.Library.Models
                 entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
                 entity.HasKey(e => new { e.CodeClass, e.Code });
             });
+            builder.Entity<ItemClassCode>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("GETDATE()");
+            });
 
             builder.Entity<Product>(entity =>
             {
@@ -223,8 +227,6 @@ namespace iTaxSuite.Library.Models
                 entity.HasOne(e => e.ClientBranch).WithMany().HasForeignKey(e => e.BranchCode).HasPrincipalKey(e => e.BranchCode);
             });
 
-
-
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -247,6 +249,7 @@ namespace iTaxSuite.Library.Models
         public virtual DbSet<NotificationReceiver> NotificationReceivers { get; set; }
         public virtual DbSet<TISystemCode> TISystemCodes { get; set; }
         public virtual DbSet<SystemCodeItem> SystemCodeItems { get; set; }
+        public virtual DbSet<ItemClassCode> ItemClassCodes { get; set; }
 
         // Inventory Models
         public virtual DbSet<StockItem> StockItems { get; set; }
