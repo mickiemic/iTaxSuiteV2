@@ -591,6 +591,18 @@ namespace iTaxSuite.Library.Models.Entities
         {
         }
 
+        public bool IsValid()
+        {
+            if (string.IsNullOrWhiteSpace(ProductCode) || string.IsNullOrWhiteSpace(BranchCode) || string.IsNullOrWhiteSpace(ItemClassCode))
+            {
+                return false;
+            }
+            if (Quantity == 0 || UnitPrice == 0 || TotalAmount == 0)
+            {
+                return false;
+            }
+            return true;
+        }
         public static SalesItem? CreateItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.InvoiceDetail item,
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
         {
@@ -605,7 +617,18 @@ namespace iTaxSuite.Library.Models.Entities
                 UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ItemNumber:{item.Item} has Invalid {UnitPrice} unit price");
                 return null;
             }
-            return new SalesItem(salesTransact, item, taxGroup, taxAuthKeys);
+            var salesItem = new SalesItem(salesTransact, item, taxGroup, taxAuthKeys);
+            if (salesItem.UnitPrice == 0)
+            {
+                UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ItemNumber:{item.Item} has Invalid {salesItem.UnitPrice} unit price");
+                return null;
+            }
+            if (salesItem.Quantity == 0)
+            {
+                UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ItemNumber:{item.Item} has Invalid {salesItem.Quantity} quantity");
+                return null;
+            }
+            return salesItem;
         }
         public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.InvoiceDetail item,
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
@@ -681,8 +704,8 @@ namespace iTaxSuite.Library.Models.Entities
             }
 
             //TaxAmount = item.TaxAmount1;
-            //TotalAmount = UnitPrice * Quantity;
-            TotalAmount = TaxableAmount + TaxAmount;
+            TotalAmount = UnitPrice * Quantity;
+            //TotalAmount = TaxableAmount + TaxAmount;
 
             DiscountRate = item.DiscountPercent;
             if (DiscountRate > 0)
@@ -707,7 +730,18 @@ namespace iTaxSuite.Library.Models.Entities
             decimal amtValue = item.ExtendedAmountWithTIP;
             if (amtValue <= 0)
                 throw new Exception($"Invalid Amount for {item.Description} :: {amtValue}");
-            return new SalesItem(salesTransact, arInvoice, item, taxGroup, taxAuthKeys);
+            var salesItem = new SalesItem(salesTransact, arInvoice, item, taxGroup, taxAuthKeys);
+            if (salesItem.UnitPrice == 0)
+            {
+                UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ARInvoice:{arInvoice.DocumentNumber} with Description {item.Description} has Invalid {salesItem.UnitPrice} unit price");
+                return null;
+            }
+            if (salesItem.Quantity == 0)
+            {
+                UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ARInvoice: {arInvoice.DocumentNumber}  with Description  {item.Description} has Invalid {salesItem.Quantity} quantity");
+                return null;
+            }
+            return salesItem;
         }
         public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.Invoice arInvoice,
             Sage.CA.SBS.ERP.Sage300.AR.WebApi.Models.InvoiceDetail item, S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
@@ -792,7 +826,9 @@ namespace iTaxSuite.Library.Models.Entities
                 TaxRate = item.TaxRate5;
             }
 
-            TotalAmount = TaxableAmount + TaxAmount;
+            TotalAmount = UnitPrice * Quantity;
+            if (TotalAmount == 0)
+                TotalAmount = TaxableAmount + TaxAmount;
             if (TotalAmount == 0)
                 TotalAmount = TaxableAmount = amtValue;
 
@@ -814,7 +850,18 @@ namespace iTaxSuite.Library.Models.Entities
                 UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ItemNumber:{item.Item} has Invalid {unitPrice} unit price");
                 return null;
             }
-            return new SalesItem(salesTransact, item, taxGroup, taxAuthKeys);
+            var salesItem = new SalesItem(salesTransact, item, taxGroup, taxAuthKeys);
+            if (salesItem.UnitPrice == 0)
+            {
+                UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ItemNumber:{item.Item} has Invalid {salesItem.UnitPrice} unit price");
+                return null;
+            }
+            if (salesItem.Quantity == 0)
+            {
+                UI.Warn(salesTransact.DocNumber, $"{salesTransact.DocNumber} ItemNumber:{item.Item} has Invalid {salesItem.Quantity} quantity");
+                return null;
+            }
+            return salesItem;
         }
         public SalesItem(SalesTransact salesTransact, Sage.CA.SBS.ERP.Sage300.OE.WebApi.Models.CreditDebitDetail item, 
             S300TaxGroup taxGroup, HashSet<string> taxAuthKeys)
@@ -885,8 +932,8 @@ namespace iTaxSuite.Library.Models.Entities
 
             TaxableAmount = item.TaxBase1;
             //TaxAmount = item.TaxAmount1;
-            //TotalAmount = UnitPrice * Quantity;
-            TotalAmount = TaxableAmount + TaxAmount;
+            TotalAmount = UnitPrice * Quantity;
+            //TotalAmount = TaxableAmount + TaxAmount;
 
             DiscountRate = item.DiscountPercent;
             DiscountAmount = item.DiscountedExtendedAmount;

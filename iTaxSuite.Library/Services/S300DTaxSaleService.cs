@@ -490,7 +490,7 @@ namespace iTaxSuite.Library.Services
                                     arSaleTrx.Remark = _strError;
                                 }
                             }
-                            else if (origInvoice.DocExchRate != arSaleTrx.DocExchRate)
+                            if (origInvoice != null && origInvoice.DocExchRate != arSaleTrx.DocExchRate)
                             {
                                 _strError = $"Exchange Rate Error, Invoice Rate {origInvoice.DocExchRate:N2} differs from Credit Note Rate {arSaleTrx.DocExchRate:N2}";
                                 UI.Error($"{crNote.BatchNumber}:{crNote.DocumentNumber}", $"{_method_} error : {_strError}");
@@ -1020,7 +1020,7 @@ namespace iTaxSuite.Library.Services
                                 oeSaleTrx.Remark = _strError;
                             }
                         }
-                        if (origInvoice.DocExchRate != oeSaleTrx.DocExchRate)
+                        if (origInvoice != null && origInvoice.DocExchRate != oeSaleTrx.DocExchRate)
                         {
                             _strError = $"Exchange Rate Error, Invoice Rate {origInvoice.DocExchRate:N2} differs from Credit Note Rate {oeSaleTrx.DocExchRate:N2}";
                             UI.Error(crNote.CreditDebitNoteNumber, $"{_method_} error : {_strError}");
@@ -1845,7 +1845,7 @@ namespace iTaxSuite.Library.Services
                         arSaleTrx.Remark = _strError;
                     }
                 }
-                else if (origInvoice.DocExchRate != arSaleTrx.DocExchRate)
+                if (origInvoice != null && origInvoice.DocExchRate != arSaleTrx.DocExchRate)
                 {
                     _strError = $"Exchange Rate Error, Invoice Rate {origInvoice.DocExchRate:N2} differs from Credit Note Rate {arSaleTrx.DocExchRate:N2}";
                     UI.Error($"{saleBatchTrxKey.BatchNumber}:{saleBatchTrxKey.DocNumber}", $"{_method_} error : {_strError}");
@@ -2263,7 +2263,7 @@ namespace iTaxSuite.Library.Services
                         oeSaleTrx.Remark = _strError;
                     }
                 }
-                if (origInvoice.DocExchRate != oeSaleTrx.DocExchRate)
+                if (origInvoice != null && origInvoice.DocExchRate != oeSaleTrx.DocExchRate)
                 {
                     _strError = $"Exchange Rate Error, Invoice Rate {origInvoice.DocExchRate:N2} differs from Credit Note Rate {oeSaleTrx.DocExchRate:N2}";
                     UI.Error(oeSaleTrx.DocNumber, $"{_method_} error : {_strError}");
